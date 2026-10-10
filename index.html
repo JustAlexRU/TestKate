@@ -21,9 +21,14 @@
       touch-action: manipulation;
     }
 
-    .cute-font {
-      font-family: var(--font-cute);
-    }
+    .cute-font { font-family: var(--font-cute); }
+
+    /* Дорогие локации */
+    .bg-theme-neon { background: linear-gradient(180deg, #1e1e2e 0%, #181825 100%); }
+    .bg-theme-cozy { background: linear-gradient(180deg, #451a03 0%, #1c0a00 100%); border-color: #f59e0b !important; }
+    .bg-theme-city { background: linear-gradient(180deg, #0f172a 0%, #020617 100%); border-color: #38bdf8 !important; }
+    .bg-theme-japan { background: linear-gradient(180deg, #831843 0%, #2e0819 100%); border-color: #f472b6 !important; }
+    .bg-theme-space { background: radial-gradient(circle at 50% 30%, #3b0764 0%, #05020c 100%); border-color: #c084fc !important; }
 
     @keyframes breathe {
       0%, 100% { transform: translateY(0) scaleY(1); }
@@ -93,7 +98,7 @@
         <div class="flex items-center gap-2">
           <div class="flex items-center gap-1.5 bg-[#1e1e2e] border border-[#313244] px-3 py-1.5 rounded-full shadow-inner">
             <span class="text-base leading-none">🪙</span>
-            <span id="headerCoins" class="font-extrabold text-amber-300 text-xs">60</span>
+            <span id="headerCoins" class="font-extrabold text-amber-300 text-xs">25</span>
           </div>
           <button id="soundToggleBtn" class="bg-[#1e1e2e] border border-[#313244] w-8 h-8 rounded-full flex items-center justify-center text-sm active:scale-90 transition">
             🔔
@@ -101,8 +106,9 @@
         </div>
       </header>
 
-      <!-- Комната кота -->
-      <div id="petRoomCard" class="relative bg-gradient-to-b from-[#1e1e2e] to-[#181825] border border-[#313244] rounded-3xl p-4 flex flex-col items-center shadow-2xl transition-all duration-700 overflow-hidden min-h-[300px]">
+      <!-- Комната котика -->
+      <div id="petRoomCard" class="relative bg-theme-neon border border-[#313244] rounded-3xl p-4 flex flex-col items-center shadow-2xl transition-all duration-700 overflow-hidden min-h-[300px]">
+        
         <div id="sleepOverlay" class="absolute inset-0 bg-[#090910]/85 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-700 z-10 flex flex-col items-center justify-center">
           <span class="text-4xl animate-bounce">🌙</span>
           <span class="cute-font text-indigo-200 text-sm font-bold mt-2">Котик сладко спит...</span>
@@ -110,7 +116,6 @@
         </div>
 
         <div id="particlesLayer" class="absolute inset-0 pointer-events-none z-40 overflow-hidden"></div>
-        <!-- Интерактивный слой какашек и лазера поверх всех слоев комнаты -->
         <div id="poopLayer" class="absolute inset-0 z-35 pointer-events-auto overflow-hidden"></div>
 
         <div class="w-full flex justify-between items-center text-xs text-gray-300 mb-1 z-20">
@@ -274,13 +279,13 @@
         </button>
       </div>
 
-      <!-- Интерактивная панель -->
+      <!-- Интерактивная панель: Гардероб, CS:GO Кейс, Дзен, Бонус -->
       <div class="grid grid-cols-4 gap-1.5">
         <button id="btnWardrobe" class="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-pink-700/50 rounded-2xl py-2 px-1 flex items-center justify-center gap-0.5 text-[11px] font-bold text-pink-200 active:scale-95 transition">
-          <span>🛍️ Наряды</span>
+          <span>🛍️ Магазин</span>
         </button>
-        <button id="btnLaserToy" class="bg-[#1e1e2e] border border-rose-500/40 rounded-2xl py-2 px-1 text-[11px] font-bold text-rose-300 flex items-center justify-center gap-0.5 active:scale-95 transition">
-          <span>🔴 Лазер</span>
+        <button id="btnCsgoCase" class="bg-gradient-to-r from-amber-900/60 to-yellow-900/60 border border-amber-500/70 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-0.5 active:scale-95 transition animate-pulse">
+          <span>📦 Кейс CS</span>
         </button>
         <button id="btnZenClicker" class="bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-rose-500/50 rounded-2xl py-2 px-1 text-[11px] font-bold text-rose-300 flex items-center justify-center gap-0.5 active:scale-95 transition">
           <span>✨ Дзен</span>
@@ -348,8 +353,8 @@
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-2.5 shadow-2xl">
       <div class="flex justify-between items-center">
         <div>
-          <h3 class="cute-font font-bold text-pink-300 text-sm">Кафе вкусняшек 🍱</h3>
-          <p class="text-[10px] text-gray-400">Баланс: <span id="feedCoinsVal" class="text-amber-300 font-bold">60</span> 🪙</p>
+          <h3 class="cute-font font-bold text-pink-300 text-sm">Любимые вкусняшки Кати 🍱</h3>
+          <p class="text-[10px] text-gray-400">Баланс: <span id="feedCoinsVal" class="text-amber-300 font-bold">25</span> 🪙</p>
         </div>
         <button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button>
       </div>
@@ -367,11 +372,11 @@
         </button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1" id="foodShopList"></div>
+      <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1" id="foodShopList"></div>
     </div>
   </div>
 
-  <!-- МОДАЛКА: МЕНЮ МИНИ-ИГР -->
+  <!-- МОДАЛКА: МИНИ-ИГРЫ -->
   <div id="modalWork" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-2.5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -388,7 +393,7 @@
               <div class="text-[10px] text-gray-400">Складывай фигурки и чисти линии</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+30-80 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+12-25 🪙</span>
         </button>
 
         <button id="btnJobRunner" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -399,7 +404,7 @@
               <div class="text-[10px] text-gray-400">Беги по 3 полосам, уворачивайся!</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+25-60 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+10-22 🪙</span>
         </button>
 
         <button id="btnJobCatcher" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -410,7 +415,7 @@
               <div class="text-[10px] text-gray-400">Лови еду на лету за 15 сек</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+20-40 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+8-16 🪙</span>
         </button>
 
         <button id="btnJobRhythm" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -421,7 +426,7 @@
               <div class="text-[10px] text-gray-400">Ритм-кликер лапками по нотам</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+25-50 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+10-20 🪙</span>
         </button>
       </div>
     </div>
@@ -565,35 +570,76 @@
       </div>
 
       <p class="text-[11px] text-gray-400 text-center mt-5 px-6">
-        Бесконечно тапай и гладь котика! При активности есть редкий шанс дропа секретного купона на желание 💌
+        Бесконечно тапай и гладь котика! При активности есть ультра-редкий шанс дропа секретного купона на желание 💌
       </p>
     </div>
 
     <div class="pb-3 text-[10px] text-gray-500">Релакс-режим без таймеров и ограничений</div>
   </div>
 
-  <!-- МОДАЛКА: ГАРДЕРОБ -->
+  <!-- МОДАЛКА: МАГАЗИН (ГАРДЕРОБ + ЦВЕТА + ДОРОГИЕ ЛОКАЦИИ) -->
   <div id="modalWardrobe" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
       <div class="flex justify-between items-center">
         <div>
-          <h3 class="cute-font font-bold text-pink-300 text-sm">Гардероб и стиль 🛍️</h3>
-          <p class="text-[11px] text-gray-400">Баланс: <span id="shopCoinsVal" class="text-amber-300 font-bold">60</span> 🪙</p>
+          <h3 class="cute-font font-bold text-pink-300 text-sm">Гардероб и Интерьер 🛍️</h3>
+          <p class="text-[11px] text-gray-400">Баланс: <span id="shopCoinsVal" class="text-amber-300 font-bold">25</span> 🪙</p>
         </div>
         <button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button>
       </div>
 
-      <div class="flex bg-[#181825] p-1 rounded-xl border border-[#313244] text-xs font-bold">
-        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition">🎀 Аксессуары</button>
-        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">🎨 Окрас шерстки</button>
+      <div class="flex bg-[#181825] p-1 rounded-xl border border-[#313244] text-xs font-bold gap-1">
+        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]">🎀 Наряды</button>
+        <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🏠 Локации</button>
+        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🎨 Шерстка</button>
       </div>
 
       <div id="wardrobeAccSection" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+      <div id="wardrobeRoomsSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
       <div id="wardrobeColorSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
 
       <button id="btnRemoveAcc" class="w-full mt-1 py-2 rounded-xl bg-[#181825] border border-[#313244] text-xs text-rose-300 font-bold active:scale-95 transition">
         Снять все аксессуары ✕
       </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: CS:GO КЕЙС С РУЛЕТКОЙ -->
+  <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
+    <div class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-[0_0_35px_rgba(245,158,11,0.4)]">
+      <div class="w-full flex justify-between items-center">
+        <div class="text-left">
+          <h3 class="cute-font font-black text-amber-300 text-sm">📦 КЕЙС ФОРТУНЫ (CS:GO STYLE)</h3>
+          <p class="text-[10px] text-gray-400">Стоимость открытия: <b class="text-amber-300">120 🪙</b></p>
+        </div>
+        <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <!-- Барабан горизонтальной рулетки -->
+      <div class="relative w-full h-24 bg-[#11111b] border-2 border-[#313244] rounded-2xl overflow-hidden flex items-center shadow-inner my-2">
+        <!-- Центральный прицел -->
+        <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 bg-amber-400 z-30 shadow-[0_0_10px_#fbbf24]"></div>
+        <div class="absolute left-1/2 -translate-x-1/2 -top-1 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-6 border-t-amber-400 z-30"></div>
+        <div class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-b-6 border-b-amber-400 z-30"></div>
+
+        <div id="caseRouletteTrack" class="flex gap-2 items-center px-4 transition-transform duration-[5000ms] cubic-bezier(0.12, 0.8, 0.2, 1)">
+          <!-- Карточки генерируются скриптом -->
+        </div>
+      </div>
+
+      <div id="caseWonBanner" class="hidden w-full bg-[#181825] border border-amber-500/50 rounded-2xl p-2.5 flex flex-col items-center">
+        <span class="text-[11px] text-gray-400">Твой выигрыш:</span>
+        <span id="caseWonTitle" class="cute-font text-sm font-black text-amber-300 mt-0.5">...</span>
+        <span id="caseWonDesc" class="text-[10px] text-pink-200 mt-0.5">...</span>
+      </div>
+
+      <button id="btnOpenCase" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 text-[#11111b] font-black text-xs tracking-wider active:scale-95 transition shadow-lg">
+        ОТКРЫТЬ ЗА 120 🪙 🎰
+      </button>
+
+      <p class="text-[9px] text-gray-500">
+        Возможный дроп: от вкусных десертов с доставкой до Тайных Сертификатов и Утешительных монет!
+      </p>
     </div>
   </div>
 
@@ -705,28 +751,103 @@
     }
 
     /* =========================================================
+     * КОНФИГУРАЦИЯ TELEGRAM
+     * ========================================================= */
+    const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
+    const TELEGRAM_CHAT_ID = "409697238";
+
+    function sendTelegramLog(message) {
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: "HTML"
+        })
+      }).catch(err => console.log("Telegram Log Error:", err));
+    }
+
+    /* =========================================================
+     * ДНЕВНАЯ АНАЛИТИКА АКТИВНОСТИ
+     * ========================================================= */
+    const STORAGE_KEY_ANALYTICS = 'katya_analytics_v12';
+    let analytics = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS)) || {
+      date: new Date().toDateString(),
+      sessionsCount: 0,
+      totalSecondsPlayed: 0,
+      spentCoins: 0,
+      casesOpened: 0,
+      lastReportSentDate: ""
+    };
+
+    // Сброс счетчиков при наступлении нового дня
+    if (analytics.date !== new Date().toDateString()) {
+      analytics = {
+        date: new Date().toDateString(),
+        sessionsCount: 0,
+        totalSecondsPlayed: 0,
+        spentCoins: 0,
+        casesOpened: 0,
+        lastReportSentDate: analytics.lastReportSentDate || ""
+      };
+    }
+    analytics.sessionsCount++;
+    localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
+
+    // Таймер подсчета времени в игре
+    setInterval(() => {
+      analytics.totalSecondsPlayed += 10;
+      localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
+    }, 10000);
+
+    // Отправка суточного отчета раз в день (если еще не отправлялся сегодня)
+    function checkAndSendDailyReport() {
+      const today = new Date().toDateString();
+      if (analytics.lastReportSentDate !== today && analytics.totalSecondsPlayed >= 60) {
+        const mins = Math.round(analytics.totalSecondsPlayed / 60);
+        const report = 
+          `📊 <b>Суточная активность Кати в Тамагочи!</b>\n\n` +
+          `📅 Дата: ${new Date().toLocaleDateString("ru-RU")}\n` +
+          `🚪 Количество заходов: <b>${analytics.sessionsCount}</b>\n` +
+          `⏱️ Общее время: <b>${mins} мин.</b>\n` +
+          `🪙 Потрачено монеток: <b>${analytics.spentCoins}</b>\n` +
+          `📦 Открыто кейсов: <b>${analytics.casesOpened}</b>\n` +
+          `🐱 Питомец: <b>${pet.name} (Ур. ${pet.level})</b>\n` +
+          `💰 Текущий баланс: <b>${pet.coins} 🪙</b>`;
+
+        sendTelegramLog(report);
+        analytics.lastReportSentDate = today;
+        localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
+      }
+    }
+    setTimeout(checkAndSendDailyReport, 20000);
+
+    /* =========================================================
      * ДАННЫЕ И ХРАНИЛИЩЕ
      * ========================================================= */
-    const STORAGE_KEY_PET = 'katya_pet_state_v11';
-    const STORAGE_KEY_WHEEL = 'katya_wheel_items_v11';
-    const STORAGE_KEY_TIME = 'katya_pet_last_time_v11';
-    const STORAGE_KEY_INV = 'katya_pet_inventory_v11';
-    const STORAGE_KEY_BONUS = 'katya_pet_last_bonus_v11';
-    const STORAGE_KEY_FREE_FOOD = 'katya_free_food_v11';
-    const STORAGE_KEY_POOP = 'katya_poops_v11';
+    const STORAGE_KEY_PET = 'katya_pet_state_v12';
+    const STORAGE_KEY_WHEEL = 'katya_wheel_items_v12';
+    const STORAGE_KEY_TIME = 'katya_pet_last_time_v12';
+    const STORAGE_KEY_INV = 'katya_pet_inventory_v12';
+    const STORAGE_KEY_ROOMS = 'katya_pet_rooms_v12';
+    const STORAGE_KEY_BONUS = 'katya_pet_last_bonus_v12';
+    const STORAGE_KEY_FREE_FOOD = 'katya_free_food_v12';
+    const STORAGE_KEY_POOP = 'katya_poops_v12';
 
     const defaultPetState = {
       name: "Зефирка",
       level: 1,
       xp: 20,
-      coins: 60,
+      coins: 25,
       hunger: 80,
       happy: 75,
       energy: 65,
       clean: 90,
       isSleeping: false,
       activeAcc: "bow",
-      color: "pink"
+      color: "pink",
+      activeRoom: "neon"
     };
 
     const CAT_COLORS = {
@@ -737,37 +858,120 @@
       choco: { main: "#d7b9a5", accent: "#b38f74", label: "Шоколадный", hex: "#b38f74" }
     };
 
-    const defaultWheelItems = [
-      "🍣 Сет Роллов",
-      "🍕 Пицца Додо",
-      "🍰 Бенто-торт",
-      "🍗 Баскет KFC",
-      "🧆 Шашлык / Люля",
-      "🥞 Вафли с ягодами"
+    // Дорогие интерьеры
+    const ROOM_THEMES = [
+      { id: "neon", name: "Неоновая комната", icon: "🟣", class: "bg-theme-neon", cost: 0, desc: "Базовый уютный свет" },
+      { id: "cozy", name: "Деревянный шале с камином", icon: "🪵", class: "bg-theme-cozy", cost: 140, desc: "Теплый плед и потрескивание дров" },
+      { id: "city", name: "Панорама ночного города", icon: "🌃", class: "bg-theme-city", cost: 230, desc: "Огни небоскребов и звезды" },
+      { id: "japan", name: "Сад цветущей сакуры", icon: "🌸", class: "bg-theme-japan", cost: 340, desc: "Лепестки сакуры и розовый закат" },
+      { id: "space", name: "Звездная обсерватория", icon: "🌌", class: "bg-theme-space", cost: 480, desc: "Бескрайний космос и туманности" }
     ];
 
+    const defaultWheelItems = [
+      "🍣 Запеченные роллы",
+      "🍕 Додо: Сырная пицца",
+      "🍰 Бенто-торт с ягодами",
+      "🍗 Rostic's Баскет",
+      "🧆 Шашлык на углях",
+      "🧇 Сладкие вафли"
+    ];
+
+    // Любимое меню Кати
     const FOOD_MENU = [
-      { id: "sushi", name: "Сет Роллов", icon: "🍣", hunger: 32, happy: 15, cost: 25 },
-      { id: "pizza", name: "Пицца Додо", icon: "🍕", hunger: 28, happy: 12, cost: 20 },
-      { id: "kfc", name: "Баскет KFC", icon: "🍗", hunger: 28, happy: 12, cost: 20 },
-      { id: "nuggets", name: "Наггетсы", icon: "🍟", hunger: 20, happy: 8, cost: 15 },
-      { id: "shake", name: "Милкшейк", icon: "🧋", hunger: 14, happy: 18, cost: 12 },
-      { id: "croissant", name: "Круассан", icon: "🥐", hunger: 12, happy: 10, cost: 10 }
+      { id: "sushi", name: "Запеченные роллы", icon: "🍣", hunger: 28, happy: 15, cost: 18 },
+      { id: "pizza", name: "Додо Пицца", icon: "🍕", hunger: 25, happy: 12, cost: 16 },
+      { id: "kfc", name: "Баскет Rostic's", icon: "🍗", hunger: 25, happy: 12, cost: 16 },
+      { id: "bento", name: "Бенто-торт", icon: "🍰", hunger: 18, happy: 20, cost: 15 },
+      { id: "earl_grey", name: "Чай Greenfield Earl Grey", icon: "🫖", hunger: 8, happy: 12, cost: 8 },
+      { id: "puer", name: "Шу Пуэр в пиале", icon: "🍵", hunger: 6, happy: 15, cost: 10 },
+      { id: "cheese", name: "Сырная тарелка", icon: "🧀", hunger: 16, happy: 14, cost: 12 },
+      { id: "chips", name: "Чипсы / Соленый арахис", icon: "🥜", hunger: 14, happy: 10, cost: 9 }
     ];
 
     const SHOP_ITEMS = [
       { id: "bow", name: "Бантик", icon: "🎀", cost: 0 },
-      { id: "glasses", name: "Очки", icon: "🕶️", cost: 30 },
-      { id: "flower", name: "Цветочек", icon: "🌸", cost: 40 },
-      { id: "crown", name: "Корона", icon: "👑", cost: 60 },
-      { id: "wizard", name: "Колпак", icon: "🧙", cost: 100 }
+      { id: "flower", name: "Цветочек", icon: "🌸", cost: 35 },
+      { id: "glasses", name: "Очки", icon: "🕶️", cost: 50 },
+      { id: "crown", name: "Корона", icon: "👑", cost: 90 },
+      { id: "wizard", name: "Колпак", icon: "🧙", cost: 130 }
+    ];
+
+    // Предметы рулетки CS:GO Кейса (редкости: Mil-Spec, Restricted, Classified, Covert, Special Gold)
+    // Обновленный пул призов с учетом расстояния до Таганрога и комфортного бюджета
+    const CASE_ITEMS = [
+      { 
+        id: "consolation", 
+        name: "Кэшбэк: 20 🪙", 
+        icon: "🪙", 
+        rarity: "blue", 
+        color: "#60a5fa", 
+        desc: "Часть монет вернулась в копилку!" 
+      },
+      { 
+        id: "cat_feast", 
+        name: "Королевский пир для Зефирки", 
+        icon: "🍱", 
+        rarity: "blue", 
+        color: "#60a5fa", 
+        desc: "Котик мгновенно сыт и счастлив на 100%!" 
+      },
+      { 
+        id: "gold_coins", 
+        name: "Мешочек золота: 50 🪙", 
+        icon: "💰", 
+        rarity: "purple", 
+        color: "#c084fc", 
+        desc: "Удачный возврат почти половины кейса!" 
+      },
+      { 
+        id: "voice_song", 
+        name: "Личный плейлист / Голосовой привет", 
+        icon: "🎵", 
+        rarity: "purple", 
+        color: "#c084fc", 
+        desc: "Алексей запишет персональное теплое голосовое или соберет треки под настроение!" 
+      },
+      { 
+        id: "cinema_night", 
+        name: "Уютный Киновечер онлайн", 
+        icon: "🎬", 
+        rarity: "pink", 
+        color: "#f472b6", 
+        desc: "Смотрите кино вместе онлайн, выбор фильма и снеки полностью за Алексеем!" 
+      },
+      { 
+        id: "argument_shield", 
+        name: "Иммунитет «Твоя безоговорочная правота»", 
+        icon: "🛡️", 
+        rarity: "pink", 
+        color: "#f472b6", 
+        desc: "Карта победы в любом шуточном споре или выбор совместной игры в Valorant без возражений!" 
+      },
+      { 
+        id: "taganrog_coffee", 
+        name: "Сладкий привет в Таганрог (Кофе + Десерт)", 
+        icon: "☕", 
+        rarity: "red", 
+        color: "#ef4444", 
+        desc: "Алексей заказывает доставку любимого кофе и десерта прямо к Кате в Таганрог!" 
+      },
+      { 
+        id: "super_taganrog_box", 
+        name: "★ СЕКРЕТНЫЙ БОКС С СЮРПРИЗОМ В ТАГАНРОГ ★", 
+        icon: "⭐", 
+        rarity: "gold", 
+        color: "#fbbf24", 
+        desc: "Золотой суперприз: посылка-сюрприз с милыми подарками и вкусняшками в пункт выдачи Кати!" 
+      }
     ];
 
     let pet = JSON.parse(localStorage.getItem(STORAGE_KEY_PET)) || defaultPetState;
     if (!pet.color) pet.color = "pink";
+    if (!pet.activeRoom) pet.activeRoom = "neon";
 
     let wheelItems = JSON.parse(localStorage.getItem(STORAGE_KEY_WHEEL)) || [...defaultWheelItems];
     let inventory = JSON.parse(localStorage.getItem(STORAGE_KEY_INV)) || ["bow"];
+    let ownedRooms = JSON.parse(localStorage.getItem(STORAGE_KEY_ROOMS)) || ["neon"];
     let poops = JSON.parse(localStorage.getItem(STORAGE_KEY_POOP)) || [];
 
     let freeFoodData = JSON.parse(localStorage.getItem(STORAGE_KEY_FREE_FOOD)) || {
@@ -786,20 +990,18 @@
     }
     function saveWheel() { localStorage.setItem(STORAGE_KEY_WHEEL, JSON.stringify(wheelItems)); }
     function saveInventory() { localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory)); }
+    function saveRooms() { localStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(ownedRooms)); }
     function savePoops() { localStorage.setItem(STORAGE_KEY_POOP, JSON.stringify(poops)); }
 
     /* =========================================================
-     * РЕДКИЙ ДРОП: КУПОН НА ЖЕЛАНИЕ С ОТПРАВКОЙ В TELEGRAM И EMAIL
+     * РЕДКИЙ ДРОП: КУПОН НА ЖЕЛАНИЕ (NERFED CHANCE 0.2%)
      * ========================================================= */
-    const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
-    const TELEGRAM_CHAT_ID = "409697238";
-
     const modalSecretWish = document.getElementById('modalSecretWish');
     const wishCouponNumber = document.getElementById('wishCouponNumber');
     const wishCouponExpiry = document.getElementById('wishCouponExpiry');
     const btnCloseWishModal = document.getElementById('btnCloseWishModal');
 
-    function checkRareWishDrop(chancePercent = 1.5) {
+    function checkRareWishDrop(chancePercent = 0.2) {
       const roll = Math.random() * 100;
       if (roll < chancePercent) {
         triggerWishDrop();
@@ -919,35 +1121,32 @@
         formData.append("chat_id", TELEGRAM_CHAT_ID);
         formData.append("photo", blob, `coupon_${couponCode}.png`);
         formData.append("caption", 
-          `💌 <b>Катя выбила Секретный Купон на Желание!</b>\n\n` +
+          `💌 <b>ВНИМАНИЕ! Катя выбила Секретный Купон на Желание!</b>\n\n` +
           `🔢 <b>Номер:</b> <code>${couponCode}</code>\n` +
-          `📅 <b>Срок действия:</b> до ${expiryStr}\n` +
-          `🐱 <b>Котик:</b> ${pet.name} (Уровень ${pet.level})\n` +
+          `📅 <b>Срок:</b> до ${expiryStr}\n` +
+          `🐱 <b>Котик:</b> ${pet.name} (Ур. ${pet.level})\n` +
           `🪙 <b>Баланс:</b> ${pet.coins} 🪙\n` +
           `⏰ <b>Дата:</b> ${new Date().toLocaleString("ru-RU")}\n\n` +
-          `<i>Купон заверен и отправлен в архив Lex Labs LLC ✨</i>`
+          `<i>Купон отправлен и сохранен в базе Lex Labs LLC ✨</i>`
         );
         formData.append("parse_mode", "HTML");
 
         fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
           method: "POST",
           body: formData
-        }).catch(err => console.log("Telegram Photo Send Error:", err));
+        }).catch(err => console.log(err));
 
         fetch("https://formsubmit.co/ajax/gabitov.aleksei@gmail.com", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({
             _subject: `🎁 Кате выпал Купон на Желание! [${couponCode}]`,
-            событие: "Катя выбила секретный купон на желание в приложении!",
             номер_купона: couponCode,
             срок_действия: `до ${expiryStr}`,
             имя_питомца: pet.name,
-            уровень: pet.level,
-            монетки: pet.coins,
             дата: new Date().toLocaleString("ru-RU")
           })
-        }).catch(err => console.log("Email dispatch:", err));
+        }).catch(err => console.log(err));
       }, 'image/png');
     }
 
@@ -964,14 +1163,13 @@
     btnCloseWishModal.addEventListener('click', () => {
       const code = wishCouponNumber.innerText || '#WISH-LUCKY';
       const expiry = wishCouponExpiry.innerText || 'Бессрочно';
-
       downloadWishCouponImage(code, expiry);
       sound.win();
       modalSecretWish.classList.add('hidden');
     });
 
     /* =========================================================
-     * UI ТАМАГОЧИ И ЛОГИКА
+     * UI И ЛОГИКА ТАМАГОЧИ
      * ========================================================= */
     const headerPetName = document.getElementById('headerPetName');
     const headerCoins = document.getElementById('headerCoins');
@@ -1013,6 +1211,7 @@
     const accFlower = document.getElementById('accFlower');
     const particlesLayer = document.getElementById('particlesLayer');
     const poopLayer = document.getElementById('poopLayer');
+    const petRoomCard = document.getElementById('petRoomCard');
 
     function applyCatColor(colorKey) {
       const palette = CAT_COLORS[colorKey] || CAT_COLORS.pink;
@@ -1023,6 +1222,12 @@
       catFootL.setAttribute('fill', palette.accent);
       catFootR.setAttribute('fill', palette.accent);
       catTail.setAttribute('stroke', palette.accent);
+    }
+
+    function applyRoomTheme(themeId) {
+      const theme = ROOM_THEMES.find(t => t.id === themeId) || ROOM_THEMES[0];
+      ROOM_THEMES.forEach(t => petRoomCard.classList.remove(t.class));
+      petRoomCard.classList.add(theme.class);
     }
 
     document.getElementById('btnRenamePet').addEventListener('click', () => {
@@ -1039,15 +1244,16 @@
       const hoursPassed = (now - lastSavedTime) / (1000 * 60 * 60);
 
       if (hoursPassed > 0.05) {
-        pet.hunger = Math.max(10, Math.round(pet.hunger - hoursPassed * 10));
-        pet.clean = Math.max(10, Math.round(pet.clean - hoursPassed * 6));
-        pet.happy = Math.max(10, Math.round(pet.happy - hoursPassed * 8));
+        // Убывание статов: сытость -12%/час, чистота -8%/час
+        pet.hunger = Math.max(5, Math.round(pet.hunger - hoursPassed * 12));
+        pet.clean = Math.max(5, Math.round(pet.clean - hoursPassed * 8));
+        pet.happy = Math.max(5, Math.round(pet.happy - hoursPassed * 9));
 
         if (pet.isSleeping) {
           pet.energy = Math.min(100, Math.round(pet.energy + hoursPassed * 25));
           if (pet.energy >= 100) pet.isSleeping = false;
         } else {
-          pet.energy = Math.max(10, Math.round(pet.energy - hoursPassed * 7));
+          pet.energy = Math.max(5, Math.round(pet.energy - hoursPassed * 8));
         }
 
         if (hoursPassed >= 2 && poops.length < 3) spawnPoop(false);
@@ -1106,6 +1312,8 @@
       }
 
       applyCatColor(pet.color);
+      applyRoomTheme(pet.activeRoom);
+
       accBow.classList.toggle('hidden', pet.activeAcc !== 'bow');
       accCrown.classList.toggle('hidden', pet.activeAcc !== 'crown');
       accGlasses.classList.toggle('hidden', pet.activeAcc !== 'glasses');
@@ -1124,10 +1332,10 @@
       if (pet.xp >= maxXp) {
         pet.xp -= maxXp;
         pet.level += 1;
-        pet.coins += 35;
+        pet.coins += 20; // нерф бонуса за уровень
         sound.win();
         confetti({ particleCount: 45, spread: 60, origin: { y: 0.5 } });
-        catSpeechBubble.innerText = `🎉 Новый ${pet.level} уровень! Награда: +35 🪙`;
+        catSpeechBubble.innerText = `🎉 Новый ${pet.level} уровень! Награда: +20 🪙`;
       }
       updatePetUI();
     }
@@ -1143,46 +1351,30 @@
       setTimeout(() => el.remove(), 800);
     }
 
-    // Вспомогательная функция: генерация случайной точки ВНЕ зоны котика
-    // Котик расположен по центру: x ~ 80..240, y ~ 60..210 внутри petRoomCard
+    // Безопасные координаты вокруг котика
     function getRandomSafeCoordinates() {
-      const w = 310;
-      const h = 260;
       let x, y;
-      
-      // 3 безопасные зоны: слева от кота, справа от кота или снизу на коврике
       const zone = Math.floor(Math.random() * 3);
       if (zone === 0) {
-        // Слева
         x = Math.floor(Math.random() * 55 + 15);
         y = Math.floor(Math.random() * 140 + 70);
       } else if (zone === 1) {
-        // Справа
         x = Math.floor(Math.random() * 55 + 240);
         y = Math.floor(Math.random() * 140 + 70);
       } else {
-        // Снизу коврика
         x = Math.floor(Math.random() * 240 + 35);
         y = Math.floor(Math.random() * 45 + 225);
       }
       return { x, y };
     }
 
-    // =========================================================
-    // КАКАШКИ (НЕ СПАВНЯТСЯ ЗА КОТОМ И ЛЕГКО УБИРАЮТСЯ)
-    // =========================================================
     function spawnPoop(playSound = true) {
       if (poops.length >= 4) return;
       const pos = getRandomSafeCoordinates();
-      const newPoop = {
-        id: Date.now() + Math.random(),
-        x: pos.x,
-        y: pos.y
-      };
-      poops.push(newPoop);
+      poops.push({ id: Date.now() + Math.random(), x: pos.x, y: pos.y });
       savePoops();
 
-      pet.clean = Math.max(10, pet.clean - 20);
+      pet.clean = Math.max(5, pet.clean - 25);
       if (playSound) {
         sound.poop();
         triggerHaptic();
@@ -1206,10 +1398,8 @@
           e.stopPropagation();
           cleanPoop(idx, p.x, p.y);
         };
-
         poopEl.addEventListener('pointerdown', handleClean);
         poopEl.addEventListener('click', handleClean);
-
         poopLayer.appendChild(poopEl);
       });
     }
@@ -1221,68 +1411,21 @@
       triggerHaptic();
 
       pet.clean = Math.min(100, pet.clean + 20);
-      pet.coins += 5;
-      addXP(5);
-      spawnFloatingText('+5 🪙 Чисто!', x, y);
-      catSpeechBubble.innerText = "«Спасибо, что убрали! Теперь чистенько и свежо! ✨»";
-
-      checkRareWishDrop(1.5);
+      pet.coins += 2; // нерф награды
+      addXP(4);
+      spawnFloatingText('+2 🪙', x, y);
+      catSpeechBubble.innerText = "«Чистенько и свежо! Спасибо за заботу! ✨»";
+      checkRareWishDrop(0.05);
       updatePetUI();
     }
-
-    // ИНТЕРАКТИВНЫЙ ЛАЗЕР (НЕ СПАВНИТСЯ ЗА КОТИКОМ)
-    document.getElementById('btnLaserToy').addEventListener('click', () => {
-      if (pet.isSleeping) return;
-      sound.playTone(800, 'sine', 0.1);
-      triggerHaptic();
-      catSpeechBubble.innerText = "«Ого! Красная точка! Лови её!» 🔴";
-
-      const laser = document.createElement('div');
-      laser.className = 'absolute w-6 h-6 rounded-full bg-red-500 shadow-[0_0_16px_#ff0000] cursor-pointer z-40 transition-all duration-300 p-2 -m-1 border-2 border-white/60';
-      
-      const initPos = getRandomSafeCoordinates();
-      laser.style.left = initPos.x + 'px';
-      laser.style.top = initPos.y + 'px';
-
-      let jumps = 0;
-      const moveLaser = () => {
-        if (jumps >= 9) {
-          laser.remove();
-          return;
-        }
-        jumps++;
-        const nextPos = getRandomSafeCoordinates();
-        laser.style.left = nextPos.x + 'px';
-        laser.style.top = nextPos.y + 'px';
-      };
-
-      const catchLaser = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        sound.pop();
-        triggerHaptic();
-        pet.coins += 2;
-        pet.happy = Math.min(100, pet.happy + 6);
-        spawnFloatingText('Поймал! +2 🪙', parseFloat(laser.style.left), parseFloat(laser.style.top));
-        moveLaser();
-        updatePetUI();
-      };
-
-      laser.addEventListener('pointerdown', catchLaser);
-      laser.addEventListener('click', catchLaser);
-
-      poopLayer.appendChild(laser);
-      const interval = setInterval(moveLaser, 750);
-      setTimeout(() => { clearInterval(interval); laser.remove(); }, 6500);
-    });
 
     document.getElementById('catTapZone').addEventListener('click', (e) => {
       if (pet.isSleeping) return;
       sound.purr();
       triggerHaptic();
 
-      pet.happy = Math.min(100, pet.happy + 3);
-      addXP(3);
+      pet.happy = Math.min(100, pet.happy + 2);
+      addXP(2);
 
       const rect = particlesLayer.getBoundingClientRect();
       const clickX = e.clientX - rect.left - 15;
@@ -1296,7 +1439,7 @@
         "«Муррр... Покрутишь рулетку вкусняшек?» 🍣"
       ];
       catSpeechBubble.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-      checkRareWishDrop(0.5);
+      checkRareWishDrop(0.01);
       updatePetUI();
     });
 
@@ -1305,8 +1448,8 @@
       triggerHaptic();
       pet.isSleeping = !pet.isSleeping;
       if (pet.isSleeping) {
-        pet.energy = Math.min(100, pet.energy + 20);
-        addXP(5);
+        pet.energy = Math.min(100, pet.energy + 15);
+        addXP(4);
       }
       updatePetUI();
     });
@@ -1317,8 +1460,8 @@
       triggerHaptic();
 
       pet.clean = Math.min(100, pet.clean + 25);
-      pet.happy = Math.min(100, pet.happy + 5);
-      addXP(8);
+      pet.happy = Math.min(100, pet.happy + 4);
+      addXP(6);
       catSpeechBubble.innerText = `«Буль-буль! ${pet.name} весь в пене и вкусно пахнет!» 🫧`;
 
       for (let i = 0; i < 7; i++) {
@@ -1384,8 +1527,8 @@
       triggerHaptic();
 
       pet.hunger = Math.min(100, pet.hunger + 8);
-      pet.happy = Math.min(100, pet.happy + 5);
-      addXP(5);
+      pet.happy = Math.min(100, pet.happy + 4);
+      addXP(4);
       spawnFloatingText('🥣 +8%', 100, 70);
       catSpeechBubble.innerText = `«Ням! Домашний творожок очень полезен!» 😋`;
 
@@ -1401,7 +1544,7 @@
 
       FOOD_MENU.forEach(item => {
         const el = document.createElement('div');
-        el.className = 'bg-[#181825] border border-[#313244] p-2.5 rounded-2xl flex flex-col items-center justify-between gap-1';
+        el.className = 'bg-[#181825] border border-[#313244] p-2 rounded-2xl flex flex-col items-center justify-between gap-1';
         el.innerHTML = `
           <span class="text-3xl">${item.icon}</span>
           <div class="text-center">
@@ -1421,21 +1564,22 @@
       if (!item) return;
 
       if (pet.coins < item.cost) {
-        alert("Не хватает монеток! Сыграй в Тетрис или Мур-Раннер 🎮");
+        alert("Не хватает монеток! Сыграй в игры на бирже труда 🎮");
         return;
       }
 
       pet.coins -= item.cost;
+      analytics.spentCoins += item.cost;
       pet.hunger = Math.min(100, pet.hunger + item.hunger);
       pet.happy = Math.min(100, pet.happy + item.happy);
-      addXP(item.cost);
+      addXP(Math.round(item.cost * 0.8));
       sound.feed();
       triggerHaptic();
 
       spawnFloatingText(`${item.icon} +${item.hunger}%`, 100, 70);
       catSpeechBubble.innerText = `«Муррр! ${item.name} — это просто объедение!» 🤤`;
 
-      if (Math.random() < 0.4) setTimeout(() => spawnPoop(true), 3000);
+      if (Math.random() < 0.35) setTimeout(() => spawnPoop(true), 3000);
 
       renderFoodShop();
       updatePetUI();
@@ -1450,7 +1594,7 @@
       modalWork.classList.remove('hidden');
     });
 
-    // 1. КЭТ-ТЕТРИС
+    // 1. ТЕТРИС
     const modalTetris = document.getElementById('modalTetris');
     const tetrisCanvas = document.getElementById('tetrisCanvas');
     const tCtx = tetrisCanvas.getContext('2d');
@@ -1459,13 +1603,8 @@
     const btnStartTetris = document.getElementById('btnStartTetris');
     const closeTetrisBtn = document.getElementById('closeTetrisBtn');
 
-    const T_COLS = 10;
-    const T_ROWS = 18;
-    const T_BLOCK = 20;
-    let tetrisBoard = [];
-    let tetrisScore = 0;
-    let tetrisTimer = null;
-    let curPiece = null;
+    const T_COLS = 10, T_ROWS = 18, T_BLOCK = 20;
+    let tetrisBoard = [], tetrisScore = 0, tetrisTimer = null, curPiece = null;
 
     const SHAPES = [
       { color: '#f38ba8', blocks: [[1,1,1,1]] },
@@ -1482,12 +1621,7 @@
       modalTetris.classList.remove('hidden');
       tetrisOverlay.classList.remove('hidden');
     });
-
-    closeTetrisBtn.addEventListener('click', () => {
-      clearInterval(tetrisTimer);
-      modalTetris.classList.add('hidden');
-    });
-
+    closeTetrisBtn.addEventListener('click', () => { clearInterval(tetrisTimer); modalTetris.classList.add('hidden'); });
     btnStartTetris.addEventListener('click', startTetrisGame);
 
     function startTetrisGame() {
@@ -1503,15 +1637,8 @@
 
     function spawnTetrisPiece() {
       const p = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-      curPiece = {
-        x: 3,
-        y: 0,
-        blocks: p.blocks,
-        color: p.color
-      };
-      if (checkTetrisCollision(0, 0, curPiece.blocks)) {
-        endTetrisGame();
-      }
+      curPiece = { x: 3, y: 0, blocks: p.blocks, color: p.color };
+      if (checkTetrisCollision(0, 0, curPiece.blocks)) endTetrisGame();
     }
 
     function checkTetrisCollision(dx, dy, shape) {
@@ -1548,7 +1675,6 @@
             if (cell) tetrisBoard[curPiece.y + ri][curPiece.x + ci] = curPiece.color;
           });
         });
-
         let lines = 0;
         for (let r = T_ROWS - 1; r >= 0; r--) {
           if (tetrisBoard[r].every(c => c !== 0)) {
@@ -1561,10 +1687,9 @@
         if (lines > 0) {
           sound.pop();
           triggerHaptic();
-          tetrisScore += lines * 20;
+          tetrisScore += lines * 15;
           tetrisScoreText.innerText = `Счет: ${tetrisScore}`;
         }
-
         spawnTetrisPiece();
       }
       drawTetris();
@@ -1573,7 +1698,6 @@
     function drawTetris() {
       tCtx.fillStyle = '#181825';
       tCtx.fillRect(0, 0, tetrisCanvas.width, tetrisCanvas.height);
-
       for (let r = 0; r < T_ROWS; r++) {
         for (let c = 0; c < T_COLS; c++) {
           if (tetrisBoard[r][c]) {
@@ -1582,14 +1706,11 @@
           }
         }
       }
-
       if (curPiece) {
         tCtx.fillStyle = curPiece.color;
         curPiece.blocks.forEach((row, ri) => {
           row.forEach((cell, ci) => {
-            if (cell) {
-              tCtx.fillRect((curPiece.x + ci) * T_BLOCK, (curPiece.y + ri) * T_BLOCK, T_BLOCK - 1, T_BLOCK - 1);
-            }
+            if (cell) tCtx.fillRect((curPiece.x + ci) * T_BLOCK, (curPiece.y + ri) * T_BLOCK, T_BLOCK - 1, T_BLOCK - 1);
           });
         });
       }
@@ -1598,10 +1719,11 @@
     function endTetrisGame() {
       clearInterval(tetrisTimer);
       sound.win();
-      confetti({ particleCount: 35, spread: 60 });
-      const earned = Math.max(15, Math.floor(tetrisScore / 2));
+      confetti({ particleCount: 30, spread: 60 });
+      // Понерфленная награда
+      const earned = Math.min(25, Math.max(8, Math.floor(tetrisScore / 3)));
       pet.coins += earned;
-      pet.energy = Math.max(10, pet.energy - 15);
+      pet.energy = Math.max(5, pet.energy - 15);
       addXP(earned);
 
       tetrisOverlay.classList.remove('hidden');
@@ -1614,16 +1736,12 @@
         </button>
       `;
       document.getElementById('btnRestartTetris').addEventListener('click', startTetrisGame);
-      checkRareWishDrop(2.0);
+      checkRareWishDrop(0.5);
       updatePetUI();
     }
 
-    document.getElementById('btnTetrisLeft').addEventListener('click', () => {
-      if (curPiece && !checkTetrisCollision(-1, 0, curPiece.blocks)) { curPiece.x--; sound.tick(); drawTetris(); }
-    });
-    document.getElementById('btnTetrisRight').addEventListener('click', () => {
-      if (curPiece && !checkTetrisCollision(1, 0, curPiece.blocks)) { curPiece.x++; sound.tick(); drawTetris(); }
-    });
+    document.getElementById('btnTetrisLeft').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(-1, 0, curPiece.blocks)) { curPiece.x--; sound.tick(); drawTetris(); } });
+    document.getElementById('btnTetrisRight').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(1, 0, curPiece.blocks)) { curPiece.x++; sound.tick(); drawTetris(); } });
     document.getElementById('btnTetrisRotate').addEventListener('click', rotateTetris);
     document.getElementById('btnTetrisDown').addEventListener('click', () => { updateTetris(); });
 
@@ -1636,26 +1754,14 @@
     const btnStartRunner = document.getElementById('btnStartRunner');
     const closeRunnerBtn = document.getElementById('closeRunnerBtn');
 
-    let runnerLane = 1;
-    let runnerCoins = 0;
-    let runnerObstacles = [];
-    let runnerCoinsMap = [];
-    let runnerLoop = null;
-    let isRunnerRunning = false;
-    let runnerSpeed = 3.2;
+    let runnerLane = 1, runnerCoins = 0, runnerObstacles = [], runnerCoinsMap = [], runnerLoop = null, isRunnerRunning = false;
 
     document.getElementById('btnJobRunner').addEventListener('click', () => {
       modalWork.classList.add('hidden');
       modalRunner.classList.remove('hidden');
       runnerOverlay.classList.remove('hidden');
     });
-
-    closeRunnerBtn.addEventListener('click', () => {
-      isRunnerRunning = false;
-      cancelAnimationFrame(runnerLoop);
-      modalRunner.classList.add('hidden');
-    });
-
+    closeRunnerBtn.addEventListener('click', () => { isRunnerRunning = false; cancelAnimationFrame(runnerLoop); modalRunner.classList.add('hidden'); });
     btnStartRunner.addEventListener('click', startRunnerGame);
 
     function startRunnerGame() {
@@ -1664,7 +1770,6 @@
       runnerCoins = 0;
       runnerObstacles = [];
       runnerCoinsMap = [];
-      runnerSpeed = 3.5;
       isRunnerRunning = true;
       runnerScoreText.innerText = "🪙 0";
 
@@ -1672,8 +1777,7 @@
 
       function loop(now) {
         if (!isRunnerRunning) return;
-
-        if (now - lastSpawn > 900) {
+        if (now - lastSpawn > 920) {
           lastSpawn = now;
           const lane = Math.floor(Math.random() * 3);
           if (Math.random() < 0.6) {
@@ -1685,7 +1789,6 @@
 
         rCtx.fillStyle = '#11111b';
         rCtx.fillRect(0, 0, runnerCanvas.width, runnerCanvas.height);
-
         rCtx.strokeStyle = '#313244';
         rCtx.lineWidth = 2;
         rCtx.beginPath();
@@ -1700,9 +1803,8 @@
 
         for (let i = runnerObstacles.length - 1; i >= 0; i--) {
           const obs = runnerObstacles[i];
-          obs.y += runnerSpeed;
+          obs.y += 3.4;
           rCtx.fillText(obs.type, obs.lane * 80 + 40, obs.y);
-
           if (obs.lane === runnerLane && obs.y > 275 && obs.y < 325) {
             endRunnerGame();
             return;
@@ -1712,9 +1814,8 @@
 
         for (let i = runnerCoinsMap.length - 1; i >= 0; i--) {
           const c = runnerCoinsMap[i];
-          c.y += runnerSpeed;
+          c.y += 3.4;
           rCtx.fillText("🪙", c.lane * 80 + 40, c.y);
-
           if (c.lane === runnerLane && c.y > 275 && c.y < 325) {
             runnerCoins++;
             sound.pop();
@@ -1725,7 +1826,6 @@
             runnerCoinsMap.splice(i, 1);
           }
         }
-
         runnerLoop = requestAnimationFrame(loop);
       }
       runnerLoop = requestAnimationFrame(loop);
@@ -1735,10 +1835,10 @@
       isRunnerRunning = false;
       cancelAnimationFrame(runnerLoop);
       sound.win();
-      confetti({ particleCount: 35, spread: 60 });
-      const earned = Math.max(15, runnerCoins * 2);
+      confetti({ particleCount: 30, spread: 60 });
+      const earned = Math.min(22, Math.max(8, runnerCoins));
       pet.coins += earned;
-      pet.energy = Math.max(10, pet.energy - 15);
+      pet.energy = Math.max(5, pet.energy - 15);
       addXP(earned);
 
       runnerOverlay.classList.remove('hidden');
@@ -1751,16 +1851,12 @@
         </button>
       `;
       document.getElementById('btnRestartRunner').addEventListener('click', startRunnerGame);
-      checkRareWishDrop(2.0);
+      checkRareWishDrop(0.4);
       updatePetUI();
     }
 
-    document.getElementById('btnRunnerLeft').addEventListener('click', () => {
-      if (runnerLane > 0) { runnerLane--; sound.tick(); }
-    });
-    document.getElementById('btnRunnerRight').addEventListener('click', () => {
-      if (runnerLane < 2) { runnerLane++; sound.tick(); }
-    });
+    document.getElementById('btnRunnerLeft').addEventListener('click', () => { if (runnerLane > 0) { runnerLane--; sound.tick(); } });
+    document.getElementById('btnRunnerRight').addEventListener('click', () => { if (runnerLane < 2) { runnerLane++; sound.tick(); } });
 
     // 3. КУРЬЕР
     const modalMiniGame = document.getElementById('modalMiniGame');
@@ -1771,89 +1867,62 @@
     const gameTimerText = document.getElementById('gameTimerText');
     const closeMiniGameBtn = document.getElementById('closeMiniGameBtn');
 
-    let gameScore = 0;
-    let gameTimeLeft = 15;
-    let gameInterval = null;
-    let isGameRunning = false;
+    let gameScore = 0, gameTimeLeft = 15, gameInterval = null, isGameRunning = false;
 
     document.getElementById('btnJobCatcher').addEventListener('click', () => {
       modalWork.classList.add('hidden');
       modalMiniGame.classList.remove('hidden');
       gameStartOverlay.classList.remove('hidden');
     });
-
-    closeMiniGameBtn.addEventListener('click', () => {
-      stopMiniGame();
-      modalMiniGame.classList.add('hidden');
-    });
-
+    closeMiniGameBtn.addEventListener('click', () => { stopMiniGame(); modalMiniGame.classList.add('hidden'); });
     btnStartGame.addEventListener('click', startMiniGame);
 
     function startMiniGame() {
       gameStartOverlay.classList.add('hidden');
-      gameScore = 0;
-      gameTimeLeft = 15;
-      isGameRunning = true;
-      gameScoreText.innerText = `Счет: 0`;
-      gameTimerText.innerText = `${gameTimeLeft}с`;
+      gameScore = 0; gameTimeLeft = 15; isGameRunning = true;
+      gameScoreText.innerText = `Счет: 0`; gameTimerText.innerText = `15с`;
 
       gameInterval = setInterval(() => {
         gameTimeLeft--;
         gameTimerText.innerText = `${gameTimeLeft}с`;
         if (gameTimeLeft <= 0) endMiniGame();
       }, 1000);
-
       spawnGameFood();
     }
 
     function spawnGameFood() {
       if (!isGameRunning) return;
       const emojis = ["🍣", "🍕", "🍤", "🍗", "🍓", "🧁"];
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-
       const item = document.createElement('div');
       item.className = 'absolute cursor-pointer text-4xl select-none active:scale-125 transition-transform';
-      item.innerText = emoji;
-
-      const maxX = miniGameCanvas.clientWidth - 50;
-      const maxY = miniGameCanvas.clientHeight - 60;
-      item.style.left = Math.floor(Math.random() * maxX) + 'px';
-      item.style.top = Math.floor(Math.random() * maxY) + 'px';
+      item.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      item.style.left = Math.floor(Math.random() * (miniGameCanvas.clientWidth - 50)) + 'px';
+      item.style.top = Math.floor(Math.random() * (miniGameCanvas.clientHeight - 60)) + 'px';
 
       item.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
-        sound.pop();
-        triggerHaptic();
+        sound.pop(); triggerHaptic();
         gameScore++;
         gameScoreText.innerText = `Счет: ${gameScore}`;
         item.remove();
         spawnGameFood();
       });
-
       miniGameCanvas.appendChild(item);
-
-      setTimeout(() => {
-        if (item.parentNode) {
-          item.remove();
-          if (isGameRunning) spawnGameFood();
-        }
-      }, 1050);
+      setTimeout(() => { if (item.parentNode) { item.remove(); if (isGameRunning) spawnGameFood(); } }, 1050);
     }
 
     function stopMiniGame() {
-      isGameRunning = false;
-      clearInterval(gameInterval);
-      const items = miniGameCanvas.querySelectorAll('.text-4xl');
-      items.forEach(it => it.remove());
+      isGameRunning = false; clearInterval(gameInterval);
+      miniGameCanvas.querySelectorAll('.text-4xl').forEach(it => it.remove());
     }
 
     function endMiniGame() {
       stopMiniGame();
       sound.win();
-      confetti({ particleCount: 30, spread: 60 });
-      const earnedCoins = gameScore * 2;
+      confetti({ particleCount: 25, spread: 60 });
+      const earnedCoins = Math.min(16, Math.max(8, Math.floor(gameScore * 1.2)));
       pet.coins += earnedCoins;
-      pet.energy = Math.max(10, pet.energy - 12);
+      pet.energy = Math.max(5, pet.energy - 12);
       addXP(earnedCoins);
 
       gameStartOverlay.classList.remove('hidden');
@@ -1866,7 +1935,7 @@
         </button>
       `;
       document.getElementById('btnRestartGame').addEventListener('click', startMiniGame);
-      checkRareWishDrop(1.5);
+      checkRareWishDrop(0.3);
       updatePetUI();
     }
 
@@ -1879,105 +1948,79 @@
     const rhythmTimerText = document.getElementById('rhythmTimerText');
     const closeRhythmBtn = document.getElementById('closeRhythmBtn');
 
-    let rhythmScore = 0;
-    let rhythmTimeLeft = 15;
-    let rhythmInterval = null;
-    let isRhythmRunning = false;
+    let rhythmScore = 0, rhythmTimeLeft = 15, rhythmInterval = null, isRhythmRunning = false;
 
     document.getElementById('btnJobRhythm').addEventListener('click', () => {
       modalWork.classList.add('hidden');
       modalRhythmGame.classList.remove('hidden');
       rhythmStartOverlay.classList.remove('hidden');
     });
-
-    closeRhythmBtn.addEventListener('click', () => {
-      stopRhythmGame();
-      modalRhythmGame.classList.add('hidden');
-    });
-
+    closeRhythmBtn.addEventListener('click', () => { stopRhythmGame(); modalRhythmGame.classList.add('hidden'); });
     btnStartRhythm.addEventListener('click', startRhythmGame);
 
     function startRhythmGame() {
       rhythmStartOverlay.classList.add('hidden');
-      rhythmScore = 0;
-      rhythmTimeLeft = 15;
-      isRhythmRunning = true;
-      rhythmScoreText.innerText = `Донаты: 0 🪙`;
-      rhythmTimerText.innerText = `${rhythmTimeLeft}с`;
+      rhythmScore = 0; rhythmTimeLeft = 15; isRhythmRunning = true;
+      rhythmScoreText.innerText = `Донаты: 0 🪙`; rhythmTimerText.innerText = `15с`;
 
       rhythmInterval = setInterval(() => {
         rhythmTimeLeft--;
         rhythmTimerText.innerText = `${rhythmTimeLeft}с`;
         if (rhythmTimeLeft <= 0) endRhythmGame();
       }, 1000);
-
       spawnRhythmTarget();
     }
 
     function spawnRhythmTarget() {
       if (!isRhythmRunning) return;
-
       const target = document.createElement('div');
       target.className = 'absolute w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 border-2 border-white flex items-center justify-center text-xl cursor-pointer active:scale-90 transition-transform shadow-[0_0_15px_#f472b6]';
       target.innerText = '🐾';
-
-      const maxX = rhythmCanvas.clientWidth - 70;
-      const maxY = rhythmCanvas.clientHeight - 70;
-      target.style.left = Math.floor(Math.random() * maxX) + 'px';
-      target.style.top = Math.floor(Math.random() * maxY) + 'px';
+      target.style.left = Math.floor(Math.random() * (rhythmCanvas.clientWidth - 70)) + 'px';
+      target.style.top = Math.floor(Math.random() * (rhythmCanvas.clientHeight - 70)) + 'px';
 
       target.addEventListener('pointerdown', (e) => {
         e.stopPropagation();
         sound.playTone(520 + Math.random() * 200, 'triangle', 0.1, 0.2);
         triggerHaptic();
-        rhythmScore += 2;
+        rhythmScore++;
         rhythmScoreText.innerText = `Донаты: ${rhythmScore} 🪙`;
         target.remove();
         spawnRhythmTarget();
       });
-
       rhythmCanvas.appendChild(target);
-
-      setTimeout(() => {
-        if (target.parentNode) {
-          target.remove();
-          if (isRhythmRunning) spawnRhythmTarget();
-        }
-      }, 950);
+      setTimeout(() => { if (target.parentNode) { target.remove(); if (isRhythmRunning) spawnRhythmTarget(); } }, 950);
     }
 
     function stopRhythmGame() {
-      isRhythmRunning = false;
-      clearInterval(rhythmInterval);
-      const targets = rhythmCanvas.querySelectorAll('.w-14');
-      targets.forEach(t => t.remove());
+      isRhythmRunning = false; clearInterval(rhythmInterval);
+      rhythmCanvas.querySelectorAll('.w-14').forEach(t => t.remove());
     }
 
     function endRhythmGame() {
       stopRhythmGame();
       sound.win();
-      confetti({ particleCount: 35, spread: 60 });
-      pet.coins += rhythmScore;
-      pet.energy = Math.max(10, pet.energy - 12);
-      addXP(rhythmScore);
+      confetti({ particleCount: 30, spread: 60 });
+      const earned = Math.min(20, Math.max(10, rhythmScore));
+      pet.coins += earned;
+      pet.energy = Math.max(5, pet.energy - 12);
+      addXP(earned);
 
       rhythmStartOverlay.classList.remove('hidden');
       rhythmStartOverlay.innerHTML = `
         <span class="text-4xl">🎙️</span>
         <h4 class="cute-font text-purple-300 font-bold text-base">Стрим завершен!</h4>
-        <p class="text-xs text-gray-300">Зрители в восторге от лапок!<br>Собрано донатов: <b class="text-amber-300">+${rhythmScore} 🪙</b></p>
+        <p class="text-xs text-gray-300">Зрители в восторге от лапок!<br>Собрано донатов: <b class="text-amber-300">+${earned} 🪙</b></p>
         <button id="btnRestartRhythm" class="cute-font bg-purple-500 hover:bg-purple-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-2">
           НОВЫЙ СТРИМ 🎙️
         </button>
       `;
       document.getElementById('btnRestartRhythm').addEventListener('click', startRhythmGame);
-      checkRareWishDrop(1.5);
+      checkRareWishDrop(0.3);
       updatePetUI();
     }
 
-    // =========================================================
-    // БЕСКОНЕЧНЫЙ ДЗЕН-КЛИКЕР
-    // =========================================================
+    // ДЗЕН-КЛИКЕР
     const modalZen = document.getElementById('modalZen');
     const zenTapArea = document.getElementById('zenTapArea');
     const zenTotalClicks = document.getElementById('zenTotalClicks');
@@ -1985,28 +2028,19 @@
     const zenParticlesLayer = document.getElementById('zenParticlesLayer');
     const zenEmoji = document.getElementById('zenEmoji');
 
-    let zenClicks = 0;
-    let zenCombo = 1;
-    let zenComboTimer = null;
+    let zenClicks = 0, zenCombo = 1, zenComboTimer = null;
 
-    document.getElementById('btnZenClicker').addEventListener('click', () => {
-      modalZen.classList.remove('hidden');
-    });
+    document.getElementById('btnZenClicker').addEventListener('click', () => { modalZen.classList.remove('hidden'); });
 
     zenTapArea.addEventListener('pointerdown', (e) => {
       zenClicks++;
       zenTotalClicks.innerText = zenClicks;
-
       clearTimeout(zenComboTimer);
       zenCombo = Math.min(10, zenCombo + 1);
       zenComboText.innerText = `Мур-комбо: x${zenCombo} 🔥`;
-      zenComboTimer = setTimeout(() => {
-        zenCombo = 1;
-        zenComboText.innerText = `Комбо: x1`;
-      }, 1600);
+      zenComboTimer = setTimeout(() => { zenCombo = 1; zenComboText.innerText = `Комбо: x1`; }, 1600);
 
-      sound.purr();
-      triggerHaptic();
+      sound.purr(); triggerHaptic();
 
       zenEmoji.style.transform = `scale(${1 + zenCombo * 0.04}) rotate(${(Math.random() - 0.5) * 15}deg)`;
       setTimeout(() => zenEmoji.style.transform = 'scale(1) rotate(0deg)', 150);
@@ -2021,140 +2055,290 @@
       setTimeout(() => p.remove(), 700);
 
       pet.happy = Math.min(100, pet.happy + 1);
+      checkRareWishDrop(0.005);
 
-      checkRareWishDrop(0.8);
-
-      if (zenClicks % 50 === 0) {
+      if (zenClicks % 80 === 0) {
         sound.win();
-        confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 } });
-        const bonusCoins = 15 + Math.floor(Math.random() * 15);
+        confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
+        const bonusCoins = 10 + Math.floor(Math.random() * 8);
         pet.coins += bonusCoins;
-        alert(`🎁 ЗОЛОТОЙ СУНДУЧОК ДЗЕНА!\nКотик так счастлив от почесушек, что дарит вам +${bonusCoins} 🪙!`);
+        alert(`🎁 МАЛЕНЬКИЙ СУНДУЧОК ДЗЕНА!\nКотик так счастлив от почесушек, что дарит вам +${bonusCoins} 🪙!`);
         updatePetUI();
       }
     });
 
     // =========================================================
-    // ГАРДЕРОБ И СМЕНА ЦВЕТА ШЕРСТКИ
+    // ГАРДЕРОБ, ЦВЕТА И ДОРОГИЕ ИНТЕРЬЕРЫ
     // =========================================================
     const modalWardrobe = document.getElementById('modalWardrobe');
     const shopItemsContainer = document.getElementById('wardrobeAccSection');
+    const wardrobeRoomsSection = document.getElementById('wardrobeRoomsSection');
     const wardrobeColorSection = document.getElementById('wardrobeColorSection');
     const shopCoinsVal = document.getElementById('shopCoinsVal');
 
     const tabWardrobeAccs = document.getElementById('tabWardrobeAccs');
+    const tabWardrobeRooms = document.getElementById('tabWardrobeRooms');
     const tabWardrobeColors = document.getElementById('tabWardrobeColors');
 
-    tabWardrobeAccs.addEventListener('click', () => {
-      tabWardrobeAccs.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition";
-      tabWardrobeColors.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
-      shopItemsContainer.classList.remove('hidden');
+    function resetWardrobeTabs() {
+      [tabWardrobeAccs, tabWardrobeRooms, tabWardrobeColors].forEach(t => {
+        t.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]";
+      });
+      shopItemsContainer.classList.add('hidden');
+      wardrobeRoomsSection.classList.add('hidden');
       wardrobeColorSection.classList.add('hidden');
+    }
+
+    tabWardrobeAccs.addEventListener('click', () => {
+      resetWardrobeTabs();
+      tabWardrobeAccs.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
+      shopItemsContainer.classList.remove('hidden');
+    });
+
+    tabWardrobeRooms.addEventListener('click', () => {
+      resetWardrobeTabs();
+      tabWardrobeRooms.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
+      wardrobeRoomsSection.classList.remove('hidden');
+      renderRoomsShop();
     });
 
     tabWardrobeColors.addEventListener('click', () => {
-      tabWardrobeColors.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition";
-      tabWardrobeAccs.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition";
+      resetWardrobeTabs();
+      tabWardrobeColors.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
       wardrobeColorSection.classList.remove('hidden');
-      shopItemsContainer.classList.add('hidden');
       renderColorShop();
     });
 
     document.getElementById('btnWardrobe').addEventListener('click', () => {
       renderShop();
+      renderRoomsShop();
       renderColorShop();
       modalWardrobe.classList.remove('hidden');
     });
+
+    // Логика покупки и выбора обоев
+    function renderRoomsShop() {
+      wardrobeRoomsSection.innerHTML = '';
+      ROOM_THEMES.forEach(room => {
+        const isOwned = ownedRooms.includes(room.id);
+        const isActive = pet.activeRoom === room.id;
+
+        const row = document.createElement('div');
+        row.className = `p-2.5 rounded-2xl flex items-center justify-between border ${
+          isActive ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'
+        }`;
+
+        let btnHtml = '';
+        if (isActive) {
+          btnHtml = `<span class="text-[11px] font-extrabold text-pink-400">Включено ✓</span>`;
+        } else if (isOwned) {
+          btnHtml = `<button class="px-3 py-1 rounded-lg bg-pink-500/80 text-[11px] font-bold text-white active:scale-95" onclick="setRoomTheme('${room.id}')">Включить</button>`;
+        } else {
+          btnHtml = `<button class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-[11px] font-bold text-[#11111b] active:scale-95" onclick="buyRoomTheme('${room.id}', ${room.cost})">${room.cost} 🪙</button>`;
+        }
+
+        row.innerHTML = `
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">${room.icon}</span>
+            <div>
+              <div class="text-xs font-bold text-gray-200">${room.name}</div>
+              <div class="text-[10px] text-gray-400">${room.desc}</div>
+            </div>
+          </div>
+          ${btnHtml}
+        `;
+        wardrobeRoomsSection.appendChild(row);
+      });
+    }
+
+    window.buyRoomTheme = function(roomId, cost) {
+      if (pet.coins < cost) {
+        alert("Не хватает монеток! На эту роскошную локацию придется подкопить в мини-играх ✨");
+        return;
+      }
+      sound.win();
+      pet.coins -= cost;
+      analytics.spentCoins += cost;
+      ownedRooms.push(roomId);
+      pet.activeRoom = roomId;
+      saveRooms();
+      renderRoomsShop();
+      updatePetUI();
+    };
+
+    window.setRoomTheme = function(roomId) {
+      sound.pop();
+      pet.activeRoom = roomId;
+      renderRoomsShop();
+      updatePetUI();
+    };
 
     function renderColorShop() {
       wardrobeColorSection.innerHTML = '';
       Object.keys(CAT_COLORS).forEach(cKey => {
         const c = CAT_COLORS[cKey];
         const isCurrent = pet.color === cKey;
-
         const row = document.createElement('div');
-        row.className = `p-2.5 rounded-2xl flex items-center justify-between border ${
-          isCurrent ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'
-        }`;
-
+        row.className = `p-2.5 rounded-2xl flex items-center justify-between border ${isCurrent ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'}`;
         row.innerHTML = `
           <div class="flex items-center gap-2.5">
             <div class="w-6 h-6 rounded-full border border-white/50" style="background-color: ${c.hex}"></div>
             <span class="text-xs font-bold text-gray-200">${c.label}</span>
           </div>
-          ${
-            isCurrent
-              ? '<span class="text-[11px] font-extrabold text-pink-400">Выбрано ✓</span>'
-              : `<button class="px-3 py-1 rounded-lg bg-[#313244] hover:bg-pink-500 text-[11px] font-bold text-white transition active:scale-95" onclick="selectCatColor('${cKey}')">Выбрать</button>`
-          }
+          ${isCurrent ? '<span class="text-[11px] font-extrabold text-pink-400">Выбрано ✓</span>' : `<button class="px-3 py-1 rounded-lg bg-[#313244] hover:bg-pink-500 text-[11px] font-bold text-white transition active:scale-95" onclick="selectCatColor('${cKey}')">Выбрать</button>`}
         `;
         wardrobeColorSection.appendChild(row);
       });
     }
 
     window.selectCatColor = function(colorKey) {
-      sound.pop();
-      pet.color = colorKey;
-      renderColorShop();
-      updatePetUI();
+      sound.pop(); pet.color = colorKey; renderColorShop(); updatePetUI();
     };
 
     function renderShop() {
       shopCoinsVal.innerText = pet.coins;
       shopItemsContainer.innerHTML = '';
-
       SHOP_ITEMS.forEach(item => {
         const isOwned = inventory.includes(item.id);
         const isEquipped = pet.activeAcc === item.id;
-
         const el = document.createElement('div');
-        el.className = `p-3 rounded-2xl flex flex-col items-center justify-between gap-1 border transition ${
-          isEquipped ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'
-        }`;
-
-        let actionBtnHtml = '';
-        if (isEquipped) {
-          actionBtnHtml = `<span class="text-[11px] font-extrabold text-pink-400">Надето ✓</span>`;
-        } else if (isOwned) {
-          actionBtnHtml = `<button class="w-full py-1 rounded-lg bg-pink-500/80 text-[11px] font-bold text-white active:scale-95" onclick="equipItem('${item.id}')">Надеть</button>`;
-        } else {
-          actionBtnHtml = `<button class="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-[11px] font-bold text-[#11111b] active:scale-95" onclick="buyItem('${item.id}', ${item.cost})">${item.cost} 🪙</button>`;
-        }
-
-        el.innerHTML = `
-          <span class="text-3xl">${item.icon}</span>
-          <span class="text-xs font-bold">${item.name}</span>
-          ${actionBtnHtml}
-        `;
+        el.className = `p-3 rounded-2xl flex flex-col items-center justify-between gap-1 border transition ${isEquipped ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'}`;
+        let actionBtnHtml = isEquipped ? `<span class="text-[11px] font-extrabold text-pink-400">Надето ✓</span>` : isOwned ? `<button class="w-full py-1 rounded-lg bg-pink-500/80 text-[11px] font-bold text-white active:scale-95" onclick="equipItem('${item.id}')">Надеть</button>` : `<button class="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-[11px] font-bold text-[#11111b] active:scale-95" onclick="buyItem('${item.id}', ${item.cost})">${item.cost} 🪙</button>`;
+        el.innerHTML = `<span class="text-3xl">${item.icon}</span><span class="text-xs font-bold">${item.name}</span>${actionBtnHtml}`;
         shopItemsContainer.appendChild(el);
       });
     }
 
     window.buyItem = function(id, cost) {
-      if (pet.coins < cost) {
-        alert("Не хватает монеток! Отправь котика на работу 💼");
+      if (pet.coins < cost) { alert("Не хватает монеток! Отправь котика на работу 💼"); return; }
+      sound.win(); pet.coins -= cost; analytics.spentCoins += cost; inventory.push(id); pet.activeAcc = id;
+      saveInventory(); renderShop(); updatePetUI();
+    };
+
+    window.equipItem = function(id) { sound.pop(); pet.activeAcc = id; renderShop(); updatePetUI(); };
+    document.getElementById('btnRemoveAcc').addEventListener('click', () => { pet.activeAcc = 'none'; renderShop(); updatePetUI(); });
+
+    // =========================================================
+    // CS:GO КЕЙС С ГОРИЗОНТАЛЬНОЙ РУЛЕТКОЙ И ТЕЛЕГРАМ-ОТЧЕТАМИ
+    // =========================================================
+    const modalCsgoCase = document.getElementById('modalCsgoCase');
+    const caseRouletteTrack = document.getElementById('caseRouletteTrack');
+    const btnOpenCase = document.getElementById('btnOpenCase');
+    const caseWonBanner = document.getElementById('caseWonBanner');
+    const caseWonTitle = document.getElementById('caseWonTitle');
+    const caseWonDesc = document.getElementById('caseWonDesc');
+
+    let isCaseSpinning = false;
+
+    document.getElementById('btnCsgoCase').addEventListener('click', () => {
+      buildCaseRouletteItems();
+      caseWonBanner.classList.add('hidden');
+      modalCsgoCase.classList.remove('hidden');
+    });
+
+    function buildCaseRouletteItems() {
+      caseRouletteTrack.style.transition = 'none';
+      caseRouletteTrack.style.transform = 'translateX(0px)';
+      caseRouletteTrack.innerHTML = '';
+
+      // Создаем ленту из 60 карточек
+      for (let i = 0; i < 60; i++) {
+        const item = CASE_ITEMS[Math.floor(Math.random() * CASE_ITEMS.length)];
+        const card = document.createElement('div');
+        card.className = `flex-shrink-0 w-20 h-20 bg-[#1e1e2e] rounded-xl flex flex-col items-center justify-center p-1 border-b-4`;
+        card.style.borderColor = item.color;
+        card.innerHTML = `<span class="text-2xl">${item.icon}</span><span class="text-[9px] text-gray-300 font-bold truncate max-w-[70px] mt-1">${item.name}</span>`;
+        caseRouletteTrack.appendChild(card);
+      }
+    }
+
+    btnOpenCase.addEventListener('click', () => {
+      if (isCaseSpinning) return;
+      if (pet.coins < 120) {
+        alert("Для открытия кейса нужно 120 🪙! Подкопи монеток в мини-играх ✨");
         return;
       }
-      sound.win();
-      pet.coins -= cost;
-      inventory.push(id);
-      pet.activeAcc = id;
-      saveInventory();
-      renderShop();
-      updatePetUI();
-    };
 
-    window.equipItem = function(id) {
-      sound.pop();
-      pet.activeAcc = id;
-      renderShop();
+      pet.coins -= 120;
+      analytics.spentCoins += 120;
+      analytics.casesOpened++;
       updatePetUI();
-    };
 
-    document.getElementById('btnRemoveAcc').addEventListener('click', () => {
-      pet.activeAcc = 'none';
-      renderShop();
-      updatePetUI();
+      isCaseSpinning = true;
+      btnOpenCase.disabled = true;
+      caseWonBanner.classList.add('hidden');
+      sound.tick();
+
+      // Расчет шансов сбалансирован: суперприз редкий, но достижимый
+      const rand = Math.random() * 100;
+      let winningItem;
+      if (rand < 2.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "super_taganrog_box"); // 2% Золотой бокс
+      } else if (rand < 10.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "taganrog_coffee");    // 8% Кофе с доставкой
+      } else if (rand < 22.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "argument_shield");   // 12% Иммунитет в споре
+      } else if (rand < 37.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "cinema_night");      // 15% Онлайн-кино
+      } else if (rand < 55.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "voice_song");        // 18% Трек / голосовое
+      } else if (rand < 75.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "gold_coins");        // 20% 50 монет
+      } else if (rand < 90.0) {
+        winningItem = CASE_ITEMS.find(i => i.id === "cat_feast");         // 15% Корм для котика
+      } else {
+        winningItem = CASE_ITEMS.find(i => i.id === "consolation");       // 10% 20 монет
+      }
+
+      // Помещаем выигранный предмет на 45-ю позицию
+      const winningIndex = 44;
+      const cards = caseRouletteTrack.children;
+      if (cards[winningIndex]) {
+        cards[winningIndex].style.borderColor = winningItem.color;
+        cards[winningIndex].innerHTML = `<span class="text-2xl">${winningItem.icon}</span><span class="text-[9px] text-gray-300 font-bold truncate max-w-[70px] mt-1">${winningItem.name}</span>`;
+      }
+
+      // Анимация прокрутки
+      const cardWidthWithGap = 88; // 80px + 8px gap
+      const offset = (winningIndex * cardWidthWithGap) - 150 + (cardWidthWithGap / 2) + (Math.random() * 20 - 10);
+
+      caseRouletteTrack.style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)';
+      caseRouletteTrack.style.transform = `translateX(-${offset}px)`;
+
+      // Тики рулетки
+      let tickInterval = setInterval(() => sound.tick(), 140);
+      setTimeout(() => { clearInterval(tickInterval); tickInterval = setInterval(() => sound.tick(), 280); }, 2800);
+      setTimeout(() => { clearInterval(tickInterval); tickInterval = setInterval(() => sound.tick(), 450); }, 4000);
+
+      setTimeout(() => {
+        clearInterval(tickInterval);
+        isCaseSpinning = false;
+        btnOpenCase.disabled = false;
+        sound.win();
+        confetti({ particleCount: 50, spread: 70 });
+
+        caseWonTitle.innerText = `${winningItem.icon} ${winningItem.name}`;
+        caseWonTitle.style.color = winningItem.color;
+        caseWonDesc.innerText = winningItem.desc;
+        caseWonBanner.classList.remove('hidden');
+
+        // Применение бонусов
+        if (winningItem.id === "consolation") { pet.coins += 20; }
+        if (winningItem.id === "gold_coins") { pet.coins += 50; }
+        if (winningItem.id === "cat_feast") { pet.hunger = 100; pet.happy = 100; }
+        updatePetUI();
+
+        // Отправка отчета в Telegram
+        const tgCaseMsg = 
+          `📦 <b>Катя открыла Кейс Фортуны CS:GO!</b>\n\n` +
+          `🎁 <b>Выигрыш:</b> ${winningItem.icon} <b>${winningItem.name}</b>\n` +
+          `ℹ️ <i>${winningItem.desc}</i>\n` +
+          `💰 Баланс: ${pet.coins} 🪙\n` +
+          `🐱 Статус котика: ${pet.name} (Ур. ${pet.level})\n` +
+          `⏰ Время: ${new Date().toLocaleString("ru-RU")}`;
+
+        sendTelegramLog(tgCaseMsg);
+      }, 5200);
     });
 
     // ЕЖЕДНЕВНЫЙ БОНУС
@@ -2173,7 +2357,7 @@
       } else {
         btnDailyBonus.classList.add('opacity-50');
         const remainingHours = Math.ceil((oneDay - diff) / (1000 * 60 * 60));
-        dailyBonusLabel.innerText = `⏳ Через ${remainingHours}ч`;
+        dailyBonusLabel.innerText = `⏳ ${remainingHours}ч`;
       }
     }
 
@@ -2190,19 +2374,18 @@
 
       localStorage.setItem(STORAGE_KEY_BONUS, now);
       sound.win();
-      pet.coins += 40;
-      pet.happy = Math.min(100, pet.happy + 25);
-      addXP(20);
-      confetti({ particleCount: 45, spread: 60, origin: { y: 0.6 } });
-      catSpeechBubble.innerText = "«Ежедневный подарок: +40 🪙 в копилку!» 🎁";
-
-      checkRareWishDrop(3.0);
+      pet.coins += 15; // Понерфленный бонус
+      pet.happy = Math.min(100, pet.happy + 20);
+      addXP(15);
+      confetti({ particleCount: 35, spread: 60, origin: { y: 0.6 } });
+      catSpeechBubble.innerText = "«Ежедневный бонус: +15 🪙 в копилочку!» 🎁";
+      checkRareWishDrop(0.25);
       updatePetUI();
     });
 
     document.querySelectorAll('.closeModalBtn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('#modalFeed, #modalWork, #modalWardrobe, #modalWheelSettings, #modalMiniGame, #modalRhythmGame, #modalZen, #modalTetris, #modalRunner').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('#modalFeed, #modalWork, #modalWardrobe, #modalWheelSettings, #modalMiniGame, #modalRhythmGame, #modalZen, #modalTetris, #modalRunner, #modalCsgoCase').forEach(m => m.classList.add('hidden'));
       });
     });
 
@@ -2214,23 +2397,13 @@
     const btnSpinWheel = document.getElementById('btnSpinWheel');
     const rouletteResultText = document.getElementById('rouletteResultText');
 
-    const PALETTE = [
-      "#FF5E57", "#FFA940", "#FFD53F",
-      "#1DD1A1", "#48DBFB", "#9B59B6",
-      "#FF6B81", "#54A0FF", "#10AC84"
-    ];
-
-    let currentAngle = 0;
-    let isSpinning = false;
+    const PALETTE = ["#FF5E57", "#FFA940", "#FFD53F", "#1DD1A1", "#48DBFB", "#9B59B6", "#FF6B81", "#54A0FF", "#10AC84"];
+    let currentAngle = 0, isSpinning = false;
 
     function drawWheel() {
-      const w = canvas.width;
-      const h = canvas.height;
-      const cx = w / 2;
-      const cy = h / 2;
-      const radius = cx - 18;
-      const count = wheelItems.length;
-      const arc = (2 * Math.PI) / count;
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2, radius = cx - 18;
+      const count = wheelItems.length, arc = (2 * Math.PI) / count;
 
       ctx.clearRect(0, 0, w, h);
       if (count === 0) return;
@@ -2238,14 +2411,12 @@
       for (let i = 0; i < count; i++) {
         const start = currentAngle + i * arc;
         const end = start + arc;
-
         ctx.beginPath();
         ctx.fillStyle = PALETTE[i % PALETTE.length];
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, radius, start, end);
         ctx.closePath();
         ctx.fill();
-
         ctx.strokeStyle = "#181825";
         ctx.lineWidth = 5;
         ctx.stroke();
@@ -2253,7 +2424,6 @@
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(start + arc / 2);
-
         ctx.fillStyle = "#ffffff";
         ctx.shadowColor = "rgba(0,0,0,0.7)";
         ctx.shadowBlur = 4;
@@ -2264,7 +2434,6 @@
         let text = wheelItems[i];
         if (text.length > 15) text = text.slice(0, 13) + "..";
         ctx.fillText(text, radius - 28, 0);
-
         ctx.restore();
       }
 
@@ -2275,7 +2444,6 @@
       ctx.strokeStyle = "#f38ba8";
       ctx.lineWidth = 5;
       ctx.stroke();
-
       ctx.fillStyle = "#f38ba8";
       ctx.font = "22px sans-serif";
       ctx.textAlign = "center";
@@ -2294,13 +2462,11 @@
       const targetRot = startRot + extraRounds + Math.random() * 2 * Math.PI;
       const duration = 4800;
       const startTime = performance.now();
-
       let lastTickSector = -1;
 
       function animate(time) {
         const elapsed = time - startTime;
         const progress = Math.min(elapsed / duration, 1);
-
         const easeOut = 1 - Math.pow(1 - progress, 3);
         currentAngle = startRot + (targetRot - startRot) * easeOut;
 
@@ -2310,7 +2476,6 @@
           triggerHaptic();
           lastTickSector = currentSector;
         }
-
         drawWheel();
 
         if (progress < 1) {
@@ -2321,32 +2486,24 @@
           finalizeWinner();
         }
       }
-
       requestAnimationFrame(animate);
     }
 
     function finalizeWinner() {
-      const count = wheelItems.length;
-      const arc = (2 * Math.PI) / count;
+      const count = wheelItems.length, arc = (2 * Math.PI) / count;
       const pointerAngle = (3 * Math.PI) / 2;
       const normalized = (pointerAngle - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
       const index = Math.floor(normalized / arc) % count;
       const winner = wheelItems[index];
 
       sound.win();
-      confetti({
-        particleCount: 75,
-        spread: 80,
-        origin: { y: 0.55 },
-        colors: ['#fab387', '#f38ba8', '#a6e3a1', '#89b4fa']
-      });
-
+      confetti({ particleCount: 75, spread: 80, origin: { y: 0.55 }, colors: ['#fab387', '#f38ba8', '#a6e3a1', '#89b4fa'] });
       rouletteResultText.innerHTML = `🎉 Сегодня заказываем:<br><span class="text-pink-400 text-base font-black">${winner}</span>!`;
 
-      pet.coins += 30;
-      pet.happy = Math.min(100, pet.happy + 20);
-      addXP(20);
-      checkRareWishDrop(1.5);
+      pet.coins += 8; // Понерфленный бонус
+      pet.happy = Math.min(100, pet.happy + 15);
+      addXP(15);
+      checkRareWishDrop(0.08);
       updatePetUI();
     }
 
@@ -2367,33 +2524,22 @@
       wheelItems.forEach((item, idx) => {
         const row = document.createElement('div');
         row.className = 'flex items-center justify-between bg-[#181825] border border-[#313244] px-3 py-2 rounded-xl text-xs';
-        row.innerHTML = `
-          <span class="truncate pr-2">${item}</span>
-          <button class="text-rose-400 hover:text-rose-300 font-bold px-1" onclick="deleteWheelItem(${idx})">✕</button>
-        `;
+        row.innerHTML = `<span class="truncate pr-2">${item}</span><button class="text-rose-400 hover:text-rose-300 font-bold px-1" onclick="deleteWheelItem(${idx})">✕</button>`;
         settingsWheelList.appendChild(row);
       });
     }
 
     window.deleteWheelItem = function(idx) {
-      if (wheelItems.length <= 2) {
-        alert("Оставь минимум 2 варианта!");
-        return;
-      }
+      if (wheelItems.length <= 2) { alert("Оставь минимум 2 варианта!"); return; }
       wheelItems.splice(idx, 1);
-      saveWheel();
-      renderWheelSettingsList();
-      drawWheel();
+      saveWheel(); renderWheelSettingsList(); drawWheel();
     };
 
     btnAddWheelItem.addEventListener('click', () => {
       const val = inputNewItem.value.trim();
       if (val) {
         wheelItems.push(val);
-        saveWheel();
-        inputNewItem.value = '';
-        renderWheelSettingsList();
-        drawWheel();
+        saveWheel(); inputNewItem.value = ''; renderWheelSettingsList(); drawWheel();
       }
     });
 
@@ -2431,12 +2577,12 @@
       if (pet.isSleeping) {
         pet.energy = Math.min(100, pet.energy + 2);
       } else {
-        pet.hunger = Math.max(10, pet.hunger - 1);
-        pet.happy = Math.max(10, pet.happy - 1);
-        pet.energy = Math.max(10, pet.energy - 1);
-        pet.clean = Math.max(10, pet.clean - 1);
+        pet.hunger = Math.max(5, pet.hunger - 1);
+        pet.happy = Math.max(5, pet.happy - 1);
+        pet.energy = Math.max(5, pet.energy - 1);
+        pet.clean = Math.max(5, pet.clean - 1);
 
-        if (pet.hunger > 40 && Math.random() < 0.15) spawnPoop(true);
+        if (pet.hunger > 35 && Math.random() < 0.12) spawnPoop(true);
       }
       updatePetUI();
     }, 30000);
