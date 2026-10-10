@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Рулетка вкусняшек для Кати</title>
+  <style>
+    :root {
+      --bg: #11111b;
+      --card-bg: #1e1e2e;
+      --sub-bg: #181825;
+      --accent: #fab387;
+      --accent-hover: #f5c2e7;
+      --text: #cdd6f4;
+      --highlight: #f9e2af;
+      --danger: #f38ba8;
+      --success: #a6e3a1;
+      --border: #313244;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .wheel-box {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      width: 340px;
+      height: 340px;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 24px solid var(--danger);
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+      z-index: 5;
+    }
+
+    .result-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      width: 100%;
+      text-align: center;
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--highlight);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-spin {
+      background-color: var(--accent);
+      color: #11111b;
+    }
+
+    .btn-spin:disabled {
+      background-color: #585b70;
+      color: #a6adc8;
+      cursor: not-allowed;
+    }
+
+    .btn-settings {
+      background-color: var(--border);
+      color: var(--text);
+      font-size: 14px;
+      padding: 11px;
+    }
+
+    /* Модальное окно */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .items-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--sub-bg);
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0 6px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background-color: var(--sub-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .btn-add {
+      background-color: var(--border);
+      color: var(--text);
+      border: none;
+      border-radius: 8px;
+      padding: 0 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-save {
+      background-color: var(--success);
+      color: #11111b;
+      font-weight: 700;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="wheel-box">
+      <div class="pointer"></div>
+      <canvas id="wheelCanvas" width="680" height="680"></canvas>
+    </div>
+
+    <div class="result-card" id="resultLabel">Нажми кнопку, чтобы выбрать ужин! 👇</div>
+
+    <button class="btn btn-spin" id="spinBtn">КРУТИТЬ РУЛЕТКУ 🎰</button>
+    <button class="btn btn-settings" id="settingsBtn">Изменить список вариантов</button>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-title">Варианты в рулетке</div>
+      <div class="items-list" id="itemsList"></div>
+      
+      <div class="input-row">
+        <input type="text" id="newItemInput" placeholder="Новая вкусняшка...">
+        <button class="btn-add" id="addItemBtn">Добавить</button>
+      </div>
+
+      <button class="btn-save" id="closeSettingsBtn">Готово</button>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_ITEMS = [
+      "🍣 Запеченные роллы",
+      "🍕 Додо Пицца",
+      "🍰 Бенто-торт / Раф",
+      "🍗 Rostic's Баскет",
+      "🧆 Шашлык / Люля",
+      "🥞 Сладкие вафли"
+    ];
+
+    const COLORS = [
+      "#FF4D4D", "#FF9F1A", "#FFD32A",
+      "#05C46B", "#0FBCF9", "#8854D0",
+      "#F53B57", "#3C40C6", "#00D8D6"
+    ];
+
+    let items = JSON.parse(localStorage.getItem("kate_wheel_items")) || [...DEFAULT_ITEMS];
+    let currentAngle = 0;
+    let isSpinning = false;
+
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+    const resultLabel = document.getElementById("resultLabel");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const modalOverlay = document.getElementById("modalOverlay");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const itemsList = document.getElementById("itemsList");
+    const newItemInput = document.getElementById("newItemInput");
+    const addItemBtn = document.getElementById("addItemBtn");
+
+    function saveItems() {
+      localStorage.setItem("kate_wheel_items", JSON.stringify(items));
+    }
+
+    function drawWheel() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const radius = w / 2 - 20;
+      const cx = w / 2;
+      const cy = h / 2;
+      const count = items.length;
+      const arc = (2 * Math.PI) / count;
+
+      ctx.clearRect(0, 0, w, h);
+
+      if (count === 0) return;
+
+      // Отрисовка секторов
+      for (let i = 0; i < count; i++) {
+        const start = currentAngle + i * arc;
+        const end = start + arc;
+
+        ctx.beginPath();
+        ctx.fillStyle = COLORS[i % COLORS.length];
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, start, end);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#181825";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Текст сектора
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(start + arc / 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 24px -apple-system, sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        
+        let label = items[i];
+        if (label.length > 17) label = label.slice(0, 15) + "..";
+        ctx.fillText(label, radius - 40, 0);
+        ctx.restore();
+      }
+
+      // Центральный хаб
+      ctx.beginPath();
+      ctx.arc(cx, cy, 45, 0, 2 * Math.PI);
+      ctx.fillStyle = "#181825";
+      ctx.fill();
+      ctx.strokeStyle = "#cdd6f4";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    }
+
+    function spin() {
+      if (isSpinning || items.length < 2) return;
+      isSpinning = true;
+      spinBtn.disabled = true;
+      settingsBtn.disabled = true;
+      resultLabel.innerText = "Барабан крутится... ⏳";
+
+      // Плавное вращение с кубическим замедлением
+      const startRot = currentAngle;
+      const extraRounds = (5 + Math.random() * 4) * 2 * Math.PI;
+      const targetRot = startRot + extraRounds + Math.random() * 2 * Math.PI;
+      const duration = 4500;
+      const startTime = performance.now();
+
+      function animate(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing: Out Cubic
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentAngle = startRot + (targetRot - startRot) * easeOut;
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          spinBtn.disabled = false;
+          settingsBtn.disabled = false;
+          evaluateWinner();
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function evaluateWinner() {
+      const count = items.length;
+      const arc = (2 * Math.PI) / count;
+      // Стрелка сверху: угол 3*PI/2 (270 градусов)
+      const pointerAngle = (3 * Math.PI) / 2;
+      const normalized = (pointerAngle - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
+      const index = Math.floor(normalized / arc) % count;
+      resultLabel.innerText = `🎉 Выпало: ${items[index]}`;
+    }
+
+    // Редактор вариантов
+    function renderList() {
+      itemsList.innerHTML = "";
+      items.forEach((item, idx) => {
+        const row = document.createElement("div");
+        row.className = "item-row";
+        row.innerHTML = `
+          <span>${item}</span>
+          <button class="btn-del" onclick="deleteItem(${idx})">✕</button>
+        `;
+        itemsList.appendChild(row);
+      });
+    }
+
+    window.deleteItem = function(idx) {
+      if (items.length <= 2) {
+        alert("Должно остаться минимум 2 варианта!");
+        return;
+      }
+      items.splice(idx, 1);
+      saveItems();
+      renderList();
+      drawWheel();
+    };
+
+    addItemBtn.onclick = () => {
+      const val = newItemInput.value.trim();
+      if (val) {
+        items.push(val);
+        saveItems();
+        newItemInput.value = "";
+        renderList();
+        drawWheel();
+      }
+    };
+
+    settingsBtn.onclick = () => {
+      renderList();
+      modalOverlay.classList.add("active");
+    };
+
+    closeSettingsBtn.onclick = () => {
+      modalOverlay.classList.remove("active");
+    };
+
+    spinBtn.onclick = spin;
+
+    drawWheel();
+  </script>
+</body>
+</html>
