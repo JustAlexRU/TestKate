@@ -78,9 +78,7 @@
 
   <main class="w-full max-w-md px-4 pt-3 flex-1 flex flex-col items-center justify-between">
 
-    <!-- ========================================== -->
-    <!-- TAB 1: ТАМАГОЧИ                            -->
-    <!-- ========================================== -->
+    <!-- TAB 1: ТАМАГОЧИ -->
     <section id="tabPet" class="flex flex-col gap-3 w-full">
       <header class="w-full py-2 px-1 flex items-center justify-between border-b border-[#313244]/60">
         <div class="flex items-center gap-2">
@@ -90,7 +88,7 @@
               <h1 id="headerPetName" class="cute-font text-sm font-bold text-pink-300">Зефирка</h1>
               <button id="btnRenamePet" class="text-xs text-gray-400 hover:text-pink-300 active:scale-90 transition">✏️</button>
             </div>
-            <!-- Секретный вход в дашборд: тройной клик по числу уровня -->
+            <!-- Секретный вход: тройной клик по уровню открывает дашборд -->
             <p class="text-[11px] text-gray-400">Уровень <span id="headerLevel" class="text-amber-300 font-bold cursor-pointer select-none">1</span></p>
           </div>
         </div>
@@ -215,7 +213,7 @@
         </div>
       </div>
 
-      <!-- Шкалы жизненных параметров -->
+      <!-- Шкалы параметров -->
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
@@ -258,7 +256,7 @@
         </div>
       </div>
 
-      <!-- Основные действия -->
+      <!-- Действия -->
       <div class="grid grid-cols-4 gap-2">
         <button id="btnActionFeed" class="bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] rounded-2xl p-2 flex flex-col items-center gap-0.5 active:scale-95 transition shadow">
           <span class="text-2xl">🍱</span>
@@ -295,9 +293,7 @@
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- TAB 2: РУЛЕТКА                             -->
-    <!-- ========================================== -->
+    <!-- TAB 2: РУЛЕТКА -->
     <section id="tabRoulette" class="hidden flex-col gap-3 w-full items-center justify-center my-auto">
       <div class="w-full text-center py-1">
         <h2 class="cute-font text-base font-extrabold text-pink-300">🎰 Рулетка вкусностей</h2>
@@ -397,11 +393,11 @@
           <div class="flex items-center gap-2.5 text-left">
             <span class="text-3xl">🏃</span>
             <div>
-              <div class="text-xs font-bold text-pink-200">Мур-Раннер (Subway)</div>
-              <div class="text-[10px] text-gray-400">Беги по 3 полосам, уворачивайся!</div>
+              <div class="text-xs font-bold text-pink-200">Мур-Раннер: Subway Cat</div>
+              <div class="text-[10px] text-gray-400">Псевдо-3D, свайпы, прыжки, поезда!</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+10-22 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+10-25 🪙</span>
         </button>
 
         <button id="btnJobCatcher" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -462,34 +458,48 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: МУР-РАННЕР -->
-  <div id="modalRunner" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3">
+  <!-- МОДАЛКА: МУР-РАННЕР (3D) -->
+  <div id="modalRunner" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3 select-none">
     <div class="w-full max-w-xs flex justify-between items-center pt-1">
       <div class="flex items-center gap-1.5">
         <span class="text-lg">🏃</span>
-        <span class="cute-font text-pink-300 font-bold text-xs">Мур-Раннер</span>
+        <span class="cute-font text-pink-300 font-bold text-xs">Subway Cat 🐾</span>
       </div>
-      <div class="flex items-center gap-2">
-        <span id="runnerScoreText" class="font-bold text-amber-300 text-xs">🪙 0</span>
+      <div class="flex items-center gap-3">
+        <span id="runnerShieldIcon" class="hidden text-xs">🛹 Щит!</span>
+        <span id="runnerMagnetIcon" class="hidden text-xs animate-bounce">🧲 Магнит!</span>
+        <span id="runnerScoreText" class="font-black text-amber-300 text-xs">🪙 0</span>
         <button id="closeRunnerBtn" class="text-gray-400 hover:text-white text-base">✕</button>
       </div>
     </div>
 
-    <div class="relative bg-[#181825] border-2 border-[#313244] rounded-2xl overflow-hidden shadow-2xl my-auto">
-      <canvas id="runnerCanvas" width="240" height="360" class="block"></canvas>
-      <div id="runnerOverlay" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center p-3 text-center">
-        <span class="text-4xl animate-bounce">🐱</span>
-        <h4 class="cute-font text-pink-300 font-bold text-sm mt-1">Беги, Зефирка!</h4>
-        <p class="text-[11px] text-gray-400 mt-1 mb-3">Уворачивайся от преград и собирай монетки на 3 полосах!</p>
-        <button id="btnStartRunner" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-xl text-xs active:scale-95 transition">
-          ПОБЕЖАЛИ ✨
+    <div class="relative bg-[#0d0d16] border-2 border-pink-500/40 rounded-3xl overflow-hidden shadow-2xl my-auto w-full max-w-xs h-[420px]">
+      <canvas id="runnerCanvas" width="300" height="420" class="w-full h-full block"></canvas>
+
+      <div id="runnerOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-4 text-center">
+        <span class="text-5xl animate-bounce">🐱🛹</span>
+        <h4 class="cute-font text-pink-300 font-bold text-base mt-2">Мур-Раннер: Subway Cat</h4>
+        <p class="text-[11px] text-gray-300 mt-2 mb-4 leading-relaxed">
+          Беги по 3 путям метро!<br>
+          <b>Свайп ВВЕРХ (⬆️)</b> — Прыжок через барьеры<br>
+          <b>Свайп ВНИЗ (⬇️)</b> — Подкат под шлагбаумами<br>
+          <b>Влево / Вправо</b> — Смена полосы и уворот от поездов
+        </p>
+        <button id="btnStartRunner" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-3 px-8 rounded-2xl text-xs active:scale-95 transition shadow-[0_0_20px_#ec4899]">
+          ПОГНАЛИ! 🚀
         </button>
       </div>
     </div>
 
-    <div class="w-full max-w-xs flex justify-between gap-2 pb-1">
-      <button id="btnRunnerLeft" class="flex-1 py-3 bg-[#1e1e2e] border border-[#313244] rounded-xl text-xl active:scale-90 transition">⬅️ Влево</button>
-      <button id="btnRunnerRight" class="flex-1 py-3 bg-[#1e1e2e] border border-[#313244] rounded-xl text-xl active:scale-90 transition">Вправо ➡️</button>
+    <div class="w-full max-w-xs flex flex-col gap-1.5 pb-1">
+      <div class="flex justify-center">
+        <button id="btnCtrlJump" class="w-24 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬆️ Прыжок</button>
+      </div>
+      <div class="flex justify-between gap-2">
+        <button id="btnCtrlLeft" class="flex-1 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬅️ Влево</button>
+        <button id="btnCtrlSlide" class="flex-1 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬇️ Подкат</button>
+        <button id="btnCtrlRight" class="flex-1 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">Вправо ➡️</button>
+      </div>
     </div>
   </div>
 
@@ -574,7 +584,7 @@
     <div class="pb-3 text-[10px] text-gray-500">Релакс-режим без таймеров и ограничений</div>
   </div>
 
-  <!-- МОДАЛКА: МАГАЗИН (ГАРДЕРОБ + ЦВЕТА + ЛОКАЦИИ) -->
+  <!-- МОДАЛКА: МАГАЗИН -->
   <div id="modalWardrobe" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -601,7 +611,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: CS:GO КЕЙС С РУЛЕТКОЙ -->
+  <!-- МОДАЛКА: CS:GO КЕЙС -->
   <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
     <div class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-[0_0_35px_rgba(245,158,11,0.4)]">
       <div class="w-full flex justify-between items-center">
@@ -732,10 +742,17 @@
     }
 
     /* =========================================================
-     * КОНФИГУРАЦИЯ TELEGRAM
+     * КОНФИГУРАЦИЯ TELEGRAM И ОБЛАКА JSONBIN
      * ========================================================= */
     const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
     const TELEGRAM_CHAT_ID = "409697238";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentUser = urlParams.get('user') || localStorage.getItem('active_player_profile') || 'katya';
+    localStorage.setItem('active_player_profile', currentUser);
+
+    const JSONBIN_BIN_ID = "6acb3d30ac6210605a272eb6";
+    const JSONBIN_API_KEY = "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
 
     function sendTelegramLog(message) {
       fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -747,6 +764,44 @@
           parse_mode: "HTML"
         })
       }).catch(err => console.log(err));
+    }
+
+    // Синхронизация с облаком JSONBin
+let cloudSyncTimer = null;
+    function syncToCloud() {
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(async () => {
+        try {
+          // 1. Сначала читаем текущее общее состояние облака
+          const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+            headers: { "X-Master-Key": JSONBIN_API_KEY }
+          });
+          const cloudData = await getRes.json();
+          const rootRecord = cloudData.record || {};
+
+          // 2. Обновляем ТОЛЬКО свой профиль (katya или alex)
+          rootRecord[currentUser] = {
+            pet: pet,
+            analytics: analytics,
+            wishes: wishesVault,
+            caseHistory: caseHistory,
+            audit: JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIT)) || [],
+            lastActive: new Date().toLocaleString("ru-RU")
+          };
+
+          // 3. Отправляем обновленный JSON обратно
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": JSONBIN_API_KEY
+            },
+            body: JSON.stringify(rootRecord)
+          });
+        } catch (err) {
+          console.log("Cloud sync error:", err);
+        }
+      }, 1200);
     }
 
     /* =========================================================
@@ -774,6 +829,7 @@
       });
       if (logs.length > 250) logs.shift();
       localStorage.setItem(STORAGE_KEY_AUDIT, JSON.stringify(logs));
+      syncToCloud();
     }
 
     const defaultPetState = {
@@ -833,11 +889,12 @@
     }
     analytics.sessionsCount++;
     localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
-    logAuditEvent(`Запуск приложения (Сессия #${analytics.sessionsCount})`, '🚪');
+    logAuditEvent(`Запуск игры (Сессия #${analytics.sessionsCount})`, '🚪');
 
     setInterval(() => {
       analytics.totalSecondsPlayed += 10;
       localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
+      if (analytics.totalSecondsPlayed % 60 === 0) syncToCloud();
     }, 10000);
 
     const ROOM_THEMES = [
@@ -905,11 +962,12 @@
     function savePet() {
       localStorage.setItem(STORAGE_KEY_PET, JSON.stringify(pet));
       localStorage.setItem(STORAGE_KEY_TIME, Date.now());
+      syncToCloud();
     }
-    function saveWheel() { localStorage.setItem(STORAGE_KEY_WHEEL, JSON.stringify(wheelItems)); }
-    function saveInventory() { localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory)); }
-    function saveRooms() { localStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(ownedRooms)); }
-    function savePoops() { localStorage.setItem(STORAGE_KEY_POOP, JSON.stringify(poops)); }
+    function saveWheel() { localStorage.setItem(STORAGE_KEY_WHEEL, JSON.stringify(wheelItems)); syncToCloud(); }
+    function saveInventory() { localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory)); syncToCloud(); }
+    function saveRooms() { localStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(ownedRooms)); syncToCloud(); }
+    function savePoops() { localStorage.setItem(STORAGE_KEY_POOP, JSON.stringify(poops)); syncToCloud(); }
 
     /* =========================================================
      * СЕКРЕТНЫЙ ВХОД В ДАШБОРД (ТРОЙНОЙ КЛИК ПО УРОВНЮ)
@@ -1007,6 +1065,7 @@
       });
       localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishesVault));
       logAuditEvent(`Выбит Купон на желание ${couponCode} (${sourceName})`, '💌');
+      syncToCloud();
 
       const canvasEl = generateCouponCanvas(couponCode, `Действителен до: ${expiryStr}`);
 
@@ -1652,120 +1711,409 @@
     document.getElementById('btnTetrisRotate').addEventListener('click', rotateTetris);
     document.getElementById('btnTetrisDown').addEventListener('click', () => { updateTetris(); });
 
-    // 2. МУР-РАННЕР
+    // =========================================================
+    // 2. МУР-РАННЕР: SUBWAY CAT (ПСЕВДО-3D)
+    // =========================================================
     const modalRunner = document.getElementById('modalRunner');
     const runnerCanvas = document.getElementById('runnerCanvas');
     const rCtx = runnerCanvas.getContext('2d');
     const runnerScoreText = document.getElementById('runnerScoreText');
+    const runnerShieldIcon = document.getElementById('runnerShieldIcon');
+    const runnerMagnetIcon = document.getElementById('runnerMagnetIcon');
     const runnerOverlay = document.getElementById('runnerOverlay');
     const btnStartRunner = document.getElementById('btnStartRunner');
     const closeRunnerBtn = document.getElementById('closeRunnerBtn');
 
-    let runnerLane = 1, runnerCoins = 0, runnerObstacles = [], runnerCoinsMap = [], runnerLoop = null, isRunnerRunning = false;
+    const btnCtrlJump = document.getElementById('btnCtrlJump');
+    const btnCtrlSlide = document.getElementById('btnCtrlSlide');
+    const btnCtrlLeft = document.getElementById('btnCtrlLeft');
+    const btnCtrlRight = document.getElementById('btnCtrlRight');
+
+    let isRunnerRunning = false;
+    let runnerAnimFrame = null;
+    let runnerCoins = 0;
+    let runnerSpeed = 0.0055;
+
+    let playerTargetLane = 0;
+    let playerX = 0;
+    let playerY = 0;
+    let isJumping = false;
+    let isSliding = false;
+    let jumpVelocity = 0;
+    let slideTimer = 0;
+
+    let hasShield = false;
+    let magnetTime = 0;
+
+    let trackObjects = [];
+    let trackOffset = 0;
 
     document.getElementById('btnJobRunner').addEventListener('click', () => {
       modalWork.classList.add('hidden');
       modalRunner.classList.remove('hidden');
       runnerOverlay.classList.remove('hidden');
-      logAuditEvent('Запустила Мур-Раннер (Subway)', '🏃');
+      logAuditEvent('Запустила Мур-Раннер: Subway Cat', '🏃');
     });
-    closeRunnerBtn.addEventListener('click', () => { isRunnerRunning = false; cancelAnimationFrame(runnerLoop); modalRunner.classList.add('hidden'); });
-    btnStartRunner.addEventListener('click', startRunnerGame);
 
-    function startRunnerGame() {
+    closeRunnerBtn.addEventListener('click', () => {
+      isRunnerRunning = false;
+      cancelAnimationFrame(runnerAnimFrame);
+      modalRunner.classList.add('hidden');
+    });
+
+    btnStartRunner.addEventListener('click', startSubwayGame);
+
+    function startSubwayGame() {
       runnerOverlay.classList.add('hidden');
-      runnerLane = 1;
-      runnerCoins = 0;
-      runnerObstacles = [];
-      runnerCoinsMap = [];
       isRunnerRunning = true;
+      runnerCoins = 0;
+      runnerSpeed = 0.0055; // Плавная комфортная скорость
+      playerTargetLane = 0;
+      playerX = 0;
+      playerY = 0;
+      isJumping = false;
+      isSliding = false;
+      jumpVelocity = 0;
+      slideTimer = 0;
+      hasShield = false;
+      magnetTime = 0;
+      trackObjects = [];
+      trackOffset = 0;
+
       runnerScoreText.innerText = "🪙 0";
+      runnerShieldIcon.classList.add('hidden');
+      runnerMagnetIcon.classList.add('hidden');
 
-      let lastSpawn = performance.now();
+      let lastSpawnTime = performance.now();
 
-      function loop(now) {
+      function gameLoop(now) {
         if (!isRunnerRunning) return;
-        if (now - lastSpawn > 920) {
-          lastSpawn = now;
-          const lane = Math.floor(Math.random() * 3);
-          if (Math.random() < 0.6) {
-            runnerObstacles.push({ lane, y: -40, type: ['🚧', '📦', '🐕'][Math.floor(Math.random() * 3)] });
-          } else {
-            runnerCoinsMap.push({ lane, y: -40 });
-          }
+
+        // Появление препятствий раз в 2.2 секунды, чтобы успевать реагировать
+        if (now - lastSpawnTime > 2200) {
+          lastSpawnTime = now;
+          spawnTrackRow();
         }
 
-        rCtx.fillStyle = '#11111b';
-        rCtx.fillRect(0, 0, runnerCanvas.width, runnerCanvas.height);
-        rCtx.strokeStyle = '#313244';
-        rCtx.lineWidth = 2;
-        rCtx.beginPath();
-        rCtx.moveTo(80, 0); rCtx.lineTo(80, 360);
-        rCtx.moveTo(160, 0); rCtx.lineTo(160, 360);
-        rCtx.stroke();
+        updateSubwayGame();
+        drawSubwayGame();
 
-        const playerX = runnerLane * 80 + 40;
-        rCtx.font = "28px sans-serif";
-        rCtx.textAlign = "center";
-        rCtx.fillText("🐱", playerX, 310);
-
-        for (let i = runnerObstacles.length - 1; i >= 0; i--) {
-          const obs = runnerObstacles[i];
-          obs.y += 3.4;
-          rCtx.fillText(obs.type, obs.lane * 80 + 40, obs.y);
-          if (obs.lane === runnerLane && obs.y > 275 && obs.y < 325) {
-            endRunnerGame();
-            return;
-          }
-          if (obs.y > 380) runnerObstacles.splice(i, 1);
-        }
-
-        for (let i = runnerCoinsMap.length - 1; i >= 0; i--) {
-          const c = runnerCoinsMap[i];
-          c.y += 3.4;
-          rCtx.fillText("🪙", c.lane * 80 + 40, c.y);
-          if (c.lane === runnerLane && c.y > 275 && c.y < 325) {
-            runnerCoins++;
-            sound.pop();
-            triggerHaptic();
-            runnerScoreText.innerText = `🪙 ${runnerCoins}`;
-            runnerCoinsMap.splice(i, 1);
-          } else if (c.y > 380) {
-            runnerCoinsMap.splice(i, 1);
-          }
-        }
-        runnerLoop = requestAnimationFrame(loop);
+        runnerAnimFrame = requestAnimationFrame(gameLoop);
       }
-      runnerLoop = requestAnimationFrame(loop);
+      runnerAnimFrame = requestAnimationFrame(gameLoop);
     }
 
-    function endRunnerGame() {
+    function spawnTrackRow() {
+      const lane = Math.floor(Math.random() * 3) - 1;
+      const rand = Math.random();
+
+      if (rand < 0.35) {
+        trackObjects.push({ type: 'barrier', lane, z: 1.0 });
+      } else if (rand < 0.55) {
+        trackObjects.push({ type: 'gate', lane, z: 1.0 });
+      } else if (rand < 0.75) {
+        trackObjects.push({ type: 'train', lane, z: 1.0 });
+      } else if (rand < 0.85) {
+        const pType = Math.random() < 0.5 ? 'magnet' : 'board';
+        trackObjects.push({ type: pType, lane, z: 1.0 });
+      } else {
+        for (let i = 0; i < 3; i++) {
+          trackObjects.push({ type: 'coin', lane, z: 1.0 + i * 0.08 });
+        }
+      }
+    }
+
+    function updateSubwayGame() {
+      // Плавное движение шпал
+      trackOffset = (trackOffset + 0.008) % 1;
+
+      // Плавный переход котика по линиям
+      playerX += (playerTargetLane - playerX) * 0.2;
+
+      // Зависающий прыжок
+      if (isJumping) {
+        playerY += jumpVelocity;
+        jumpVelocity -= 0.55; // Мягкая гравитация
+        if (playerY <= 0) {
+          playerY = 0;
+          isJumping = false;
+        }
+      }
+
+      // Подкат длится чуть дольше
+      if (isSliding) {
+        slideTimer--;
+        if (slideTimer <= 0) isSliding = false;
+      }
+
+      if (magnetTime > 0) {
+        magnetTime--;
+        runnerMagnetIcon.classList.remove('hidden');
+        if (magnetTime <= 0) runnerMagnetIcon.classList.add('hidden');
+      }
+
+      // Движение объектов
+      for (let i = trackObjects.length - 1; i >= 0; i--) {
+        const obj = trackObjects[i];
+        obj.z -= runnerSpeed;
+
+        // Магнит плавно тянет монеты
+        if (magnetTime > 0 && obj.type === 'coin' && obj.z < 0.7) {
+          obj.lane += (playerTargetLane - obj.lane) * 0.15;
+        }
+
+        // Зона коллизии прямо перед котиком (расширенная и плавная)
+        if (obj.z < 0.22 && obj.z > 0.05) {
+          const laneMatch = Math.abs(obj.lane - playerX) < 0.5;
+
+          if (laneMatch) {
+            if (obj.type === 'coin') {
+              runnerCoins++;
+              sound.pop();
+              triggerHaptic();
+              runnerScoreText.innerText = `🪙 ${runnerCoins}`;
+              trackObjects.splice(i, 1);
+              continue;
+            }
+
+            if (obj.type === 'magnet') {
+              magnetTime = 500;
+              sound.win();
+              trackObjects.splice(i, 1);
+              continue;
+            }
+
+            if (obj.type === 'board') {
+              hasShield = true;
+              runnerShieldIcon.classList.remove('hidden');
+              sound.win();
+              trackObjects.splice(i, 1);
+              continue;
+            }
+
+            // Барьер: нужно перепрыгнуть
+            if (obj.type === 'barrier' && isJumping && playerY > 20) {
+              continue;
+            }
+
+            // Шлагбаум: нужно проскользнуть
+            if (obj.type === 'gate' && isSliding) {
+              continue;
+            }
+
+            // Столкновение со щитом
+            if (hasShield) {
+              hasShield = false;
+              runnerShieldIcon.classList.add('hidden');
+              sound.pop();
+              confetti({ particleCount: 20 });
+              trackObjects.splice(i, 1);
+              continue;
+            }
+
+            // Конец забега
+            endSubwayGame();
+            return;
+          }
+        }
+
+        // Удаление объекта только когда он ушел совсем назад
+        if (obj.z <= 0.01) {
+          trackObjects.splice(i, 1);
+        }
+      }
+    }
+
+    function drawSubwayGame() {
+      const w = runnerCanvas.width;
+      const h = runnerCanvas.height;
+
+      // 1. Небо
+      const gradSky = rCtx.createLinearGradient(0, 0, 0, h * 0.4);
+      gradSky.addColorStop(0, '#0a0a14');
+      gradSky.addColorStop(1, '#1e1b4b');
+      rCtx.fillStyle = gradSky;
+      rCtx.fillRect(0, 0, w, h * 0.4);
+
+      // Городской горизонт
+      rCtx.fillStyle = '#312e81';
+      for (let i = 0; i < 6; i++) {
+        rCtx.fillRect(i * 55 + 10, h * 0.32 - (i % 3) * 12, 35, 50);
+      }
+
+      // 2. Пол и рельсы
+      const horizonY = h * 0.38;
+      const gradGround = rCtx.createLinearGradient(0, horizonY, 0, h);
+      gradGround.addColorStop(0, '#111827');
+      gradGround.addColorStop(1, '#030712');
+      rCtx.fillStyle = gradGround;
+      rCtx.fillRect(0, horizonY, w, h - horizonY);
+
+      // НОВАЯ СГЛАЖЕННАЯ ПЕРСПЕКТИВА (без резкого рывка в лицо)
+      function project(lane, z, yOffset = 0) {
+        const factor = 1 - z; // Чистый линейный масштаб
+        // Квадратичное плавное опускание вниз
+        const screenY = horizonY + (h - horizonY) * (factor * factor) - yOffset * (factor + 0.1);
+        const laneSpread = 130 * factor;
+        const screenX = (w / 2) + lane * laneSpread;
+        return { x: screenX, y: screenY, factor };
+      }
+
+      // Шпалы рельсов
+      rCtx.strokeStyle = '#374151';
+      rCtx.lineWidth = 2.5;
+      for (let i = 0; i < 8; i++) {
+        const z = (i / 8 - trackOffset * 0.125 + 1) % 1;
+        if (z < 0.05 || z > 0.95) continue;
+        const pL = project(-1.3, z);
+        const pR = project(1.3, z);
+        rCtx.beginPath();
+        rCtx.moveTo(pL.x, pL.y);
+        rCtx.lineTo(pR.x, pR.y);
+        rCtx.stroke();
+      }
+
+      // 3 полосы путей
+      rCtx.strokeStyle = '#f43f5e';
+      rCtx.lineWidth = 2;
+      [-1.3, -0.42, 0.42, 1.3].forEach(l => {
+        const top = project(l, 0.95);
+        const bot = project(l, 0.05);
+        rCtx.beginPath();
+        rCtx.moveTo(top.x, top.y);
+        rCtx.lineTo(bot.x, bot.y);
+        rCtx.stroke();
+      });
+
+      // Сортировка предметов
+      const sorted = [...trackObjects].sort((a, b) => b.z - a.z);
+
+      sorted.forEach(obj => {
+        const p = project(obj.lane, obj.z);
+        // Плавный рост размера по мере приближения
+        const sz = Math.max(12, Math.floor(20 + 32 * p.factor));
+
+        if (obj.type === 'coin') {
+          rCtx.font = `${sz}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('🪙', p.x, p.y);
+        } else if (obj.type === 'barrier') {
+          rCtx.font = `${sz + 6}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('🚧', p.x, p.y);
+        } else if (obj.type === 'gate') {
+          rCtx.font = `${sz + 6}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('⛔', p.x, p.y - sz * 0.4);
+        } else if (obj.type === 'train') {
+          rCtx.font = `${sz + 18}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('🚆', p.x, p.y + 4);
+        } else if (obj.type === 'magnet') {
+          rCtx.font = `${sz + 4}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('🧲', p.x, p.y);
+        } else if (obj.type === 'board') {
+          rCtx.font = `${sz + 4}px sans-serif`;
+          rCtx.textAlign = 'center';
+          rCtx.fillText('🛹', p.x, p.y);
+        }
+      });
+
+      // Котик
+      const playerPos = project(playerX, 0.14, playerY);
+
+      // Тень
+      rCtx.fillStyle = 'rgba(0,0,0,0.6)';
+      rCtx.beginPath();
+      rCtx.ellipse(playerPos.x, project(playerX, 0.14).y, 22, 6, 0, 0, Math.PI * 2);
+      rCtx.fill();
+
+      rCtx.save();
+      rCtx.translate(playerPos.x, playerPos.y);
+
+      if (isSliding) {
+        rCtx.font = '34px sans-serif';
+        rCtx.textAlign = 'center';
+        rCtx.fillText('🐾💨', 0, 0);
+      } else {
+        rCtx.font = hasShield ? '46px sans-serif' : '42px sans-serif';
+        rCtx.textAlign = 'center';
+        rCtx.fillText(hasShield ? '🐱🛹' : '🐱', 0, 0);
+      }
+      rCtx.restore();
+    }
+
+    function endSubwayGame() {
       isRunnerRunning = false;
-      cancelAnimationFrame(runnerLoop);
+      cancelAnimationFrame(runnerAnimFrame);
       sound.win();
-      confetti({ particleCount: 30, spread: 60 });
-      const earned = Math.min(22, Math.max(8, runnerCoins));
+      confetti({ particleCount: 35, spread: 70 });
+
+      const earned = Math.min(25, Math.max(10, runnerCoins));
       pet.coins += earned;
       pet.energy = Math.max(5, pet.energy - 15);
       addXP(earned);
-      logAuditEvent(`Сыграла в Мур-Раннер (Монет: ${runnerCoins}, +${earned} 🪙)`, '🏃');
+      logAuditEvent(`Сыграла в Subway Cat (Собрано: ${runnerCoins} 🪙, Итог: +${earned} 🪙)`, '🏃');
 
       runnerOverlay.classList.remove('hidden');
       runnerOverlay.innerHTML = `
-        <span class="text-4xl">💥</span>
-        <h4 class="cute-font text-amber-300 font-bold text-sm mt-1">Ой! Забег окончен!</h4>
-        <p class="text-xs text-gray-300 mt-1">Собрано монет: <b class="text-amber-300">+${earned} 🪙</b></p>
-        <button id="btnRestartRunner" class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl text-xs mt-3 active:scale-95 transition">
-          ЕЩЕ ЗАБЕГ 🏃
+        <span class="text-5xl">💥</span>
+        <h4 class="cute-font text-amber-300 font-bold text-base mt-2">Забег окончен!</h4>
+        <p class="text-xs text-gray-200 mt-1 mb-4 leading-relaxed">
+          Монет собрано: <b class="text-amber-300 text-sm">${runnerCoins}</b><br>
+          Награда котику: <b class="text-pink-400 text-sm">+${earned} 🪙</b>
+        </p>
+        <button id="btnRestartSubway" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-2.5 px-6 rounded-2xl text-xs active:scale-95 transition shadow-lg">
+          ЕЩЕ ЗАБЕГ 🛹
         </button>
       `;
-      document.getElementById('btnRestartRunner').addEventListener('click', startRunnerGame);
-      checkRareWishDrop(0.4, "Мини-игра Раннер");
+      document.getElementById('btnRestartSubway').addEventListener('click', startSubwayGame);
+      checkRareWishDrop(0.4, "Subway Cat Раннер");
       updatePetUI();
     }
 
-    document.getElementById('btnRunnerLeft').addEventListener('click', () => { if (runnerLane > 0) { runnerLane--; sound.tick(); } });
-    document.getElementById('btnRunnerRight').addEventListener('click', () => { if (runnerLane < 2) { runnerLane++; sound.tick(); } });
+    btnCtrlLeft.addEventListener('click', () => { if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); } });
+    btnCtrlRight.addEventListener('click', () => { if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); } });
+    btnCtrlJump.addEventListener('click', () => {
+      if (!isJumping && !isSliding) { isJumping = true; jumpVelocity = 11; sound.tick(); }
+    });
+    btnCtrlSlide.addEventListener('click', () => {
+      if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (!isRunnerRunning) return;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); }
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); }
+      } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+        if (!isJumping && !isSliding) { isJumping = true; jumpVelocity = 11; sound.tick(); }
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
+      }
+    });
+
+    let touchStartX = 0, touchStartY = 0;
+    runnerCanvas.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    runnerCanvas.addEventListener('touchend', (e) => {
+      if (!isRunnerRunning) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 35 && playerTargetLane < 1) { playerTargetLane++; sound.tick(); }
+        else if (dx < -35 && playerTargetLane > -1) { playerTargetLane--; sound.tick(); }
+      } else {
+        if (dy < -35 && !isJumping && !isSliding) { isJumping = true; jumpVelocity = 14; sound.tick(); }
+        else if (dy > 35 && !isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
+      }
+    }, { passive: true });
 
     // 3. КУРЬЕР
     const modalMiniGame = document.getElementById('modalMiniGame');
@@ -2251,6 +2599,7 @@
         });
         localStorage.setItem(STORAGE_KEY_CASE_DROPS, JSON.stringify(caseHistory));
         logAuditEvent(`Открыла кейс: выбила «${winningItem.name}»`, winningItem.icon);
+        syncToCloud();
 
         const tgCaseMsg = 
           `📦 <b>Катя открыла Кейс Фортуны CS:GO!</b>\n\n` +
@@ -2515,6 +2864,7 @@
     applyOfflineDecay();
     updatePetUI();
     drawWheel();
+    syncToCloud();
   </script>
 </body>
 </html>
