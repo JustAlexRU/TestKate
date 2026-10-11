@@ -13,11 +13,61 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0b0c16; }
     ::-webkit-scrollbar-thumb { background: #2b2d42; border-radius: 4px; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .animate-shake { animation: shake 0.35s ease-in-out; }
   </style>
 </head>
 <body class="bg-[#080911] text-[#cdd6f4] min-h-screen p-4 sm:p-8 selection:bg-pink-500 selection:text-white">
 
-  <div class="max-w-5xl mx-auto flex flex-col gap-6">
+  <!-- ========================================== -->
+  <!-- ЭКРАН АВТОРИЗАЦИИ (ПАРОЛЬ 1703)           -->
+  <!-- ========================================== -->
+  <div id="authOverlay" class="fixed inset-0 bg-[#080911] z-50 flex items-center justify-center p-4">
+    <div id="authCard" class="w-full max-w-xs bg-[#111222] border border-[#2a2d4a] rounded-3xl p-6 flex flex-col items-center gap-4 shadow-[0_0_40px_rgba(0,0,0,0.9)]">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center text-3xl">
+        🔒
+      </div>
+      
+      <div class="text-center">
+        <h2 class="cute-font text-base font-bold text-gray-200">Доступ ограничен</h2>
+        <p class="text-[11px] text-gray-400 mt-1">Введите PIN-код для входа в панель</p>
+      </div>
+
+      <!-- Поле ввода PIN -->
+      <div class="w-full">
+        <input 
+          type="password" 
+          id="pinInput" 
+          maxlength="8" 
+          placeholder="••••" 
+          autocomplete="off"
+          class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-2xl px-4 py-3 text-center mono-font text-2xl tracking-[0.4em] text-pink-400 outline-none focus:border-pink-500 transition shadow-inner"
+        />
+        <div id="pinError" class="text-[11px] text-rose-400 text-center font-bold mt-2 min-h-[16px] opacity-0 transition-opacity">
+          Неверный PIN-код
+        </div>
+      </div>
+
+      <!-- Кнопка подтверждения -->
+      <button id="btnSubmitPin" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition active:scale-95 shadow-lg">
+        ПОДТВЕРДИТЬ
+      </button>
+
+      <a href="index.html" class="text-[11px] text-gray-500 hover:text-gray-400 transition mt-1">
+        ← Вернуться на главную
+      </a>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- ОСНОВНОЙ ДАШБОРД (СКРЫТ ДО АВТОРИЗАЦИИ)   -->
+  <!-- ========================================== -->
+  <div id="dashboardContent" class="hidden max-w-5xl mx-auto flex flex-col gap-6">
 
     <!-- Шапка дашборда -->
     <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#111222]/90 border border-[#2a2d4a] p-5 rounded-3xl backdrop-blur-md gap-4 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
@@ -29,7 +79,7 @@
               Lex Labs — Скрытый Дашборд Аналитики
             </h1>
             <p class="mono-font text-[11px] text-gray-400 mt-0.5">
-              Мониторинг: Катя • Маршрут: Таганрог ⇄ Орск • Статус: Конфиденциально
+              Мониторинг: Катя • Маршрут: Таганрог ⇄ Орск • Статус: Авторизован
             </p>
           </div>
         </div>
@@ -38,6 +88,9 @@
       <div class="flex items-center gap-2.5 self-end sm:self-auto">
         <button id="btnRefresh" class="px-3.5 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] hover:border-pink-500 text-xs font-bold text-gray-200 transition active:scale-95 flex items-center gap-1.5">
           <span>🔄</span> Обновить
+        </button>
+        <button id="btnLogout" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition active:scale-95">
+          Выйти ✕
         </button>
         <a href="index.html" class="px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-bold hover:bg-pink-500/20 transition">
           🐱 В игру
@@ -152,6 +205,64 @@
   </div>
 
   <script>
+    // ==========================================
+    // ЛОГИКА АВТОРИЗАЦИИ (PIN: 1703)
+    // ==========================================
+    const DASHBOARD_PIN = "1703";
+    const SESSION_AUTH_KEY = "lex_dashboard_auth_token";
+
+    const authOverlay = document.getElementById('authOverlay');
+    const authCard = document.getElementById('authCard');
+    const pinInput = document.getElementById('pinInput');
+    const pinError = document.getElementById('pinError');
+    const btnSubmitPin = document.getElementById('btnSubmitPin');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const btnLogout = document.getElementById('btnLogout');
+
+    function checkAuth() {
+      if (sessionStorage.getItem(SESSION_AUTH_KEY) === "authorized") {
+        authOverlay.classList.add('hidden');
+        dashboardContent.classList.remove('hidden');
+        renderDashboard();
+      } else {
+        authOverlay.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        setTimeout(() => pinInput.focus(), 150);
+      }
+    }
+
+    function verifyPin() {
+      const val = pinInput.value.trim();
+      if (val === DASHBOARD_PIN) {
+        sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
+        pinError.style.opacity = '0';
+        authOverlay.classList.add('hidden');
+        dashboardContent.classList.remove('hidden');
+        renderDashboard();
+      } else {
+        pinError.style.opacity = '1';
+        authCard.classList.remove('animate-shake');
+        void authCard.offsetWidth; // trigger reflow
+        authCard.classList.add('animate-shake');
+        pinInput.value = '';
+        pinInput.focus();
+      }
+    }
+
+    btnSubmitPin.addEventListener('click', verifyPin);
+    pinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifyPin();
+    });
+
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.removeItem(SESSION_AUTH_KEY);
+      pinInput.value = '';
+      checkAuth();
+    });
+
+    // ==========================================
+    // ВЫГРУЗКА ДАННЫХ ИЗ ХРАНИЛИЩА
+    // ==========================================
     const STORAGE_KEY_PET = 'katya_master_pet_state';
     const STORAGE_KEY_ANALYTICS = 'katya_master_analytics';
     const STORAGE_KEY_WISHES = 'katya_master_wishes_vault';
@@ -170,14 +281,14 @@
       const caseDrops = JSON.parse(localStorage.getItem(STORAGE_KEY_CASE_DROPS)) || [];
       const audit = JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIT)) || [];
 
-      // KPI
+      // 1. KPI
       const mins = Math.round((analytics.totalSecondsPlayed || 0) / 60);
       document.getElementById('kpiTotalTime').innerText = `${mins} м`;
       document.getElementById('kpiSessions').innerText = analytics.sessionsCount || 0;
       document.getElementById('kpiSpentCoins').innerText = `${analytics.spentCoins || 0} 🪙`;
       document.getElementById('kpiCasesOpened').innerText = analytics.casesOpened || 0;
 
-      // Питомец
+      // 2. Питомец
       document.getElementById('dashPetName').innerText = pet.name || 'Зефирка';
       document.getElementById('dashPetLevel').innerText = pet.level || 1;
       document.getElementById('dashPetCoins').innerText = pet.coins || 0;
@@ -188,7 +299,7 @@
       document.getElementById('dashPetEnergy').innerText = `${pet.energy || 0}%`;
       document.getElementById('dashPetClean').innerText = `${pet.clean || 0}%`;
 
-      // Купоны
+      // 3. Купоны
       const wishesGrid = document.getElementById('wishesGrid');
       document.getElementById('badgeWishCount').innerText = `${wishes.length} шт`;
       wishesGrid.innerHTML = '';
@@ -218,7 +329,7 @@
         });
       }
 
-      // Кейсы
+      // 4. Кейсы
       const caseList = document.getElementById('caseDropsList');
       document.getElementById('badgeCaseCount').innerText = `${caseDrops.length} открытий`;
       caseList.innerHTML = '';
@@ -243,7 +354,7 @@
         });
       }
 
-      // Журнал аудита
+      // 5. Журнал аудита
       const auditContainer = document.getElementById('auditLogContainer');
       auditContainer.innerHTML = '';
 
@@ -273,7 +384,8 @@
       }
     });
 
-    renderDashboard();
+    // Инициализация при входе
+    checkAuth();
   </script>
 </body>
 </html>
