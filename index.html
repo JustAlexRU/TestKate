@@ -61,6 +61,10 @@
       0%, 100% { box-shadow: 0 0 14px rgba(244, 114, 182, 0.4); }
       50% { box-shadow: 0 0 24px rgba(244, 114, 182, 0.8); }
     }
+    @keyframes blackBoxFlash {
+      0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+      50% { box-shadow: 0 0 55px rgba(251, 191, 36, 0.95); }
+    }
 
     .animate-breathe { animation: breathe 3.2s ease-in-out infinite; transform-origin: bottom center; }
     .animate-tail { animation: tailWag 2.4s ease-in-out infinite; transform-origin: bottom left; }
@@ -68,6 +72,7 @@
     .animate-bubble { animation: bubbleRise 2.8s infinite ease-in; }
     .animate-glow { animation: pulseGlow 2.5s infinite ease-in-out; }
     .animate-poop { animation: poopPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .animate-epic-glow { animation: blackBoxFlash 1.5s infinite ease-in-out; }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: #181825; }
@@ -75,6 +80,11 @@
   </style>
 </head>
 <body class="bg-[#11111b] text-[#cdd6f4] min-h-screen flex flex-col items-center justify-between pb-24 selection:bg-pink-500 selection:text-white">
+
+  <!-- Индикатор песочницы для локального запуска -->
+  <div id="localSandboxWarning" class="hidden w-full bg-rose-500/90 text-white text-[10px] font-bold text-center py-1 z-50">
+    🚀 ЛОКАЛЬНЫЙ РЕЖИМ (ПЕСОЧНИЦА): Синхронизация с боевым облаком отключена
+  </div>
 
   <main class="w-full max-w-md px-4 pt-3 flex-1 flex flex-col items-center justify-between">
 
@@ -88,7 +98,7 @@
               <h1 id="headerPetName" class="cute-font text-sm font-bold text-pink-300">Зефирка</h1>
               <button id="btnRenamePet" class="text-xs text-gray-400 hover:text-pink-300 active:scale-90 transition">✏️</button>
             </div>
-            <!-- Секретный вход: тройной клик по уровню открывает дашборд -->
+            <!-- Секретный вход в дашборд: тройной клик по уровню -->
             <p class="text-[11px] text-gray-400">Уровень <span id="headerLevel" class="text-amber-300 font-bold cursor-pointer select-none">1</span></p>
           </div>
         </div>
@@ -106,10 +116,13 @@
 
       <!-- Комната котика -->
       <div id="petRoomCard" class="relative bg-theme-neon border border-[#313244] rounded-3xl p-4 flex flex-col items-center shadow-2xl transition-all duration-700 overflow-hidden min-h-[300px]">
-        <div id="sleepOverlay" class="absolute inset-0 bg-[#090910]/85 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-700 z-10 flex flex-col items-center justify-center">
-          <span class="text-4xl animate-bounce">🌙</span>
-          <span class="cute-font text-indigo-200 text-sm font-bold mt-2">Котик сладко спит...</span>
-          <span class="text-xs text-indigo-400 mt-1">Энергия восстанавливается</span>
+        
+        <!-- Красивый ночной оверлей сна (не перекрывает тело кота) -->
+        <div id="sleepOverlay" class="absolute inset-0 bg-gradient-to-b from-[#090a18]/90 via-[#101228]/50 to-[#090a18]/90 backdrop-blur-[1px] opacity-0 pointer-events-none transition-opacity duration-700 z-30 flex flex-col items-center justify-start pt-3">
+          <div class="flex items-center gap-2 bg-[#191b34]/95 border border-indigo-400/50 px-4 py-1.5 rounded-full shadow-lg">
+            <span class="text-sm animate-pulse">🌙</span>
+            <span class="cute-font text-indigo-200 text-xs font-bold">Котик сладко спит & восстанавливает силы...</span>
+          </div>
         </div>
 
         <div id="particlesLayer" class="absolute inset-0 pointer-events-none z-40 overflow-hidden"></div>
@@ -128,18 +141,25 @@
         </div>
 
         <div id="catTapZone" class="relative w-48 h-48 flex items-center justify-center cursor-pointer active:scale-95 transition-transform z-20 my-1">
-          <div id="zzzContainer" class="hidden absolute top-4 right-8 z-30">
+          <div id="zzzContainer" class="hidden absolute top-2 right-4 z-30">
             <span class="absolute font-bold text-indigo-300 text-lg animate-zzz" style="animation-delay: 0s;">Z</span>
             <span class="absolute font-bold text-pink-300 text-sm animate-zzz" style="animation-delay: 0.7s;">z</span>
             <span class="absolute font-bold text-purple-300 text-xs animate-zzz" style="animation-delay: 1.4s;">z</span>
           </div>
 
-          <!-- SVG Котик -->
-          <svg id="catSvg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl animate-breathe pointer-events-none">
+          <!-- SVG Котик с многослойным гардеробом -->
+          <svg id="catSvg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl animate-breathe pointer-events-none transition-all duration-500">
             <ellipse cx="100" cy="182" rx="60" ry="12" fill="#0b0b12" opacity="0.6"/>
             <path id="catTail" class="animate-tail" d="M 45 150 C 15 145, 10 115, 25 105 C 32 100, 42 115, 42 135" fill="none" stroke="#f2cdcd" stroke-width="14" stroke-linecap="round"/>
             <ellipse id="catBody" cx="100" cy="142" rx="55" ry="42" fill="#f5e0dc"/>
             <ellipse cx="100" cy="146" rx="36" ry="28" fill="#ffffff" opacity="0.85"/>
+
+            <!-- СЛОЙ ТЕЛА / ОДЕЖДЫ: ХУДИ -->
+            <g id="accLayerHoodie" class="hidden">
+              <path d="M 52 132 C 55 110, 145 110, 148 132 C 148 165, 52 165, 52 132 Z" fill="#ec4899" stroke="#db2777" stroke-width="2"/>
+              <polygon points="90,118 100,128 110,118" fill="#fbcfe8"/>
+            </g>
+
             <ellipse id="catFootL" cx="60" cy="174" rx="15" ry="9" fill="#f2cdcd"/>
             <ellipse id="catFootR" cx="140" cy="174" rx="15" ry="9" fill="#f2cdcd"/>
             <circle id="catHead" cx="100" cy="92" r="50" fill="#f5e0dc"/>
@@ -171,33 +191,41 @@
             <line x1="50" y1="104" x2="67" y2="103" stroke="#bac2de" stroke-width="2" stroke-linecap="round"/>
             <line x1="148" y1="96" x2="132" y2="98" stroke="#bac2de" stroke-width="2" stroke-linecap="round"/>
             <line x1="150" y1="104" x2="133" y2="103" stroke="#bac2de" stroke-width="2" stroke-linecap="round"/>
-            <ellipse cx="88" cy="156" rx="9" ry="14" fill="#ffffff"/>
-            <ellipse cx="112" cy="156" rx="9" ry="14" fill="#ffffff"/>
 
-            <g id="accBow" class="hidden">
+            <!-- СЛОЙ ТЕЛА: БАНТИК -->
+            <g id="accLayerBow" class="hidden">
               <polygon points="90,135 100,140 90,145" fill="#f38ba8"/>
               <polygon points="110,135 100,140 110,145" fill="#f38ba8"/>
               <circle cx="100" cy="140" r="3.5" fill="#fab387"/>
             </g>
-            <g id="accCrown" class="hidden">
+            <!-- СЛОЙ ТЕЛА: ШАРФ -->
+            <g id="accLayerScarf" class="hidden">
+              <rect x="75" y="128" width="50" height="12" rx="6" fill="#38bdf8"/>
+              <rect x="110" y="132" width="12" height="25" rx="4" fill="#0284c7"/>
+            </g>
+
+            <!-- СЛОЙ ГЛАЗ: ОЧКИ -->
+            <g id="accLayerGlasses" class="hidden">
+              <rect x="68" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
+              <rect x="107" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
+              <line x1="93" y1="89" x2="107" y2="89" stroke="#fab387" stroke-width="2.5"/>
+            </g>
+
+            <!-- СЛОЙ ГОЛОВЫ: КОРОНА -->
+            <g id="accLayerCrown" class="hidden">
               <polygon points="80,48 88,30 100,43 112,30 120,48" fill="#f9e2af" stroke="#fab387" stroke-width="1.5"/>
               <circle cx="88" cy="30" r="2.5" fill="#f38ba8"/>
               <circle cx="100" cy="43" r="2.5" fill="#89b4fa"/>
               <circle cx="112" cy="30" r="2.5" fill="#a6e3a1"/>
             </g>
-            <g id="accGlasses" class="hidden">
-              <rect x="68" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
-              <rect x="107" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
-              <line x1="93" y1="89" x2="107" y2="89" stroke="#fab387" stroke-width="2.5"/>
-              <line x1="60" y1="87" x2="68" y2="87" stroke="#fab387" stroke-width="2"/>
-              <line x1="132" y1="87" x2="140" y2="87" stroke="#fab387" stroke-width="2"/>
-            </g>
-            <g id="accWizard" class="hidden">
+            <!-- СЛОЙ ГОЛОВЫ: КОЛПАК -->
+            <g id="accLayerWizard" class="hidden">
               <polygon points="68,52 100,10 132,52" fill="#7287fd"/>
               <ellipse cx="100" cy="52" rx="34" ry="6" fill="#8839ef"/>
               <polygon points="98,28 102,28 100,24" fill="#f9e2af"/>
             </g>
-            <g id="accFlower" class="hidden">
+            <!-- СЛОЙ ГОЛОВЫ: ЦВЕТОК -->
+            <g id="accLayerFlower" class="hidden">
               <circle cx="68" cy="46" r="5" fill="#f38ba8"/>
               <circle cx="62" cy="50" r="5" fill="#f38ba8"/>
               <circle cx="65" cy="56" r="5" fill="#f38ba8"/>
@@ -213,11 +241,11 @@
         </div>
       </div>
 
-      <!-- Шкалы параметров -->
+      <!-- Шкалы жизненных параметров -->
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
-            <span class="flex items-center gap-1 font-bold">🍣 Сытость</span>
+            <span class="font-bold">🍣 Сытость</span>
             <span id="statHungerVal" class="text-pink-300 font-extrabold text-[11px]">80%</span>
           </div>
           <div class="w-full bg-[#11111b] h-2 rounded-full overflow-hidden">
@@ -227,7 +255,7 @@
 
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
-            <span class="flex items-center gap-1 font-bold">💖 Счастье</span>
+            <span class="font-bold">💖 Счастье</span>
             <span id="statHappyVal" class="text-pink-300 font-extrabold text-[11px]">75%</span>
           </div>
           <div class="w-full bg-[#11111b] h-2 rounded-full overflow-hidden">
@@ -237,7 +265,7 @@
 
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
-            <span class="flex items-center gap-1 font-bold">⚡ Энергия</span>
+            <span class="font-bold">⚡ Энергия</span>
             <span id="statEnergyVal" class="text-pink-300 font-extrabold text-[11px]">60%</span>
           </div>
           <div class="w-full bg-[#11111b] h-2 rounded-full overflow-hidden">
@@ -247,7 +275,7 @@
 
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
-            <span class="flex items-center gap-1 font-bold">🫧 Чистота</span>
+            <span class="font-bold">🫧 Чистота</span>
             <span id="statCleanVal" class="text-pink-300 font-extrabold text-[11px]">90%</span>
           </div>
           <div class="w-full bg-[#11111b] h-2 rounded-full overflow-hidden">
@@ -256,7 +284,7 @@
         </div>
       </div>
 
-      <!-- Действия -->
+      <!-- Основные действия -->
       <div class="grid grid-cols-4 gap-2">
         <button id="btnActionFeed" class="bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] rounded-2xl p-2 flex flex-col items-center gap-0.5 active:scale-95 transition shadow">
           <span class="text-2xl">🍱</span>
@@ -279,15 +307,15 @@
       <!-- Интерактивная панель -->
       <div class="grid grid-cols-4 gap-1.5">
         <button id="btnWardrobe" class="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-pink-700/50 rounded-2xl py-2 px-1 flex items-center justify-center gap-0.5 text-[11px] font-bold text-pink-200 active:scale-95 transition">
-          <span>🛍️ Магазин</span>
+          <span>🛍️ Наряды</span>
         </button>
-        <button id="btnCsgoCase" class="bg-gradient-to-r from-amber-900/60 to-yellow-900/60 border border-amber-500/70 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-0.5 active:scale-95 transition animate-pulse">
-          <span>📦 Кейс CS</span>
+        <button id="btnCasesHub" class="bg-gradient-to-r from-amber-900/60 via-purple-900/60 to-yellow-900/60 border border-amber-500/70 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-0.5 active:scale-95 transition animate-pulse">
+          <span>📦 3 Кейса</span>
         </button>
-        <button id="btnZenClicker" class="bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-rose-500/50 rounded-2xl py-2 px-1 text-[11px] font-bold text-rose-300 flex items-center justify-center gap-0.5 active:scale-95 transition">
+        <button id="btnZenClicker" class="bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-rose-500/50 rounded-2xl py-2 px-1 text-[11px] font-bold text-rose-300 active:scale-95 transition">
           <span>✨ Дзен</span>
         </button>
-        <button id="btnDailyBonus" class="bg-[#1e1e2e] border border-amber-500/40 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-0.5 active:scale-95 transition">
+        <button id="btnDailyBonus" class="bg-[#1e1e2e] border border-amber-500/40 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 active:scale-95 transition">
           <span id="dailyBonusLabel">🎁 Бонус</span>
         </button>
       </div>
@@ -328,7 +356,7 @@
 
   </main>
 
-  <!-- NAVIGATION -->
+  <!-- НАВИГАЦИЯ -->
   <nav class="fixed bottom-0 w-full max-w-md bg-[#181825]/95 backdrop-blur-md border-t border-[#313244] px-6 py-2 flex justify-around items-center z-40">
     <button id="navTabPet" class="flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition">
       <span class="text-2xl">🐱</span>
@@ -340,6 +368,111 @@
       <span class="text-[11px] cute-font">Рулетка</span>
     </button>
   </nav>
+
+  <!-- МОДАЛКА: ВЫБОР ИЗ 3 КЕЙСОВ -->
+  <div id="modalCasesHub" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
+    <div class="bg-[#181825] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="cute-font font-black text-amber-300 text-sm">Кейсы Удачи CS:GO Style 📦</h3>
+          <p class="text-[10px] text-gray-400">Баланс: <b id="casesHubCoins" class="text-amber-300">0</b> 🪙</p>
+        </div>
+        <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="flex flex-col gap-2 mt-1">
+        <button id="btnLaunchCaseStandard" class="bg-[#11111b] border border-blue-500/50 hover:border-blue-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="text-3xl">📦</span>
+            <div>
+              <div class="font-bold text-blue-300 text-xs">Стандартный Лутбокс</div>
+              <div class="text-[10px] text-gray-400">Монетки, пир, шарфик</div>
+            </div>
+          </div>
+          <span class="font-black text-amber-300 text-xs" id="labelCaseStandardCost">80 🪙</span>
+        </button>
+
+        <button id="btnLaunchCasePremium" class="bg-[#11111b] border border-purple-500/50 hover:border-purple-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="text-3xl">💜</span>
+            <div>
+              <div class="font-bold text-purple-300 text-xs">Премиум Кейс Таганрога</div>
+              <div class="text-[10px] text-gray-400">Кофе, кино, худи</div>
+            </div>
+          </div>
+          <span class="font-black text-amber-300 text-xs" id="labelCasePremiumCost">160 🪙</span>
+        </button>
+
+        <button id="btnLaunchCaseBlack" class="bg-gradient-to-r from-[#1f1604] to-[#12081f] border-2 border-amber-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left animate-epic-glow">
+          <div class="flex items-center gap-2.5">
+            <span class="text-3xl">👑</span>
+            <div>
+              <div class="font-black text-amber-300 text-xs">★ CLASSIFIED BLACK BOX ★</div>
+              <div class="text-[10px] text-amber-200/80 font-bold">Награды: ??? (Засекречено)</div>
+            </div>
+          </div>
+          <span class="font-black text-amber-300 text-xs" id="labelCaseBlackCost">320 🪙</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: CS:GO РУЛЕТКА ДЛЯ ВЫБРАННОГО КЕЙСА -->
+  <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
+    <div id="caseRouletteCard" class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-2xl">
+      <div class="w-full flex justify-between items-center">
+        <div class="text-left">
+          <h3 class="cute-font font-black text-amber-300 text-sm" id="activeCaseTitle">КЕЙС ФОРТУНЫ</h3>
+          <p class="text-[10px] text-gray-400">Стоимость: <b class="text-amber-300" id="activeCaseCostLabel">...</b></p>
+        </div>
+        <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="relative w-full h-24 bg-[#11111b] border-2 border-[#313244] rounded-2xl overflow-hidden flex items-center shadow-inner my-2">
+        <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 bg-amber-400 z-30 shadow-[0_0_10px_#fbbf24]"></div>
+        <div id="caseRouletteTrack" class="flex gap-2 items-center px-4 transition-transform duration-[5000ms] cubic-bezier(0.12, 0.8, 0.2, 1)"></div>
+      </div>
+
+      <div id="caseWonBanner" class="hidden w-full bg-[#181825] border border-amber-500/50 rounded-2xl p-2.5 flex flex-col items-center">
+        <span class="text-[11px] text-gray-400">Твой выигрыш:</span>
+        <span id="caseWonTitle" class="cute-font text-sm font-black text-amber-300 mt-0.5">...</span>
+        <span id="caseWonDesc" class="text-[10px] text-pink-200 mt-0.5">...</span>
+      </div>
+
+      <button id="btnOpenCase" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 text-[#11111b] font-black text-xs tracking-wider active:scale-95 transition shadow-lg">
+        ОТКРЫТЬ КЕЙС 🎰
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: МНОГОСЛОЙНЫЙ ГАРДЕРОБ -->
+  <div id="modalWardrobe" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="cute-font font-bold text-pink-300 text-sm">Гардероб и Интерьер 🛍️</h3>
+          <p class="text-[11px] text-gray-400">Слоты можно совмещать! Баланс: <span id="shopCoinsVal" class="text-amber-300 font-bold">25</span> 🪙</p>
+        </div>
+        <button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="flex bg-[#181825] p-1 rounded-xl border border-[#313244] text-xs font-bold gap-1">
+        <button id="tabWardrobeOutfits" class="flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]">👗 Одежда</button>
+        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🎀 Наряды</button>
+        <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🏠 Локации</button>
+        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🎨 Шерстка</button>
+      </div>
+
+      <div id="wardrobeOutfitsSection" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+      <div id="wardrobeAccSection" class="hidden grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+      <div id="wardrobeRoomsSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+      <div id="wardrobeColorSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
+
+      <button id="btnRemoveAllOutfits" class="w-full mt-1 py-2 rounded-xl bg-[#181825] border border-[#313244] text-xs text-rose-300 font-bold active:scale-95 transition">
+        Снять всю одежду и аксессуары ✕
+      </button>
+    </div>
+  </div>
 
   <!-- МОДАЛКА: МЕНЮ ЕДЫ -->
   <div id="modalFeed" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -386,7 +519,7 @@
               <div class="text-[10px] text-gray-400">Складывай фигурки и чисти линии</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+12-25 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300" id="badgeTetrisReward">+12-25 🪙</span>
         </button>
 
         <button id="btnJobRunner" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -397,7 +530,7 @@
               <div class="text-[10px] text-gray-400">Псевдо-3D, свайпы, прыжки, поезда!</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+10-25 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300" id="badgeRunnerReward">+10-25 🪙</span>
         </button>
 
         <button id="btnJobCatcher" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
@@ -577,73 +710,11 @@
       </div>
 
       <p class="text-[11px] text-gray-400 text-center mt-5 px-6">
-        Бесконечно тапай и гладь котика! При активности есть ультра-редкий шанс дропа секретного купона на желание 💌
+        Бесконечно тапай и гладь котика! При активности есть шанс дропа секретного купона на желание 💌
       </p>
     </div>
 
     <div class="pb-3 text-[10px] text-gray-500">Релакс-режим без таймеров и ограничений</div>
-  </div>
-
-  <!-- МОДАЛКА: МАГАЗИН -->
-  <div id="modalWardrobe" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <div>
-          <h3 class="cute-font font-bold text-pink-300 text-sm">Гардероб и Интерьер 🛍️</h3>
-          <p class="text-[11px] text-gray-400">Баланс: <span id="shopCoinsVal" class="text-amber-300 font-bold">25</span> 🪙</p>
-        </div>
-        <button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button>
-      </div>
-
-      <div class="flex bg-[#181825] p-1 rounded-xl border border-[#313244] text-xs font-bold gap-1">
-        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]">🎀 Наряды</button>
-        <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🏠 Локации</button>
-        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]">🎨 Шерстка</button>
-      </div>
-
-      <div id="wardrobeAccSection" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1"></div>
-      <div id="wardrobeRoomsSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
-      <div id="wardrobeColorSection" class="hidden grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1"></div>
-
-      <button id="btnRemoveAcc" class="w-full mt-1 py-2 rounded-xl bg-[#181825] border border-[#313244] text-xs text-rose-300 font-bold active:scale-95 transition">
-        Снять все аксессуары ✕
-      </button>
-    </div>
-  </div>
-
-  <!-- МОДАЛКА: CS:GO КЕЙС -->
-  <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
-    <div class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-[0_0_35px_rgba(245,158,11,0.4)]">
-      <div class="w-full flex justify-between items-center">
-        <div class="text-left">
-          <h3 class="cute-font font-black text-amber-300 text-sm">📦 КЕЙС ФОРТУНЫ (CS:GO STYLE)</h3>
-          <p class="text-[10px] text-gray-400">Стоимость открытия: <b class="text-amber-300">120 🪙</b></p>
-        </div>
-        <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
-      </div>
-
-      <div class="relative w-full h-24 bg-[#11111b] border-2 border-[#313244] rounded-2xl overflow-hidden flex items-center shadow-inner my-2">
-        <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 bg-amber-400 z-30 shadow-[0_0_10px_#fbbf24]"></div>
-        <div class="absolute left-1/2 -translate-x-1/2 -top-1 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-6 border-t-amber-400 z-30"></div>
-        <div class="absolute left-1/2 -translate-x-1/2 -bottom-1 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-b-6 border-b-amber-400 z-30"></div>
-
-        <div id="caseRouletteTrack" class="flex gap-2 items-center px-4 transition-transform duration-[5000ms] cubic-bezier(0.12, 0.8, 0.2, 1)"></div>
-      </div>
-
-      <div id="caseWonBanner" class="hidden w-full bg-[#181825] border border-amber-500/50 rounded-2xl p-2.5 flex flex-col items-center">
-        <span class="text-[11px] text-gray-400">Твой выигрыш:</span>
-        <span id="caseWonTitle" class="cute-font text-sm font-black text-amber-300 mt-0.5">...</span>
-        <span id="caseWonDesc" class="text-[10px] text-pink-200 mt-0.5">...</span>
-      </div>
-
-      <button id="btnOpenCase" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 text-[#11111b] font-black text-xs tracking-wider active:scale-95 transition shadow-lg">
-        ОТКРЫТЬ ЗА 120 🪙 🎰
-      </button>
-
-      <p class="text-[9px] text-gray-500">
-        Призы созданы специально с доставкой и заботой на расстоянии в Таганрог!
-      </p>
-    </div>
   </div>
 
   <!-- МОДАЛКА: СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ -->
@@ -730,6 +801,10 @@
         const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.2, 0.22), i * 100));
       }
+      epicWin() {
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.25, 0.3), i * 80));
+      }
       tick() { this.playTone(760, 'triangle', 0.04, 0.08); }
     }
 
@@ -742,110 +817,45 @@
     }
 
     /* =========================================================
-     * КОНФИГУРАЦИЯ TELEGRAM И ОБЛАКА JSONBIN
+     * ИЗОЛЯЦИЯ СРЕДЫ И УМНАЯ ИДЕНТИФИКАЦИЯ КАТИ
      * ========================================================= */
-    const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
-    const TELEGRAM_CHAT_ID = "409697238";
+    const isLocalExecution = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalExecution) {
+      document.getElementById('localSandboxWarning').classList.remove('hidden');
+      console.log("Включен локальный режим: Синхронизация с боевым облаком отключена.");
+    }
 
+    let currentUser = localStorage.getItem('active_player_profile');
     const urlParams = new URLSearchParams(window.location.search);
-    let currentUser = urlParams.get('user') || localStorage.getItem('active_player_profile') || 'katya';
+    if (urlParams.has('user')) {
+      currentUser = urlParams.get('user');
+    } else if (!currentUser) {
+      const savedPet = JSON.parse(localStorage.getItem('katya_master_pet_state'));
+      if (savedPet && (savedPet.level > 1 || savedPet.coins > 25 || savedPet.xp > 20)) {
+        currentUser = 'katya';
+      } else {
+        currentUser = 'player_' + Math.random().toString(36).substring(2, 7);
+      }
+    }
     localStorage.setItem('active_player_profile', currentUser);
 
+    const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
+    const TELEGRAM_CHAT_ID = "409697238";
     const JSONBIN_BIN_ID = "6acb3d30ac6210605a272eb6";
     const JSONBIN_API_KEY = "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
 
     function sendTelegramLog(message) {
+      if (isLocalExecution) return;
       fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: message,
+          text: `[${currentUser}] ` + message,
           parse_mode: "HTML"
         })
       }).catch(err => console.log(err));
     }
-
-    // Синхронизация с облаком JSONBin
-let cloudSyncTimer = null;
-    function syncToCloud() {
-      clearTimeout(cloudSyncTimer);
-      cloudSyncTimer = setTimeout(async () => {
-        try {
-          // 1. Сначала читаем текущее общее состояние облака
-          const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-            headers: { "X-Master-Key": JSONBIN_API_KEY }
-          });
-          const cloudData = await getRes.json();
-          const rootRecord = cloudData.record || {};
-
-          // 2. Обновляем ТОЛЬКО свой профиль (katya или alex)
-          rootRecord[currentUser] = {
-            pet: pet,
-            analytics: analytics,
-            wishes: wishesVault,
-            caseHistory: caseHistory,
-            audit: JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIT)) || [],
-            lastActive: new Date().toLocaleString("ru-RU")
-          };
-
-          // 3. Отправляем обновленный JSON обратно
-          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Master-Key": JSONBIN_API_KEY
-            },
-            body: JSON.stringify(rootRecord)
-          });
-        } catch (err) {
-          console.log("Cloud sync error:", err);
-        }
-      }, 1200);
-    }
-
-    /* =========================================================
-     * МАСТЕР-ХРАНИЛИЩЕ (БЕЗОПАСНАЯ ГИДРАТАЦИЯ БЕЗ СБРОСА)
-     * ========================================================= */
-    const STORAGE_KEY_PET = 'katya_master_pet_state';
-    const STORAGE_KEY_ANALYTICS = 'katya_master_analytics';
-    const STORAGE_KEY_WISHES = 'katya_master_wishes_vault';
-    const STORAGE_KEY_CASE_DROPS = 'katya_master_case_history';
-    const STORAGE_KEY_AUDIT = 'katya_master_audit_events';
-    const STORAGE_KEY_WHEEL = 'katya_master_wheel_items';
-    const STORAGE_KEY_TIME = 'katya_master_last_time';
-    const STORAGE_KEY_INV = 'katya_master_inventory';
-    const STORAGE_KEY_ROOMS = 'katya_master_rooms';
-    const STORAGE_KEY_BONUS = 'katya_master_last_bonus';
-    const STORAGE_KEY_FREE_FOOD = 'katya_master_free_food';
-    const STORAGE_KEY_POOP = 'katya_master_poops';
-
-    function logAuditEvent(text, icon = '📌') {
-      const logs = JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIT)) || [];
-      logs.push({
-        text,
-        icon,
-        time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      });
-      if (logs.length > 250) logs.shift();
-      localStorage.setItem(STORAGE_KEY_AUDIT, JSON.stringify(logs));
-      syncToCloud();
-    }
-
-    const defaultPetState = {
-      name: "Зефирка",
-      level: 1,
-      xp: 20,
-      coins: 25,
-      hunger: 80,
-      happy: 75,
-      energy: 65,
-      clean: 90,
-      isSleeping: false,
-      activeAcc: "bow",
-      color: "pink",
-      activeRoom: "neon"
-    };
 
     function safeHydrate(key, defaults) {
       try {
@@ -864,64 +874,111 @@ let cloudSyncTimer = null;
       }
     }
 
-    let pet = safeHydrate(STORAGE_KEY_PET, defaultPetState);
-    let inventory = safeHydrate(STORAGE_KEY_INV, ["bow"]);
-    let ownedRooms = safeHydrate(STORAGE_KEY_ROOMS, ["neon"]);
-    let poops = safeHydrate(STORAGE_KEY_POOP, []);
-    let wishesVault = safeHydrate(STORAGE_KEY_WISHES, []);
-    let caseHistory = safeHydrate(STORAGE_KEY_CASE_DROPS, []);
+    let activeEquipment = safeHydrate('katya_active_equipment', {
+      head: "crown",
+      eyes: "none",
+      body: "bow"
+    });
 
-    let analytics = safeHydrate(STORAGE_KEY_ANALYTICS, {
+    let ownedItems = safeHydrate('katya_owned_items', ["bow", "crown"]);
+    let ownedRooms = safeHydrate('katya_master_rooms', ["neon"]);
+
+    let ACTIVE_ECONOMY = {
+      caseCostStandard: 80,
+      caseCostPremium: 160,
+      caseCostBlack: 320,
+      dailyBonus: 15,
+      maxRunner: 25,
+      maxTetris: 25
+    };
+
+    let ACTIVE_WISH_CHANCES = {
+      subway: 0.4,
+      tetris: 0.5,
+      catcher: 0.3,
+      rhythm: 0.3,
+      zen: 0.005,
+      poop: 0.15,
+      roulette: 0.08,
+      dailyBonus: 0.2
+    };
+
+    const CASES_DATA = {
+      standard: {
+        id: "case_standard",
+        title: "Стандартный Лутбокс",
+        cost: 80,
+        items: [
+          { id: "std_coins_20", name: "20 🪙 в копилку", icon: "🪙", color: "#60a5fa", chance: 45, desc: "Частичный возврат" },
+          { id: "std_food", name: "Кошачий сытный обед", icon: "🍱", color: "#60a5fa", chance: 35, desc: "+50% сытости" },
+          { id: "std_scarf", name: "Теплый синий шарфик", icon: "🧣", color: "#c084fc", chance: 15, desc: "Одежда для котика", type: "body" },
+          { id: "std_gold", name: "Мешочек 60 🪙", icon: "💰", color: "#fbbf24", chance: 5, desc: "Золотой возврат" }
+        ]
+      },
+      premium: {
+        id: "case_premium",
+        title: "Премиум Кейс Таганрога",
+        cost: 160,
+        items: [
+          { id: "prem_coffee", name: "Сладкий кофе в Таганрог", icon: "☕", color: "#ef4444", chance: 12, desc: "Доставка кофе Кате" },
+          { id: "prem_hoodie", name: "Розовое теплое худи", icon: "👗", color: "#f472b6", chance: 25, desc: "Одежда для котика", type: "body" },
+          { id: "prem_cinema", name: "Уютный Киновечер онлайн", icon: "🎬", color: "#f472b6", chance: 20, desc: "Фильм и снеки" },
+          { id: "prem_song", name: "Кавер/Трек от Алексея", icon: "🎵", color: "#c084fc", chance: 23, desc: "Личное аудиосообщение" },
+          { id: "prem_coins", name: "Мешок золота: 80 🪙", icon: "💰", color: "#c084fc", chance: 20, desc: "Возврат монет" }
+        ]
+      },
+      black: {
+        id: "case_black",
+        title: "★ CLASSIFIED BLACK BOX ★",
+        cost: 320,
+        isClassified: true,
+        items: [
+          { id: "blk_super_box", name: "★ СЕКРЕТНЫЙ БОКС В ТАГАНРОГ ★", icon: "⭐", color: "#fbbf24", chance: 5, desc: "Золотой суперприз: сюрприз в ПВЗ!", isEpic: true },
+          { id: "blk_wish_coupon", name: "💌 СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ", icon: "💌", color: "#fbbf24", chance: 10, desc: "Любое желание Кати!", isEpic: true },
+          { id: "blk_argument", name: "Иммунитет в споре (Правота)", icon: "🛡️", color: "#f472b6", chance: 30, desc: "Безоговорочная победа" },
+          { id: "blk_coffee_dessert", name: "Кофе + Бенто-торт в Таганрог", icon: "🍰", color: "#ef4444", chance: 25, desc: "Доставка сладостей" },
+          { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", color: "#c084fc", chance: 30, desc: "Возврат половины кейса" }
+        ]
+      }
+    };
+
+    let selectedCaseKey = "standard";
+
+    const defaultPetState = {
+      name: "Зефирка",
+      level: 1,
+      xp: 20,
+      coins: 25,
+      hunger: 80,
+      happy: 75,
+      energy: 65,
+      clean: 90,
+      isSleeping: false,
+      activeRoom: "neon",
+      color: "pink"
+    };
+
+    let pet = safeHydrate('katya_master_pet_state', defaultPetState);
+    let analytics = safeHydrate('katya_master_analytics', {
       date: new Date().toDateString(),
       sessionsCount: 0,
       totalSecondsPlayed: 0,
       spentCoins: 0,
-      casesOpened: 0,
-      lastReportSentDate: ""
+      casesOpened: 0
     });
+    let wishesVault = safeHydrate('katya_master_wishes_vault', []);
+    let caseHistory = safeHydrate('katya_master_case_history', []);
+    let poops = safeHydrate('katya_master_poops', []);
+    let freeFoodData = safeHydrate('katya_master_free_food', { count: 3, date: new Date().toDateString() });
 
-    if (analytics.date !== new Date().toDateString()) {
-      analytics.date = new Date().toDateString();
-      analytics.sessionsCount = 0;
-      analytics.totalSecondsPlayed = 0;
-      analytics.spentCoins = 0;
-      analytics.casesOpened = 0;
-    }
-    analytics.sessionsCount++;
-    localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
-    logAuditEvent(`Запуск игры (Сессия #${analytics.sessionsCount})`, '🚪');
-
-    setInterval(() => {
-      analytics.totalSecondsPlayed += 10;
-      localStorage.setItem(STORAGE_KEY_ANALYTICS, JSON.stringify(analytics));
-      if (analytics.totalSecondsPlayed % 60 === 0) syncToCloud();
-    }, 10000);
-
-    const ROOM_THEMES = [
-      { id: "neon", name: "Неоновая комната", icon: "🟣", class: "bg-theme-neon", cost: 0, desc: "Базовый уютный свет" },
-      { id: "cozy", name: "Шале с камином", icon: "🪵", class: "bg-theme-cozy", cost: 140, desc: "Теплый плед и камин" },
-      { id: "city", name: "Панорама ночного города", icon: "🌃", class: "bg-theme-city", cost: 230, desc: "Огни небоскребов" },
-      { id: "japan", name: "Сад цветущей сакуры", icon: "🌸", class: "bg-theme-japan", cost: 340, desc: "Лепестки сакуры" },
-      { id: "space", name: "Звездная обсерватория", icon: "🌌", class: "bg-theme-space", cost: 480, desc: "Бескрайний космос" }
-    ];
-
-    const CAT_COLORS = {
-      pink: { main: "#f5e0dc", accent: "#f2cdcd", label: "Зефирно-розовый", hex: "#f5e0dc" },
-      peach: { main: "#fed7aa", accent: "#fdba74", label: "Персиковый", hex: "#fed7aa" },
-      white: { main: "#f8fafc", accent: "#e2e8f0", label: "Снежно-белый", hex: "#ffffff" },
-      grey: { main: "#cbd5e1", accent: "#94a3b8", label: "Дымчато-серый", hex: "#cbd5e1" },
-      choco: { main: "#d7b9a5", accent: "#b38f74", label: "Шоколадный", hex: "#b38f74" }
-    };
-
-    const defaultWheelItems = [
+    let wheelItems = safeHydrate('katya_master_wheel_items', [
       "🍣 Запеченные роллы",
       "🍕 Додо: Сырная пицца",
       "🍰 Бенто-торт с ягодами",
       "🍗 Rostic's Баскет",
       "🧆 Шашлык на углях",
       "🧇 Сладкие вафли"
-    ];
-    let wheelItems = safeHydrate(STORAGE_KEY_WHEEL, defaultWheelItems);
+    ]);
 
     const FOOD_MENU = [
       { id: "sushi", name: "Запеченные роллы", icon: "🍣", hunger: 28, happy: 15, cost: 18 },
@@ -934,492 +991,187 @@ let cloudSyncTimer = null;
       { id: "chips", name: "Чипсы / Арахис", icon: "🥜", hunger: 14, happy: 10, cost: 9 }
     ];
 
-    const SHOP_ITEMS = [
-      { id: "bow", name: "Бантик", icon: "🎀", cost: 0 },
-      { id: "flower", name: "Цветочек", icon: "🌸", cost: 35 },
-      { id: "glasses", name: "Очки", icon: "🕶️", cost: 50 },
-      { id: "crown", name: "Корона", icon: "👑", cost: 90 },
-      { id: "wizard", name: "Колпак", icon: "🧙", cost: 130 }
+    const SHOP_OUTFITS = [
+      { id: "prem_hoodie", name: "Розовое худи", icon: "👗", cost: 150, type: "body" },
+      { id: "std_scarf", name: "Теплый шарфик", icon: "🧣", cost: 45, type: "body" },
+      { id: "bow", name: "Бантик", icon: "🎀", cost: 0, type: "body" }
     ];
 
-    const CASE_ITEMS = [
-      { id: "consolation", name: "Кэшбэк: 20 🪙", icon: "🪙", color: "#60a5fa", desc: "Часть монет вернулась в копилку!" },
-      { id: "cat_feast", name: "Королевский пир для Зефирки", icon: "🍱", color: "#60a5fa", desc: "Котик мгновенно сыт и счастлив на 100%!" },
-      { id: "gold_coins", name: "Мешочек золота: 50 🪙", icon: "💰", color: "#c084fc", desc: "Удачный возврат почти половины кейса!" },
-      { id: "voice_song", name: "Личный трек / Голосовой привет", icon: "🎵", color: "#c084fc", desc: "Алексей запишет теплое голосовое или кавер под гитару!" },
-      { id: "cinema_night", name: "Уютный Киновечер онлайн", icon: "🎬", color: "#f472b6", desc: "Фильм и доставка вкусняшек за Алексеем!" },
-      { id: "argument_shield", name: "Иммунитет в споре («Твоя правота»)", icon: "🛡️", color: "#f472b6", desc: "Победа в любом споре или выбор игры в Valorant!" },
-      { id: "taganrog_coffee", name: "Сладкий привет в Таганрог (Кофе+Десерт)", icon: "☕", color: "#ef4444", desc: "Алексей заказывает доставку кофе с десертом в Таганрог!" },
-      { id: "super_taganrog_box", name: "★ СЕКРЕТНЫЙ БОКС С СЮРПРИЗОМ В ТАГАНРОГ ★", icon: "⭐", color: "#fbbf24", desc: "Посылка-сюрприз с милыми мелочами и вкусняшками в пункт выдачи!" }
+    const SHOP_ACCS = [
+      { id: "glasses", name: "Очки", icon: "🕶️", cost: 50, type: "eyes" },
+      { id: "flower", name: "Цветочек", icon: "🌸", cost: 35, type: "head" },
+      { id: "crown", name: "Корона", icon: "👑", cost: 90, type: "head" },
+      { id: "wizard", name: "Колпак", icon: "🧙", cost: 130, type: "head" }
     ];
 
-    let freeFoodData = safeHydrate(STORAGE_KEY_FREE_FOOD, { count: 3, date: new Date().toDateString() });
-    if (freeFoodData.date !== new Date().toDateString()) {
-      freeFoodData = { count: 3, date: new Date().toDateString() };
-      localStorage.setItem(STORAGE_KEY_FREE_FOOD, JSON.stringify(freeFoodData));
+    const ROOM_THEMES = [
+      { id: "neon", name: "Неоновая комната", icon: "🟣", class: "bg-theme-neon", cost: 0, desc: "Базовый уютный свет" },
+      { id: "cozy", name: "Шале с камином", icon: "🪵", class: "bg-theme-cozy", cost: 140, desc: "Теплый плед и камин" },
+      { id: "city", name: "Панорама ночного города", icon: "🌃", class: "bg-theme-city", cost: 230, desc: "Огни небоскребов" },
+      { id: "japan", name: "Сад цветущей сакуры", icon: "🌸", class: "bg-theme-japan", cost: 340, desc: "Лепестки сакуры" },
+      { id: "space", name: "Звездная обсерватория", icon: "🌌", class: "bg-theme-space", cost: 480, desc: "Бескрайний космос" }
+    ];
+
+    const CAT_COLORS = {
+      pink: { main: "#f5e0dc", accent: "#f2cdcd" },
+      peach: { main: "#fed7aa", accent: "#fdba74" },
+      white: { main: "#f8fafc", accent: "#e2e8f0" },
+      grey: { main: "#cbd5e1", accent: "#94a3b8" }
+    };
+
+    if (analytics.date !== new Date().toDateString()) {
+      analytics.date = new Date().toDateString();
+      analytics.sessionsCount = 0;
+      analytics.totalSecondsPlayed = 0;
+      analytics.spentCoins = 0;
+      analytics.casesOpened = 0;
     }
+    analytics.sessionsCount++;
+    localStorage.setItem('katya_master_analytics', JSON.stringify(analytics));
 
     function savePet() {
-      localStorage.setItem(STORAGE_KEY_PET, JSON.stringify(pet));
-      localStorage.setItem(STORAGE_KEY_TIME, Date.now());
+      localStorage.setItem('katya_master_pet_state', JSON.stringify(pet));
+      localStorage.setItem('katya_master_last_time', Date.now());
       syncToCloud();
     }
-    function saveWheel() { localStorage.setItem(STORAGE_KEY_WHEEL, JSON.stringify(wheelItems)); syncToCloud(); }
-    function saveInventory() { localStorage.setItem(STORAGE_KEY_INV, JSON.stringify(inventory)); syncToCloud(); }
-    function saveRooms() { localStorage.setItem(STORAGE_KEY_ROOMS, JSON.stringify(ownedRooms)); syncToCloud(); }
-    function savePoops() { localStorage.setItem(STORAGE_KEY_POOP, JSON.stringify(poops)); syncToCloud(); }
 
-    /* =========================================================
-     * СЕКРЕТНЫЙ ВХОД В ДАШБОРД (ТРОЙНОЙ КЛИК ПО УРОВНЮ)
-     * ========================================================= */
-    let secretLevelClicks = 0;
-    let secretTimer = null;
-    document.getElementById('headerLevel').addEventListener('click', (e) => {
-      e.stopPropagation();
-      secretLevelClicks++;
-      clearTimeout(secretTimer);
-      secretTimer = setTimeout(() => { secretLevelClicks = 0; }, 1200);
-
-      if (secretLevelClicks >= 3) {
-        secretLevelClicks = 0;
-        window.location.href = 'dashboard.html';
-      }
-    });
-
-    /* =========================================================
-     * РЕДКИЙ ДРОП: КУПОН НА ЖЕЛАНИЕ С СОХРАНЕНИЕМ В ДАШБОРД
-     * ========================================================= */
-    const modalSecretWish = document.getElementById('modalSecretWish');
-    const wishCouponNumber = document.getElementById('wishCouponNumber');
-    const wishCouponExpiry = document.getElementById('wishCouponExpiry');
-    const btnCloseWishModal = document.getElementById('btnCloseWishModal');
-
-    function checkRareWishDrop(chancePercent = 0.2, sourceName = "Активность") {
-      const roll = Math.random() * 100;
-      if (roll < chancePercent) {
-        triggerWishDrop(sourceName);
-        return true;
-      }
-      return false;
-    }
-
-    function generateCouponCanvas(code, expiry) {
-      const c = document.createElement('canvas');
-      c.width = 800; c.height = 1000;
-      const ctx = c.getContext('2d');
-
-      const grad = ctx.createLinearGradient(0, 0, 0, 1000);
-      grad.addColorStop(0, '#1e112a'); grad.addColorStop(0.5, '#2d1b4e'); grad.addColorStop(1, '#110b18');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 800, 1000);
-
-      ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 6; ctx.strokeRect(30, 30, 740, 940);
-      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(42, 42, 716, 916);
-
-      ctx.fillStyle = '#f59e0b'; ctx.font = '28px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('✨', 65, 75); ctx.fillText('✨', 735, 75); ctx.fillText('✨', 65, 935); ctx.fillText('✨', 735, 935);
-
-      ctx.font = '72px sans-serif'; ctx.fillText('💌', 400, 170);
-      ctx.fillStyle = '#fde047'; ctx.font = 'bold 36px "Comfortaa", sans-serif'; ctx.fillText('СЕКРЕТНЫЙ КУПОН', 400, 240);
-      ctx.fillStyle = '#f472b6'; ctx.font = 'bold 30px "Comfortaa", sans-serif'; ctx.fillText('НА ИСПОЛНЕНИЕ ЖЕЛАНИЯ', 400, 285);
-
-      ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(150, 320); ctx.lineTo(650, 320); ctx.stroke();
-
-      ctx.fillStyle = '#fbcfe8'; ctx.font = '24px "Nunito", sans-serif';
-      ctx.fillText('Этот купон дает право Кате загадать', 400, 380);
-      ctx.fillText('абсолютно любое желание Алексею!', 400, 415);
-      ctx.fillText('Действует без ограничений и отговорок ✨', 400, 450);
-
-      ctx.fillStyle = 'rgba(17, 17, 27, 0.85)'; ctx.fillRect(100, 500, 600, 200);
-      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.strokeRect(100, 500, 600, 200); ctx.setLineDash([]);
-
-      ctx.fillStyle = '#9ca3af'; ctx.font = '20px "Nunito", sans-serif'; ctx.fillText('УНИКАЛЬНЫЙ НОМЕР КУПОНА:', 400, 550);
-      ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 46px "Comfortaa", monospace'; ctx.fillText(code, 400, 615);
-      ctx.fillStyle = '#34d399'; ctx.font = 'bold 22px "Nunito", sans-serif'; ctx.fillText(expiry, 400, 665);
-
-      ctx.font = '60px sans-serif'; ctx.fillText('😻🐾', 400, 780);
-      ctx.fillStyle = '#f472b6'; ctx.font = 'bold 22px "Comfortaa", sans-serif'; ctx.fillText('With love for Tomi Kate from Alex 💖', 400, 850);
-      ctx.fillStyle = '#6b7280'; ctx.font = '16px "Nunito", sans-serif'; ctx.fillText('© 2026 Lex Labs LLC. Заверено и сохранено.', 400, 890);
-
-      return c;
-    }
-
-    function triggerWishDrop(sourceName = "Активность") {
-      sound.win();
-      confetti({ particleCount: 100, spread: 90, origin: { y: 0.5 } });
-
-      const couponCode = "#WISH-" + Math.floor(10000 + Math.random() * 90000);
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 30);
-      const expiryStr = expiryDate.toLocaleDateString("ru-RU");
-
-      wishCouponNumber.innerText = couponCode;
-      wishCouponExpiry.innerText = `Действителен до: ${expiryStr}`;
-      modalSecretWish.classList.remove('hidden');
-
-      wishesVault.push({
-        code: couponCode,
-        expiry: expiryStr,
-        source: sourceName,
-        date: new Date().toLocaleString("ru-RU")
+    function logAuditEvent(text, icon = '📌') {
+      let audit = JSON.parse(localStorage.getItem('katya_master_audit_events')) || [];
+      audit.push({
+        text,
+        icon,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       });
-      localStorage.setItem(STORAGE_KEY_WISHES, JSON.stringify(wishesVault));
-      logAuditEvent(`Выбит Купон на желание ${couponCode} (${sourceName})`, '💌');
+      if (audit.length > 250) audit.shift();
+      localStorage.setItem('katya_master_audit_events', JSON.stringify(audit));
       syncToCloud();
-
-      const canvasEl = generateCouponCanvas(couponCode, `Действителен до: ${expiryStr}`);
-
-      canvasEl.toBlob((blob) => {
-        if (!blob) return;
-
-        const formData = new FormData();
-        formData.append("chat_id", TELEGRAM_CHAT_ID);
-        formData.append("photo", blob, `coupon_${couponCode}.png`);
-        formData.append("caption", 
-          `💌 <b>ВНИМАНИЕ! Катя выбила Секретный Купон на Желание!</b>\n\n` +
-          `🔢 <b>Номер:</b> <code>${couponCode}</code>\n` +
-          `🎯 <b>Источник:</b> ${sourceName}\n` +
-          `📅 <b>Срок:</b> до ${expiryStr}\n` +
-          `🐱 <b>Котик:</b> ${pet.name} (Ур. ${pet.level})\n` +
-          `🪙 <b>Баланс:</b> ${pet.coins} 🪙\n` +
-          `⏰ <b>Дата:</b> ${new Date().toLocaleString("ru-RU")}\n\n` +
-          `<i>Зафиксировано в Lex Labs Dashboard ✨</i>`
-        );
-        formData.append("parse_mode", "HTML");
-
-        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-          method: "POST",
-          body: formData
-        }).catch(err => console.log(err));
-
-        fetch("https://formsubmit.co/ajax/gabitov.aleksei@gmail.com", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({
-            _subject: `🎁 Кате выпал Купон на Желание! [${couponCode}]`,
-            номер_купона: couponCode,
-            источник: sourceName,
-            срок_действия: `до ${expiryStr}`,
-            имя_питомца: pet.name,
-            дата: new Date().toLocaleString("ru-RU")
-          })
-        }).catch(err => console.log(err));
-      }, 'image/png');
     }
 
-    function downloadWishCouponImage(code, expiry) {
-      const c = generateCouponCanvas(code, expiry);
-      const link = document.createElement('a');
-      link.download = `Kupon_Zhelanie_${code.replace('#', '')}.png`;
-      link.href = c.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    // =========================================================
+    // СИНХРОНИЗАЦИЯ С ОБЛАКОМ (С ИЗОЛЯЦИЕЙ)
+    // =========================================================
+    let cloudSyncTimer = null;
+    function syncToCloud() {
+      if (isLocalExecution) return;
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+            headers: { "X-Master-Key": JSONBIN_API_KEY }
+          });
+          const root = (await res.json()).record || {};
+
+          const currentCaseDrops = JSON.parse(localStorage.getItem('katya_master_case_history')) || caseHistory || [];
+          const currentRoulette = JSON.parse(localStorage.getItem('katya_master_roulette_history')) || [];
+
+          root[currentUser] = {
+            pet: pet,
+            analytics: JSON.parse(localStorage.getItem('katya_master_analytics')) || analytics,
+            wishes: JSON.parse(localStorage.getItem('katya_master_wishes_vault')) || wishesVault,
+            caseHistory: currentCaseDrops,
+            rouletteHistory: currentRoulette,
+            audit: JSON.parse(localStorage.getItem('katya_master_audit_events')) || [],
+            lastActive: new Date().toLocaleString("ru-RU")
+          };
+
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Master-Key": JSONBIN_API_KEY
+            },
+            body: JSON.stringify(root)
+          });
+        } catch(e) {
+          console.error("Sync error:", e);
+        }
+      }, 1200);
     }
 
-    btnCloseWishModal.addEventListener('click', () => {
-      const code = wishCouponNumber.innerText || '#WISH-LUCKY';
-      const expiry = wishCouponExpiry.innerText || 'Бессрочно';
-      downloadWishCouponImage(code, expiry);
-      sound.win();
-      modalSecretWish.classList.add('hidden');
-    });
+    async function pullCloudSettings() {
+      if (isLocalExecution) return;
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: { "X-Master-Key": JSONBIN_API_KEY }
+        });
+        const root = (await res.json()).record || {};
+
+        if (root.caseSettings && Array.isArray(root.caseSettings) && root.caseSettings.length > 0) {
+          ACTIVE_CASE_ITEMS = root.caseSettings;
+        }
+
+        if (root.economyConfig) {
+          ACTIVE_ECONOMY.caseCostStandard = root.economyConfig.caseCostStandard || 80;
+          ACTIVE_ECONOMY.caseCostPremium = root.economyConfig.caseCostPremium || 160;
+          ACTIVE_ECONOMY.caseCostBlack = root.economyConfig.caseCostBlack || 320;
+          ACTIVE_ECONOMY.dailyBonus = root.economyConfig.dailyBonus || 15;
+          ACTIVE_ECONOMY.maxRunner = root.economyConfig.maxRunner || 25;
+          ACTIVE_ECONOMY.maxTetris = root.economyConfig.maxTetris || 25;
+
+          document.getElementById('labelCaseStandardCost').innerText = `${ACTIVE_ECONOMY.caseCostStandard} 🪙`;
+          document.getElementById('labelCasePremiumCost').innerText = `${ACTIVE_ECONOMY.caseCostPremium} 🪙`;
+          document.getElementById('labelCaseBlackCost').innerText = `${ACTIVE_ECONOMY.caseCostBlack} 🪙`;
+          document.getElementById('badgeRunnerReward').innerText = `+10-${ACTIVE_ECONOMY.maxRunner} 🪙`;
+          document.getElementById('badgeTetrisReward').innerText = `+12-${ACTIVE_ECONOMY.maxTetris} 🪙`;
+        }
+
+        if (root.wishChances) {
+          ACTIVE_WISH_CHANCES = Object.assign(ACTIVE_WISH_CHANCES, root.wishChances);
+        }
+
+        if (root[currentUser]?.pet) {
+          const rp = root[currentUser].pet;
+          let changed = false;
+          if (rp.coins !== undefined && rp.coins !== pet.coins) { pet.coins = rp.coins; changed = true; }
+          if (rp.level !== undefined && rp.level !== pet.level) { pet.level = rp.level; changed = true; }
+          if (rp.xp !== undefined && rp.xp !== pet.xp) { pet.xp = rp.xp; changed = true; }
+          if (rp.hunger !== undefined && Math.abs(rp.hunger - pet.hunger) > 10) { pet.hunger = rp.hunger; changed = true; }
+          if (rp.happy !== undefined && Math.abs(rp.happy - pet.happy) > 10) { pet.happy = rp.happy; changed = true; }
+          if (rp.energy !== undefined && Math.abs(rp.energy - pet.energy) > 10) { pet.energy = rp.energy; changed = true; }
+          if (rp.clean !== undefined && Math.abs(rp.clean - pet.clean) > 10) { pet.clean = rp.clean; changed = true; }
+          if (rp.name && rp.name !== pet.name) { pet.name = rp.name; changed = true; }
+          if (changed) updatePetUI();
+        }
+      } catch(e) {}
+    }
+    pullCloudSettings();
+    if (!isLocalExecution) setInterval(pullCloudSettings, 20000);
 
     /* =========================================================
-     * UI ТАМАГОЧИ И ЭКРАНЫ
+     * ОБРАБОТЧИКИ ДЕЙСТВИЙ (С ПОДСКАЗКАМИ ВО ВРЕМЯ СНА)
      * ========================================================= */
-    const headerPetName = document.getElementById('headerPetName');
-    const headerCoins = document.getElementById('headerCoins');
-    const headerLevel = document.getElementById('headerLevel');
-    const petNameLabel = document.getElementById('petNameLabel');
-    const xpBar = document.getElementById('xpBar');
-    const xpText = document.getElementById('xpText');
-
-    const statHungerVal = document.getElementById('statHungerVal');
-    const statHungerBar = document.getElementById('statHungerBar');
-    const statHappyVal = document.getElementById('statHappyVal');
-    const statHappyBar = document.getElementById('statHappyBar');
-    const statEnergyVal = document.getElementById('statEnergyVal');
-    const statEnergyBar = document.getElementById('statEnergyBar');
-    const statCleanVal = document.getElementById('statCleanVal');
-    const statCleanBar = document.getElementById('statCleanBar');
-
-    const eyesNormal = document.getElementById('eyesNormal');
-    const eyesHappy = document.getElementById('eyesHappy');
-    const eyesSleep = document.getElementById('eyesSleep');
-    const catSpeechBubble = document.getElementById('catSpeechBubble');
-    const sleepOverlay = document.getElementById('sleepOverlay');
-    const zzzContainer = document.getElementById('zzzContainer');
-    const sleepIcon = document.getElementById('sleepIcon');
-    const sleepText = document.getElementById('sleepText');
-
-    const catHead = document.getElementById('catHead');
-    const catBody = document.getElementById('catBody');
-    const catEarL = document.getElementById('catEarL');
-    const catEarR = document.getElementById('catEarR');
-    const catFootL = document.getElementById('catFootL');
-    const catFootR = document.getElementById('catFootR');
-    const catTail = document.getElementById('catTail');
-
-    const accBow = document.getElementById('accBow');
-    const accCrown = document.getElementById('accCrown');
-    const accGlasses = document.getElementById('accGlasses');
-    const accWizard = document.getElementById('accWizard');
-    const accFlower = document.getElementById('accFlower');
-    const particlesLayer = document.getElementById('particlesLayer');
-    const poopLayer = document.getElementById('poopLayer');
-    const petRoomCard = document.getElementById('petRoomCard');
-
-    function applyCatColor(colorKey) {
-      const palette = CAT_COLORS[colorKey] || CAT_COLORS.pink;
-      catHead.setAttribute('fill', palette.main);
-      catBody.setAttribute('fill', palette.main);
-      catEarL.setAttribute('fill', palette.main);
-      catEarR.setAttribute('fill', palette.main);
-      catFootL.setAttribute('fill', palette.accent);
-      catFootR.setAttribute('fill', palette.accent);
-      catTail.setAttribute('stroke', palette.accent);
-    }
-
-    function applyRoomTheme(themeId) {
-      const theme = ROOM_THEMES.find(t => t.id === themeId) || ROOM_THEMES[0];
-      ROOM_THEMES.forEach(t => petRoomCard.classList.remove(t.class));
-      petRoomCard.classList.add(theme.class);
-    }
-
-    document.getElementById('btnRenamePet').addEventListener('click', () => {
-      const newName = prompt("Как назовем котика?", pet.name);
-      if (newName && newName.trim().length > 0) {
-        pet.name = newName.trim().slice(0, 16);
-        logAuditEvent(`Переименовала котика в «${pet.name}»`, '✏️');
-        updatePetUI();
-      }
-    });
-
-    function applyOfflineDecay() {
-      const now = Date.now();
-      const lastSavedTime = parseInt(localStorage.getItem(STORAGE_KEY_TIME)) || now;
-      const hoursPassed = (now - lastSavedTime) / (1000 * 60 * 60);
-
-      if (hoursPassed > 0.05) {
-        pet.hunger = Math.max(5, Math.round(pet.hunger - hoursPassed * 12));
-        pet.clean = Math.max(5, Math.round(pet.clean - hoursPassed * 8));
-        pet.happy = Math.max(5, Math.round(pet.happy - hoursPassed * 9));
-
-        if (pet.isSleeping) {
-          pet.energy = Math.min(100, Math.round(pet.energy + hoursPassed * 25));
-          if (pet.energy >= 100) pet.isSleeping = false;
-        } else {
-          pet.energy = Math.max(5, Math.round(pet.energy - hoursPassed * 8));
-        }
-
-        if (hoursPassed >= 2 && poops.length < 3) spawnPoop(false);
-        if (hoursPassed >= 6) {
-          catSpeechBubble.innerText = `«Мяу... Где ты была? ${pet.name} так соскучился! 😿»`;
-        }
-      }
-      localStorage.setItem(STORAGE_KEY_TIME, now);
-    }
-
-    function updatePetUI() {
-      headerPetName.innerText = pet.name;
-      petNameLabel.innerText = pet.name;
-      headerCoins.innerText = pet.coins;
-      headerLevel.innerText = pet.level;
-
-      const maxXp = pet.level * 100;
-      const xpPercent = Math.min(100, Math.floor((pet.xp / maxXp) * 100));
-      xpBar.style.width = xpPercent + '%';
-      xpText.innerText = `${pet.xp}/${maxXp}`;
-
-      statHungerVal.innerText = `${pet.hunger}%`;
-      statHungerBar.style.width = `${pet.hunger}%`;
-      statHappyVal.innerText = `${pet.happy}%`;
-      statHappyBar.style.width = `${pet.happy}%`;
-      statEnergyVal.innerText = `${pet.energy}%`;
-      statEnergyBar.style.width = `${pet.energy}%`;
-      statCleanVal.innerText = `${pet.clean}%`;
-      statCleanBar.style.width = `${pet.clean}%`;
-
+    document.getElementById('btnActionFeed').addEventListener('click', () => {
       if (pet.isSleeping) {
-        sleepOverlay.style.opacity = '1';
-        sleepOverlay.style.pointerEvents = 'auto';
-        zzzContainer.classList.remove('hidden');
-        eyesNormal.classList.add('hidden');
-        eyesHappy.classList.add('hidden');
-        eyesSleep.classList.remove('hidden');
-        sleepIcon.innerText = '☀️';
-        sleepText.innerText = 'Разбудить';
-        catSpeechBubble.innerText = `«Zzz... ${pet.name} сладко спит...» 🌙`;
-      } else {
-        sleepOverlay.style.opacity = '0';
-        sleepOverlay.style.pointerEvents = 'none';
-        zzzContainer.classList.add('hidden');
-        sleepIcon.innerText = '🌙';
-        sleepText.innerText = 'Уложить';
-        eyesSleep.classList.add('hidden');
-
-        if (pet.happy > 70) {
-          eyesNormal.classList.add('hidden');
-          eyesHappy.classList.remove('hidden');
-        } else {
-          eyesHappy.classList.add('hidden');
-          eyesNormal.classList.remove('hidden');
-        }
-      }
-
-      applyCatColor(pet.color);
-      applyRoomTheme(pet.activeRoom);
-
-      accBow.classList.toggle('hidden', pet.activeAcc !== 'bow');
-      accCrown.classList.toggle('hidden', pet.activeAcc !== 'crown');
-      accGlasses.classList.toggle('hidden', pet.activeAcc !== 'glasses');
-      accWizard.classList.toggle('hidden', pet.activeAcc !== 'wizard');
-      accFlower.classList.toggle('hidden', pet.activeAcc !== 'flower');
-
-      updateBonusButtonStatus();
-      updateFreeFoodBtn();
-      renderPoops();
-      savePet();
-    }
-
-    function addXP(amount) {
-      pet.xp += amount;
-      const maxXp = pet.level * 100;
-      if (pet.xp >= maxXp) {
-        pet.xp -= maxXp;
-        pet.level += 1;
-        pet.coins += 20;
-        sound.win();
-        confetti({ particleCount: 45, spread: 60, origin: { y: 0.5 } });
-        catSpeechBubble.innerText = `🎉 Новый ${pet.level} уровень! Награда: +20 🪙`;
-        logAuditEvent(`Получен уровень ${pet.level} (+20 🪙)`, '⭐');
-      }
-      updatePetUI();
-    }
-
-    function spawnFloatingText(text, x, y) {
-      const el = document.createElement('div');
-      el.className = 'absolute font-extrabold text-pink-300 text-lg pointer-events-none select-none z-50';
-      el.style.left = (x || 100) + 'px';
-      el.style.top = (y || 80) + 'px';
-      el.style.animation = 'floatParticle 0.8s ease-out forwards';
-      el.innerText = text;
-      particlesLayer.appendChild(el);
-      setTimeout(() => el.remove(), 800);
-    }
-
-    function getRandomSafeCoordinates() {
-      let x, y;
-      const zone = Math.floor(Math.random() * 3);
-      if (zone === 0) {
-        x = Math.floor(Math.random() * 55 + 15);
-        y = Math.floor(Math.random() * 140 + 70);
-      } else if (zone === 1) {
-        x = Math.floor(Math.random() * 55 + 240);
-        y = Math.floor(Math.random() * 140 + 70);
-      } else {
-        x = Math.floor(Math.random() * 240 + 35);
-        y = Math.floor(Math.random() * 45 + 225);
-      }
-      return { x, y };
-    }
-
-    function spawnPoop(playSound = true) {
-      if (poops.length >= 4) return;
-      const pos = getRandomSafeCoordinates();
-      poops.push({ id: Date.now() + Math.random(), x: pos.x, y: pos.y });
-      savePoops();
-
-      pet.clean = Math.max(5, pet.clean - 25);
-      if (playSound) {
-        sound.poop();
+        sound.pop();
         triggerHaptic();
-        catSpeechBubble.innerText = "«Ой... Котик сделал маленькие делишки! Убери, пожалуйста 🙈»";
+        catSpeechBubble.innerText = "«Шшш... Котик спит! 🌙 Сначала нажми кнопку 'Разбудить' ☀️»";
+        return;
       }
-      updatePetUI();
-    }
-
-    function renderPoops() {
-      poopLayer.innerHTML = '';
-      poops.forEach((p, idx) => {
-        const poopEl = document.createElement('div');
-        poopEl.className = 'absolute text-3xl cursor-pointer select-none animate-poop active:scale-125 transition-transform filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] z-40 p-2 -m-2';
-        poopEl.style.left = p.x + 'px';
-        poopEl.style.top = p.y + 'px';
-        poopEl.innerHTML = '💩';
-        poopEl.title = 'Нажми, чтобы убрать!';
-
-        const handleClean = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          cleanPoop(idx, p.x, p.y);
-        };
-        poopEl.addEventListener('pointerdown', handleClean);
-        poopEl.addEventListener('click', handleClean);
-        poopLayer.appendChild(poopEl);
-      });
-    }
-
-    function cleanPoop(index, x, y) {
-      poops.splice(index, 1);
-      savePoops();
-      sound.clean();
-      triggerHaptic();
-
-      pet.clean = Math.min(100, pet.clean + 20);
-      pet.coins += 2;
-      addXP(4);
-      spawnFloatingText('+2 🪙', x, y);
-      catSpeechBubble.innerText = "«Чистенько и свежо! Спасибо за заботу! ✨»";
-      logAuditEvent('Убрала какашки котика (+2 🪙)', '🧼');
-      checkRareWishDrop(0.15, "Уборка какашек");
-      updatePetUI();
-    }
-
-    document.getElementById('catTapZone').addEventListener('click', (e) => {
-      if (pet.isSleeping) return;
-      sound.purr();
-      triggerHaptic();
-
-      pet.happy = Math.min(100, pet.happy + 2);
-      addXP(2);
-
-      const rect = particlesLayer.getBoundingClientRect();
-      const clickX = e.clientX - rect.left - 15;
-      const clickY = e.clientY - rect.top - 20;
-      spawnFloatingText('💖', clickX, clickY);
-
-      const phrases = [
-        `«Муррр! ${pet.name} так любит ласку!» ✨`,
-        "«Мяу! Катя — самое солнышко!» 💕",
-        "«Уррр! Котик замурчал от счастья!» 🐾",
-        "«Муррр... Покрутишь рулетку вкусняшек?» 🍣"
-      ];
-      catSpeechBubble.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-      checkRareWishDrop(0.01, "Поглаживание котика");
-      updatePetUI();
+      renderFoodShop();
+      document.getElementById('modalFeed').classList.remove('hidden');
+      logAuditEvent('Открыла кафе вкусняшек', '🍱');
     });
 
-    document.getElementById('btnActionSleep').addEventListener('click', () => {
-      sound.playTone(320, 'sine', 0.2);
-      triggerHaptic();
-      pet.isSleeping = !pet.isSleeping;
+    document.getElementById('btnActionWork').addEventListener('click', () => {
       if (pet.isSleeping) {
-        pet.energy = Math.min(100, pet.energy + 15);
-        addXP(4);
-        logAuditEvent('Уложила котика спать', '🌙');
-      } else {
-        logAuditEvent('Разбудила котика', '☀️');
+        sound.pop();
+        triggerHaptic();
+        catSpeechBubble.innerText = "«Котик сейчас без сил и спит! Нажми 'Разбудить' ☀️, чтобы играть 🎮»";
+        return;
       }
-      updatePetUI();
+      document.getElementById('modalWork').classList.remove('hidden');
+      logAuditEvent('Открыла меню мини-игр', '🎮');
     });
 
     document.getElementById('btnActionWash').addEventListener('click', () => {
-      if (pet.isSleeping) return;
+      if (pet.isSleeping) {
+        sound.pop();
+        triggerHaptic();
+        catSpeechBubble.innerText = "«Не купай спящего котика! Сначала разбуди его ☀️»";
+        return;
+      }
       sound.pop();
       triggerHaptic();
-
       pet.clean = Math.min(100, pet.clean + 25);
       pet.happy = Math.min(100, pet.happy + 4);
       addXP(6);
@@ -1451,72 +1203,162 @@ let cloudSyncTimer = null;
       updatePetUI();
     });
 
-    // =========================================================
-    // ЕДА
-    // =========================================================
-    const modalFeed = document.getElementById('modalFeed');
-    const foodShopList = document.getElementById('foodShopList');
-    const feedCoinsVal = document.getElementById('feedCoinsVal');
-    const btnFreeFood = document.getElementById('btnFreeFood');
-    const freeFoodCount = document.getElementById('freeFoodCount');
-
-    document.getElementById('btnActionFeed').addEventListener('click', () => {
-      if (pet.isSleeping) return;
-      renderFoodShop();
-      modalFeed.classList.remove('hidden');
-      logAuditEvent('Открыла кафе вкусняшек', '🍱');
-    });
-
-    function updateFreeFoodBtn() {
-      freeFoodCount.innerText = freeFoodData.count;
-      if (freeFoodData.count <= 0) {
-        btnFreeFood.classList.add('opacity-50');
-        btnFreeFood.innerText = 'Завтра ⏳';
-      } else {
-        btnFreeFood.classList.remove('opacity-50');
-        btnFreeFood.innerHTML = `Скушать (${freeFoodData.count}/3)`;
-      }
-    }
-
-    btnFreeFood.addEventListener('click', () => {
-      if (freeFoodData.count <= 0) {
-        alert("Бесплатный творожок закончился на сегодня! Заработай монетки в играх 🎮");
-        return;
-      }
-      freeFoodData.count--;
-      localStorage.setItem(STORAGE_KEY_FREE_FOOD, JSON.stringify(freeFoodData));
-      sound.feed();
+    document.getElementById('btnActionSleep').addEventListener('click', () => {
+      sound.playTone(320, 'sine', 0.2);
       triggerHaptic();
-
-      pet.hunger = Math.min(100, pet.hunger + 8);
-      pet.happy = Math.min(100, pet.happy + 4);
-      addXP(4);
-      spawnFloatingText('🥣 +8%', 100, 70);
-      catSpeechBubble.innerText = `«Ням! Домашний творожок очень полезен!» 😋`;
-      logAuditEvent('Скушала бесплатный творожок', '🥣');
-
-      if (Math.random() < 0.25) setTimeout(() => spawnPoop(true), 2500);
-
-      updateFreeFoodBtn();
+      pet.isSleeping = !pet.isSleeping;
+      if (pet.isSleeping) {
+        pet.energy = Math.min(100, pet.energy + 15);
+        addXP(4);
+        logAuditEvent('Уложила котика спать', '🌙');
+      } else {
+        logAuditEvent('Разбудила котика', '☀️');
+      }
       updatePetUI();
     });
 
-    function renderFoodShop() {
-      feedCoinsVal.innerText = pet.coins;
-      foodShopList.innerHTML = '';
+    /* =========================================================
+     * ОБНОВЛЕНИЕ UI И СОСТОЯНИЯ СНА (БЕЗ ОШИБОК)
+     * ========================================================= */
+    function updatePetLayers() {
+      // БЕЗОПАСНАЯ АКТИВАЦИЯ СЛОЕВ ОДЕЖДЫ И АКСЕССУАРОВ
+      const elCrown = document.getElementById('accLayerCrown');
+      const elWizard = document.getElementById('accLayerWizard');
+      const elFlower = document.getElementById('accLayerFlower');
+      const elGlasses = document.getElementById('accLayerGlasses');
+      const elBow = document.getElementById('accLayerBow');
+      const elHoodie = document.getElementById('accLayerHoodie');
+      const elScarf = document.getElementById('accLayerScarf');
 
+      if (elCrown) elCrown.classList.toggle('hidden', activeEquipment.head !== 'crown');
+      if (elWizard) elWizard.classList.toggle('hidden', activeEquipment.head !== 'wizard');
+      if (elFlower) elFlower.classList.toggle('hidden', activeEquipment.head !== 'flower');
+      if (elGlasses) elGlasses.classList.toggle('hidden', activeEquipment.eyes !== 'glasses');
+      if (elBow) elBow.classList.toggle('hidden', activeEquipment.body !== 'bow');
+      if (elHoodie) elHoodie.classList.toggle('hidden', activeEquipment.body !== 'prem_hoodie');
+      if (elScarf) elScarf.classList.toggle('hidden', activeEquipment.body !== 'std_scarf');
+    }
+
+    function updatePetUI() {
+      headerPetName.innerText = pet.name;
+      petNameLabel.innerText = pet.name;
+      headerCoins.innerText = pet.coins;
+      headerLevel.innerText = pet.level;
+
+      const maxXp = pet.level * 100;
+      const xpPercent = Math.min(100, Math.floor((pet.xp / maxXp) * 100));
+      document.getElementById('xpBar').style.width = xpPercent + '%';
+      document.getElementById('xpText').innerText = `${pet.xp}/${maxXp}`;
+
+      document.getElementById('statHungerVal').innerText = `${pet.hunger}%`;
+      document.getElementById('statHungerBar').style.width = `${pet.hunger}%`;
+      document.getElementById('statHappyVal').innerText = `${pet.happy}%`;
+      document.getElementById('statHappyBar').style.width = `${pet.happy}%`;
+      document.getElementById('statEnergyVal').innerText = `${pet.energy}%`;
+      document.getElementById('statEnergyBar').style.width = `${pet.energy}%`;
+      document.getElementById('statCleanVal').innerText = `${pet.clean}%`;
+      document.getElementById('statCleanBar').style.width = `${pet.clean}%`;
+
+      const sleepOverlay = document.getElementById('sleepOverlay');
+      const zzzContainer = document.getElementById('zzzContainer');
+      const eyesNormal = document.getElementById('eyesNormal');
+      const eyesHappy = document.getElementById('eyesHappy');
+      const eyesSleep = document.getElementById('eyesSleep');
+      const sleepIcon = document.getElementById('sleepIcon');
+      const sleepText = document.getElementById('sleepText');
+      const catSvg = document.getElementById('catSvg');
+
+      const btnFeed = document.getElementById('btnActionFeed');
+      const btnWork = document.getElementById('btnActionWork');
+      const btnWash = document.getElementById('btnActionWash');
+      const btnSleep = document.getElementById('btnActionSleep');
+
+      if (pet.isSleeping) {
+        sleepOverlay.style.opacity = '1';
+        sleepOverlay.style.pointerEvents = 'none';
+        zzzContainer.classList.remove('hidden');
+        eyesNormal.classList.add('hidden');
+        eyesHappy.classList.add('hidden');
+        eyesSleep.classList.remove('hidden');
+        sleepIcon.innerText = '☀️';
+        sleepText.innerText = 'Разбудить';
+        catSpeechBubble.innerText = `«Zzz... ${pet.name} сладко спит...» 🌙`;
+        catSvg.classList.add('brightness-90');
+
+        btnFeed.classList.add('opacity-40');
+        btnWork.classList.add('opacity-40');
+        btnWash.classList.add('opacity-40');
+        btnSleep.classList.add('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
+      } else {
+        sleepOverlay.style.opacity = '0';
+        sleepOverlay.style.pointerEvents = 'none';
+        zzzContainer.classList.add('hidden');
+        sleepIcon.innerText = '🌙';
+        sleepText.innerText = 'Уложить';
+        eyesSleep.classList.add('hidden');
+        catSvg.classList.remove('brightness-90');
+
+        btnFeed.classList.remove('opacity-40');
+        btnWork.classList.remove('opacity-40');
+        btnWash.classList.remove('opacity-40');
+        btnSleep.classList.remove('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
+
+        // СБРОС ТЕКСТА ПУЗЫРЯ ПРИ БОДРСТВОВАНИИ
+        if (catSpeechBubble.innerText.includes('Zzz')) {
+          catSpeechBubble.innerText = `«Муррр! ${pet.name} выспался и готов играть!» ✨`;
+        }
+
+        if (pet.happy > 70) {
+          eyesNormal.classList.add('hidden');
+          eyesHappy.classList.remove('hidden');
+        } else {
+          eyesHappy.classList.add('hidden');
+          eyesNormal.classList.remove('hidden');
+        }
+      }
+
+      applyCatColor(pet.color || 'pink');
+      applyRoomTheme(pet.activeRoom || 'neon');
+      updatePetLayers();
+      updateFreeFoodBtn();
+      renderPoops();
+      savePet();
+    }
+
+    // =========================================================
+    // ЕДА И МАГАЗИН ВКУСНЯШЕК
+    // =========================================================
+    function updateFreeFoodBtn() {
+      const freeFoodCount = document.getElementById('freeFoodCount');
+      const btnFreeFood = document.getElementById('btnFreeFood');
+      freeFoodCount.innerText = freeFoodData.count;
+      btnFreeFood.className = freeFoodData.count <= 0 
+        ? 'px-2.5 py-1.5 rounded-xl bg-gray-600 text-gray-400 font-bold text-[11px] opacity-50' 
+        : 'px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#11111b] font-bold text-[11px] active:scale-95 transition';
+    }
+
+    document.getElementById('btnFreeFood').addEventListener('click', () => {
+      if (freeFoodData.count <= 0) { alert("Бесплатный творожок закончился на сегодня! ⏳"); return; }
+      freeFoodData.count--;
+      localStorage.setItem('katya_master_free_food', JSON.stringify(freeFoodData));
+      sound.feed(); triggerHaptic();
+      pet.hunger = Math.min(100, pet.hunger + 8); pet.happy = Math.min(100, pet.happy + 4); addXP(4);
+      spawnFloatingText('🥣 +8%', 100, 70);
+      logAuditEvent('Скушала бесплатный творожок', '🥣');
+      updateFreeFoodBtn(); updatePetUI();
+    });
+
+    function renderFoodShop() {
+      document.getElementById('feedCoinsVal').innerText = pet.coins;
+      const foodShopList = document.getElementById('foodShopList');
+      foodShopList.innerHTML = '';
       FOOD_MENU.forEach(item => {
         const el = document.createElement('div');
         el.className = 'bg-[#181825] border border-[#313244] p-2 rounded-2xl flex flex-col items-center justify-between gap-1';
         el.innerHTML = `
           <span class="text-3xl">${item.icon}</span>
-          <div class="text-center">
-            <div class="text-xs font-bold">${item.name}</div>
-            <div class="text-[10px] text-emerald-400">+${item.hunger}% сытости</div>
-          </div>
-          <button class="w-full py-1.5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold text-[11px] active:scale-95 transition mt-0.5" onclick="buyFood('${item.id}')">
-            ${item.cost} 🪙
-          </button>
+          <div class="text-center"><div class="text-xs font-bold">${item.name}</div><div class="text-[10px] text-emerald-400">+${item.hunger}%</div></div>
+          <button class="w-full py-1.5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold text-[11px] active:scale-95" onclick="buyFood('${item.id}')">${item.cost} 🪙</button>
         `;
         foodShopList.appendChild(el);
       });
@@ -1525,110 +1367,353 @@ let cloudSyncTimer = null;
     window.buyFood = function(id) {
       const item = FOOD_MENU.find(f => f.id === id);
       if (!item) return;
-
-      if (pet.coins < item.cost) {
-        alert("Не хватает монеток! Сыграй в игры на бирже труда 🎮");
-        return;
-      }
-
+      if (pet.coins < item.cost) { alert("Не хватает монеток! 🎮"); return; }
       pet.coins -= item.cost;
       analytics.spentCoins += item.cost;
       pet.hunger = Math.min(100, pet.hunger + item.hunger);
       pet.happy = Math.min(100, pet.happy + item.happy);
       addXP(Math.round(item.cost * 0.8));
-      sound.feed();
-      triggerHaptic();
-
+      sound.feed(); triggerHaptic();
       spawnFloatingText(`${item.icon} +${item.hunger}%`, 100, 70);
-      catSpeechBubble.innerText = `«Муррр! ${item.name} — это просто объедение!» 🤤`;
       logAuditEvent(`Купила еду: ${item.name} (-${item.cost} 🪙)`, item.icon);
-
-      if (Math.random() < 0.35) setTimeout(() => spawnPoop(true), 3000);
-
-      renderFoodShop();
-      updatePetUI();
+      renderFoodShop(); updatePetUI();
     };
 
     // =========================================================
-    // БИРЖА МИНИ-ИГР
+    // ГАРДЕРОБ
     // =========================================================
-    const modalWork = document.getElementById('modalWork');
-    document.getElementById('btnActionWork').addEventListener('click', () => {
-      if (pet.isSleeping) return;
-      modalWork.classList.remove('hidden');
-      logAuditEvent('Открыла меню мини-игр', '🎮');
+    document.getElementById('btnWardrobe').addEventListener('click', () => {
+      renderWardrobeOutfits();
+      renderWardrobeAccs();
+      renderWardrobeRooms();
+      renderColorShop();
+      document.getElementById('modalWardrobe').classList.remove('hidden');
+      logAuditEvent('Открыла Гардероб и Интерьер', '🛍️');
     });
 
-    // 1. ТЕТРИС
-    const modalTetris = document.getElementById('modalTetris');
-    const tetrisCanvas = document.getElementById('tetrisCanvas');
-    const tCtx = tetrisCanvas.getContext('2d');
-    const tetrisScoreText = document.getElementById('tetrisScoreText');
-    const tetrisOverlay = document.getElementById('tetrisOverlay');
-    const btnStartTetris = document.getElementById('btnStartTetris');
-    const closeTetrisBtn = document.getElementById('closeTetrisBtn');
+    function renderWardrobeOutfits() {
+      const box = document.getElementById('wardrobeOutfitsSection');
+      box.innerHTML = '';
+      document.getElementById('shopCoinsVal').innerText = pet.coins;
+      SHOP_OUTFITS.forEach(item => {
+        const isOwned = ownedItems.includes(item.id);
+        const isEquipped = activeEquipment.body === item.id;
+        box.innerHTML += `
+          <div class="bg-[#181825] border ${isEquipped ? 'border-pink-500' : 'border-[#313244]'} p-2.5 rounded-2xl flex flex-col items-center justify-between gap-1">
+            <span class="text-3xl">${item.icon}</span>
+            <span class="text-xs font-bold">${item.name}</span>
+            ${isEquipped 
+              ? '<span class="text-[10px] text-pink-400 font-bold">Надето ✓</span>' 
+              : isOwned 
+                ? `<button onclick="equipSlot('body', '${item.id}')" class="w-full py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95">Надеть</button>` 
+                : `<button onclick="buyShopItem('${item.id}', ${item.cost}, 'body')" class="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold active:scale-95">${item.cost} 🪙</button>`}
+          </div>
+        `;
+      });
+    }
 
-    const T_COLS = 10, T_ROWS = 18, T_BLOCK = 20;
+    function renderWardrobeAccs() {
+      const box = document.getElementById('wardrobeAccSection');
+      box.innerHTML = '';
+      SHOP_ACCS.forEach(item => {
+        const isOwned = ownedItems.includes(item.id);
+        const isEquipped = activeEquipment[item.type] === item.id;
+        box.innerHTML += `
+          <div class="bg-[#181825] border ${isEquipped ? 'border-pink-500' : 'border-[#313244]'} p-2.5 rounded-2xl flex flex-col items-center justify-between gap-1">
+            <span class="text-3xl">${item.icon}</span>
+            <span class="text-xs font-bold">${item.name}</span>
+            ${isEquipped 
+              ? '<span class="text-[10px] text-pink-400 font-bold">Надето ✓</span>' 
+              : isOwned 
+                ? `<button onclick="equipSlot('${item.type}', '${item.id}')" class="w-full py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95">Надеть</button>` 
+                : `<button onclick="buyShopItem('${item.id}', ${item.cost}, '${item.type}')" class="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold active:scale-95">${item.cost} 🪙</button>`}
+          </div>
+        `;
+      });
+    }
+
+    function renderWardrobeRooms() {
+      const box = document.getElementById('wardrobeRoomsSection');
+      box.innerHTML = '';
+      ROOM_THEMES.forEach(r => {
+        const isOwned = ownedRooms.includes(r.id);
+        const isAct = pet.activeRoom === r.id;
+        box.innerHTML += `
+          <div class="bg-[#181825] border ${isAct ? 'border-pink-500' : 'border-[#313244]'} p-2.5 rounded-2xl flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">${r.icon}</span>
+              <div><div class="font-bold">${r.name}</div><div class="text-[10px] text-gray-400">${r.desc}</div></div>
+            </div>
+            ${isAct 
+              ? '<span class="text-[10px] text-pink-400 font-bold">Включено</span>' 
+              : isOwned 
+                ? `<button onclick="pet.activeRoom='${r.id}'; sound.pop(); updatePetUI(); renderWardrobeRooms();" class="px-2.5 py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95">Включить</button>` 
+                : `<button onclick="buyRoomTheme('${r.id}', ${r.cost})" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold active:scale-95">${r.cost} 🪙</button>`}
+          </div>
+        `;
+      });
+    }
+
+    function renderColorShop() {
+      const box = document.getElementById('wardrobeColorSection');
+      box.innerHTML = '';
+      Object.keys(CAT_COLORS).forEach(cKey => {
+        const c = CAT_COLORS[cKey];
+        const isCurrent = pet.color === cKey;
+        box.innerHTML += `
+          <div class="p-2.5 rounded-2xl flex items-center justify-between border ${isCurrent ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'}">
+            <div class="flex items-center gap-2.5">
+              <div class="w-6 h-6 rounded-full border border-white/50" style="background-color: ${c.main}"></div>
+              <span class="text-xs font-bold text-gray-200 capitalize">${cKey}</span>
+            </div>
+            ${isCurrent ? '<span class="text-[11px] font-extrabold text-pink-400">Выбрано ✓</span>' : `<button class="px-3 py-1 rounded-lg bg-[#313244] hover:bg-pink-500 text-[11px] font-bold text-white transition active:scale-95" onclick="pet.color='${cKey}'; sound.pop(); updatePetUI(); renderColorShop();">Выбрать</button>`}
+          </div>
+        `;
+      });
+    }
+
+    window.equipSlot = function(slot, id) {
+      activeEquipment[slot] = id;
+      localStorage.setItem('katya_active_equipment', JSON.stringify(activeEquipment));
+      sound.pop();
+      updatePetUI();
+      renderWardrobeOutfits();
+      renderWardrobeAccs();
+    };
+
+    window.buyShopItem = function(id, cost, slot) {
+      if (pet.coins < cost) return alert("Не хватает монеток! 💼");
+      pet.coins -= cost;
+      analytics.spentCoins += cost;
+      if (!ownedItems.includes(id)) ownedItems.push(id);
+      activeEquipment[slot] = id;
+      localStorage.setItem('katya_owned_items', JSON.stringify(ownedItems));
+      localStorage.setItem('katya_active_equipment', JSON.stringify(activeEquipment));
+      sound.win();
+      updatePetUI();
+      renderWardrobeOutfits();
+      renderWardrobeAccs();
+    };
+
+    window.buyRoomTheme = function(id, cost) {
+      if (pet.coins < cost) return alert("Не хватает монеток! 💼");
+      pet.coins -= cost;
+      analytics.spentCoins += cost;
+      ownedRooms.push(id);
+      pet.activeRoom = id;
+      localStorage.setItem('katya_master_rooms', JSON.stringify(ownedRooms));
+      sound.win();
+      updatePetUI();
+      renderWardrobeRooms();
+    };
+
+    document.getElementById('btnRemoveAllOutfits').addEventListener('click', () => {
+      activeEquipment = { head: "none", eyes: "none", body: "none" };
+      localStorage.setItem('katya_active_equipment', JSON.stringify(activeEquipment));
+      updatePetUI();
+      renderWardrobeOutfits();
+      renderWardrobeAccs();
+    });
+
+    document.getElementById('tabWardrobeOutfits').addEventListener('click', () => {
+      document.getElementById('wardrobeOutfitsSection').classList.remove('hidden');
+      document.getElementById('wardrobeAccSection').classList.add('hidden');
+      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
+      document.getElementById('wardrobeColorSection').classList.add('hidden');
+      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
+      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+    });
+    document.getElementById('tabWardrobeAccs').addEventListener('click', () => {
+      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
+      document.getElementById('wardrobeAccSection').classList.remove('hidden');
+      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
+      document.getElementById('wardrobeColorSection').classList.add('hidden');
+      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
+      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+    });
+    document.getElementById('tabWardrobeRooms').addEventListener('click', () => {
+      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
+      document.getElementById('wardrobeAccSection').classList.add('hidden');
+      document.getElementById('wardrobeRoomsSection').classList.remove('hidden');
+      document.getElementById('wardrobeColorSection').classList.add('hidden');
+      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
+      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+    });
+    document.getElementById('tabWardrobeColors').addEventListener('click', () => {
+      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
+      document.getElementById('wardrobeAccSection').classList.add('hidden');
+      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
+      document.getElementById('wardrobeColorSection').classList.remove('hidden');
+      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
+      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
+    });
+
+    // =========================================================
+    // 3 КЕЙСА УДАЧИ С РУЛЕТКОЙ
+    // =========================================================
+    document.getElementById('btnCasesHub').addEventListener('click', () => {
+      document.getElementById('casesHubCoins').innerText = pet.coins;
+      document.getElementById('modalCasesHub').classList.remove('hidden');
+    });
+
+    function launchCaseRoulette(caseKey) {
+      selectedCaseKey = caseKey;
+      const cData = CASES_DATA[caseKey];
+      document.getElementById('modalCasesHub').classList.add('hidden');
+      document.getElementById('activeCaseTitle').innerText = cData.title;
+      document.getElementById('activeCaseCostLabel').innerText = `${cData.cost} 🪙`;
+      document.getElementById('caseWonBanner').classList.add('hidden');
+      document.getElementById('caseRouletteCard').classList.remove('animate-epic-glow');
+
+      const tr = document.getElementById('caseRouletteTrack');
+      tr.style.transition = 'none';
+      tr.style.transform = 'translateX(0px)';
+      tr.innerHTML = '';
+
+      for (let i = 0; i < 55; i++) {
+        const item = cData.items[Math.floor(Math.random() * cData.items.length)];
+        const card = document.createElement('div');
+        card.className = `flex-shrink-0 w-20 h-20 bg-[#1e1e2e] rounded-xl flex flex-col items-center justify-center p-1 border-b-4`;
+        card.style.borderColor = item.color;
+        card.innerHTML = `<span class="text-2xl">${cData.isClassified ? "❓" : item.icon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${cData.isClassified ? "???" : item.name}</span>`;
+        tr.appendChild(card);
+      }
+
+      document.getElementById('modalCsgoCase').classList.remove('hidden');
+    }
+
+    document.getElementById('btnLaunchCaseStandard').addEventListener('click', () => launchCaseRoulette('standard'));
+    document.getElementById('btnLaunchCasePremium').addEventListener('click', () => launchCaseRoulette('premium'));
+    document.getElementById('btnLaunchCaseBlack').addEventListener('click', () => launchCaseRoulette('black'));
+
+    let isSpinningCase = false;
+    document.getElementById('btnOpenCase').addEventListener('click', () => {
+      if (isSpinningCase) return;
+      const cData = CASES_DATA[selectedCaseKey];
+
+      if (pet.coins < cData.cost) return alert(`Нужно ${cData.cost} 🪙.`);
+      pet.coins -= cData.cost;
+      analytics.spentCoins += cData.cost;
+      analytics.casesOpened++;
+      updatePetUI();
+
+      isSpinningCase = true;
+      document.getElementById('btnOpenCase').disabled = true;
+      sound.tick();
+
+      let rand = Math.random() * 100, cumulative = 0, winningItem = cData.items[cData.items.length - 1];
+      for (let it of cData.items) {
+        cumulative += it.chance;
+        if (rand <= cumulative) { winningItem = it; break; }
+      }
+
+      const cards = document.getElementById('caseRouletteTrack').children;
+      if (cards[42]) {
+        cards[42].style.borderColor = winningItem.color;
+        cards[42].innerHTML = `<span class="text-2xl">${winningItem.icon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${winningItem.name}</span>`;
+      }
+
+      document.getElementById('caseRouletteTrack').style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)';
+      document.getElementById('caseRouletteTrack').style.transform = `translateX(-${42 * 88 - 150 + 44}px)`;
+
+      let tInt = setInterval(() => sound.tick(), 140);
+      setTimeout(() => { clearInterval(tInt); tInt = setInterval(() => sound.tick(), 300); }, 3000);
+
+      setTimeout(() => {
+        clearInterval(tInt);
+        isSpinningCase = false;
+        document.getElementById('btnOpenCase').disabled = false;
+
+        document.getElementById('caseWonTitle').innerText = `${winningItem.icon} ${winningItem.name}`;
+        document.getElementById('caseWonTitle').style.color = winningItem.color;
+        document.getElementById('caseWonDesc').innerText = winningItem.desc;
+        document.getElementById('caseWonBanner').classList.remove('hidden');
+
+        if (winningItem.isEpic) {
+          sound.epicWin();
+          document.getElementById('caseRouletteCard').classList.add('animate-epic-glow');
+          confetti({ particleCount: 150, spread: 100 });
+        } else {
+          sound.win();
+          confetti({ particleCount: 40, spread: 60 });
+        }
+
+        if (winningItem.type === 'body') {
+          if (!ownedItems.includes(winningItem.id)) ownedItems.push(winningItem.id);
+          activeEquipment.body = winningItem.id;
+          localStorage.setItem('katya_owned_items', JSON.stringify(ownedItems));
+          localStorage.setItem('katya_active_equipment', JSON.stringify(activeEquipment));
+        }
+
+        caseHistory.push({
+          id: winningItem.id,
+          name: winningItem.name,
+          icon: winningItem.icon,
+          desc: winningItem.desc,
+          caseTitle: cData.title,
+          isEpic: !!winningItem.isEpic,
+          time: new Date().toLocaleString("ru-RU")
+        });
+        localStorage.setItem('katya_master_case_history', JSON.stringify(caseHistory));
+        logAuditEvent(`Открыла ${cData.title}: выбила «${winningItem.name}»`, winningItem.icon);
+        savePet();
+        updatePetLayers();
+      }, 5200);
+    });
+
+    // =========================================================
+    // ТЕТРИС ДВИЖОК
+    // =========================================================
+    const tetrisCanvas = document.getElementById('tetrisCanvas'), tCtx = tetrisCanvas.getContext('2d');
     let tetrisBoard = [], tetrisScore = 0, tetrisTimer = null, curPiece = null;
-
     const SHAPES = [
       { color: '#f38ba8', blocks: [[1,1,1,1]] },
       { color: '#fab387', blocks: [[1,1],[1,1]] },
       { color: '#a6e3a1', blocks: [[0,1,1],[1,1,0]] },
       { color: '#89b4fa', blocks: [[1,1,0],[0,1,1]] },
       { color: '#cba6f7', blocks: [[1,1,1],[0,1,0]] },
-      { color: '#f9e2af', blocks: [[1,1,1],[1,0,0]] },
-      { color: '#94e2d5', blocks: [[1,1,1],[0,0,1]] }
+      { color: '#f9e2af', blocks: [[1,1,1],[1,0,0]] }
     ];
 
     document.getElementById('btnJobTetris').addEventListener('click', () => {
-      modalWork.classList.add('hidden');
-      modalTetris.classList.remove('hidden');
-      tetrisOverlay.classList.remove('hidden');
-      logAuditEvent('Запустила Кэт-Тетрис', '🧱');
+      document.getElementById('modalWork').classList.add('hidden');
+      document.getElementById('modalTetris').classList.remove('hidden');
+      document.getElementById('tetrisOverlay').classList.remove('hidden');
     });
-    closeTetrisBtn.addEventListener('click', () => { clearInterval(tetrisTimer); modalTetris.classList.add('hidden'); });
-    btnStartTetris.addEventListener('click', startTetrisGame);
-
-    function startTetrisGame() {
-      tetrisOverlay.classList.add('hidden');
-      tetrisBoard = Array.from({ length: T_ROWS }, () => Array(T_COLS).fill(0));
+    document.getElementById('closeTetrisBtn').addEventListener('click', () => {
+      clearInterval(tetrisTimer);
+      document.getElementById('modalTetris').classList.add('hidden');
+    });
+    document.getElementById('btnStartTetris').addEventListener('click', () => {
+      document.getElementById('tetrisOverlay').classList.add('hidden');
+      tetrisBoard = Array.from({ length: 18 }, () => Array(10).fill(0));
       tetrisScore = 0;
-      tetrisScoreText.innerText = "Счет: 0";
-      spawnTetrisPiece();
+      document.getElementById('tetrisScoreText').innerText = "Счет: 0";
+      curPiece = { x: 3, y: 0, blocks: SHAPES[Math.floor(Math.random() * SHAPES.length)].blocks, color: SHAPES[Math.floor(Math.random() * SHAPES.length)].color };
       clearInterval(tetrisTimer);
       tetrisTimer = setInterval(updateTetris, 500);
       drawTetris();
-    }
-
-    function spawnTetrisPiece() {
-      const p = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-      curPiece = { x: 3, y: 0, blocks: p.blocks, color: p.color };
-      if (checkTetrisCollision(0, 0, curPiece.blocks)) endTetrisGame();
-    }
+    });
 
     function checkTetrisCollision(dx, dy, shape) {
       for (let r = 0; r < shape.length; r++) {
         for (let c = 0; c < shape[r].length; c++) {
           if (shape[r][c]) {
-            const newX = curPiece.x + c + dx;
-            const newY = curPiece.y + r + dy;
-            if (newX < 0 || newX >= T_COLS || newY >= T_ROWS) return true;
-            if (newY >= 0 && tetrisBoard[newY][newX]) return true;
+            const nx = curPiece.x + c + dx, ny = curPiece.y + r + dy;
+            if (nx < 0 || nx >= 10 || ny >= 18) return true;
+            if (ny >= 0 && tetrisBoard[ny][nx]) return true;
           }
         }
       }
       return false;
-    }
-
-    function rotateTetris() {
-      if (!curPiece) return;
-      const rotated = curPiece.blocks[0].map((_, i) => curPiece.blocks.map(row => row[i]).reverse());
-      if (!checkTetrisCollision(0, 0, rotated)) {
-        curPiece.blocks = rotated;
-        sound.tick();
-        drawTetris();
-      }
     }
 
     function updateTetris() {
@@ -1636,1216 +1721,490 @@ let cloudSyncTimer = null;
       if (!checkTetrisCollision(0, 1, curPiece.blocks)) {
         curPiece.y++;
       } else {
-        curPiece.blocks.forEach((r, ri) => {
-          r.forEach((cell, ci) => {
-            if (cell) tetrisBoard[curPiece.y + ri][curPiece.x + ci] = curPiece.color;
-          });
-        });
-        let lines = 0;
-        for (let r = T_ROWS - 1; r >= 0; r--) {
+        curPiece.blocks.forEach((r, ri) => r.forEach((cell, ci) => {
+          if (cell) tetrisBoard[curPiece.y + ri][curPiece.x + ci] = curPiece.color;
+        }));
+        for (let r = 17; r >= 0; r--) {
           if (tetrisBoard[r].every(c => c !== 0)) {
             tetrisBoard.splice(r, 1);
-            tetrisBoard.unshift(Array(T_COLS).fill(0));
-            lines++;
+            tetrisBoard.unshift(Array(10).fill(0));
+            tetrisScore += 15;
+            sound.pop();
             r++;
           }
         }
-        if (lines > 0) {
-          sound.pop();
-          triggerHaptic();
-          tetrisScore += lines * 15;
-          tetrisScoreText.innerText = `Счет: ${tetrisScore}`;
+        document.getElementById('tetrisScoreText').innerText = `Счет: ${tetrisScore}`;
+        curPiece = { x: 3, y: 0, blocks: SHAPES[Math.floor(Math.random() * SHAPES.length)].blocks, color: SHAPES[Math.floor(Math.random() * SHAPES.length)].color };
+        if (checkTetrisCollision(0, 0, curPiece.blocks)) {
+          clearInterval(tetrisTimer);
+          sound.win();
+          confetti({ particleCount: 30, spread: 60 });
+          const earned = Math.min(ACTIVE_ECONOMY.maxTetris, Math.max(8, Math.floor(tetrisScore / 3)));
+          pet.coins += earned;
+          pet.energy = Math.max(5, pet.energy - 15);
+          addXP(earned);
+          logAuditEvent(`Тетрис (+${earned} 🪙)`, '🧱');
+          document.getElementById('tetrisOverlay').classList.remove('hidden');
+          document.getElementById('tetrisOverlay').innerHTML = `<span class="text-4xl">🧱</span><h4 class="cute-font text-amber-300 font-bold mt-1">Игра окончена!</h4><p class="text-xs text-gray-300">+${earned} 🪙</p><button id="btnRestartTetris" class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartTetris').click()">СЫГРАТЬ СНОВА ✨</button>`;
+          checkRareWishDrop(ACTIVE_WISH_CHANCES.tetris, "Тетрис");
+          updatePetUI();
         }
-        spawnTetrisPiece();
       }
       drawTetris();
     }
 
     function drawTetris() {
       tCtx.fillStyle = '#181825';
-      tCtx.fillRect(0, 0, tetrisCanvas.width, tetrisCanvas.height);
-      for (let r = 0; r < T_ROWS; r++) {
-        for (let c = 0; c < T_COLS; c++) {
+      tCtx.fillRect(0, 0, 200, 360);
+      for (let r = 0; r < 18; r++) {
+        for (let c = 0; c < 10; c++) {
           if (tetrisBoard[r][c]) {
             tCtx.fillStyle = tetrisBoard[r][c];
-            tCtx.fillRect(c * T_BLOCK, r * T_BLOCK, T_BLOCK - 1, T_BLOCK - 1);
+            tCtx.fillRect(c * 20, r * 20, 19, 19);
           }
         }
       }
       if (curPiece) {
         tCtx.fillStyle = curPiece.color;
-        curPiece.blocks.forEach((row, ri) => {
-          row.forEach((cell, ci) => {
-            if (cell) tCtx.fillRect((curPiece.x + ci) * T_BLOCK, (curPiece.y + ri) * T_BLOCK, T_BLOCK - 1, T_BLOCK - 1);
-          });
-        });
+        curPiece.blocks.forEach((row, ri) => row.forEach((cell, ci) => {
+          if (cell) tCtx.fillRect((curPiece.x + ci) * 20, (curPiece.y + ri) * 20, 19, 19);
+        }));
       }
-    }
-
-    function endTetrisGame() {
-      clearInterval(tetrisTimer);
-      sound.win();
-      confetti({ particleCount: 30, spread: 60 });
-      const earned = Math.min(25, Math.max(8, Math.floor(tetrisScore / 3)));
-      pet.coins += earned;
-      pet.energy = Math.max(5, pet.energy - 15);
-      addXP(earned);
-      logAuditEvent(`Сыграла в Тетрис (Счет: ${tetrisScore}, +${earned} 🪙)`, '🧱');
-
-      tetrisOverlay.classList.remove('hidden');
-      tetrisOverlay.innerHTML = `
-        <span class="text-4xl">🧱</span>
-        <h4 class="cute-font text-amber-300 font-bold text-sm mt-1">Игра окончена!</h4>
-        <p class="text-xs text-gray-300 mt-1">Заработано: <b class="text-amber-300">+${earned} 🪙</b></p>
-        <button id="btnRestartTetris" class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl text-xs mt-3 active:scale-95 transition">
-          СЫГРАТЬ СНОВА ✨
-        </button>
-      `;
-      document.getElementById('btnRestartTetris').addEventListener('click', startTetrisGame);
-      checkRareWishDrop(0.5, "Мини-игра Тетрис");
-      updatePetUI();
     }
 
     document.getElementById('btnTetrisLeft').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(-1, 0, curPiece.blocks)) { curPiece.x--; sound.tick(); drawTetris(); } });
     document.getElementById('btnTetrisRight').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(1, 0, curPiece.blocks)) { curPiece.x++; sound.tick(); drawTetris(); } });
-    document.getElementById('btnTetrisRotate').addEventListener('click', rotateTetris);
-    document.getElementById('btnTetrisDown').addEventListener('click', () => { updateTetris(); });
+    document.getElementById('btnTetrisRotate').addEventListener('click', () => {
+      if (!curPiece) return;
+      const rot = curPiece.blocks[0].map((_, i) => curPiece.blocks.map(row => row[i]).reverse());
+      if (!checkTetrisCollision(0, 0, rot)) { curPiece.blocks = rot; sound.tick(); drawTetris(); }
+    });
+    document.getElementById('btnTetrisDown').addEventListener('click', updateTetris);
 
     // =========================================================
-    // 2. МУР-РАННЕР: SUBWAY CAT (ПСЕВДО-3D)
+    // МУР-РАННЕР SUBWAY CAT
     // =========================================================
-    const modalRunner = document.getElementById('modalRunner');
-    const runnerCanvas = document.getElementById('runnerCanvas');
-    const rCtx = runnerCanvas.getContext('2d');
-    const runnerScoreText = document.getElementById('runnerScoreText');
-    const runnerShieldIcon = document.getElementById('runnerShieldIcon');
-    const runnerMagnetIcon = document.getElementById('runnerMagnetIcon');
-    const runnerOverlay = document.getElementById('runnerOverlay');
-    const btnStartRunner = document.getElementById('btnStartRunner');
-    const closeRunnerBtn = document.getElementById('closeRunnerBtn');
-
-    const btnCtrlJump = document.getElementById('btnCtrlJump');
-    const btnCtrlSlide = document.getElementById('btnCtrlSlide');
-    const btnCtrlLeft = document.getElementById('btnCtrlLeft');
-    const btnCtrlRight = document.getElementById('btnCtrlRight');
-
-    let isRunnerRunning = false;
-    let runnerAnimFrame = null;
-    let runnerCoins = 0;
-    let runnerSpeed = 0.0055;
-
-    let playerTargetLane = 0;
-    let playerX = 0;
-    let playerY = 0;
-    let isJumping = false;
-    let isSliding = false;
-    let jumpVelocity = 0;
-    let slideTimer = 0;
-
-    let hasShield = false;
-    let magnetTime = 0;
-
-    let trackObjects = [];
-    let trackOffset = 0;
+    const runnerCanvas = document.getElementById('runnerCanvas'), rCtx = runnerCanvas.getContext('2d');
+    let isRunnerRunning = false, runnerAnimFrame = null, runnerCoins = 0;
+    let playerTargetLane = 0, playerX = 0, playerY = 0, isJumping = false, isSliding = false, jumpVel = 0, slideTimer = 0;
+    let hasShield = false, magnetTime = 0, trackObjects = [], trackOffset = 0;
 
     document.getElementById('btnJobRunner').addEventListener('click', () => {
-      modalWork.classList.add('hidden');
-      modalRunner.classList.remove('hidden');
-      runnerOverlay.classList.remove('hidden');
-      logAuditEvent('Запустила Мур-Раннер: Subway Cat', '🏃');
+      document.getElementById('modalWork').classList.add('hidden');
+      document.getElementById('modalRunner').classList.remove('hidden');
+      document.getElementById('runnerOverlay').classList.remove('hidden');
     });
-
-    closeRunnerBtn.addEventListener('click', () => {
+    document.getElementById('closeRunnerBtn').addEventListener('click', () => {
       isRunnerRunning = false;
       cancelAnimationFrame(runnerAnimFrame);
-      modalRunner.classList.add('hidden');
+      document.getElementById('modalRunner').classList.add('hidden');
     });
-
-    btnStartRunner.addEventListener('click', startSubwayGame);
-
-    function startSubwayGame() {
-      runnerOverlay.classList.add('hidden');
+    document.getElementById('btnStartRunner').addEventListener('click', () => {
+      document.getElementById('runnerOverlay').classList.add('hidden');
       isRunnerRunning = true;
       runnerCoins = 0;
-      runnerSpeed = 0.0055; // Плавная комфортная скорость
       playerTargetLane = 0;
       playerX = 0;
       playerY = 0;
       isJumping = false;
       isSliding = false;
-      jumpVelocity = 0;
-      slideTimer = 0;
       hasShield = false;
       magnetTime = 0;
       trackObjects = [];
       trackOffset = 0;
+      document.getElementById('runnerScoreText').innerText = "🪙 0";
+      document.getElementById('runnerShieldIcon').classList.add('hidden');
+      document.getElementById('runnerMagnetIcon').classList.add('hidden');
 
-      runnerScoreText.innerText = "🪙 0";
-      runnerShieldIcon.classList.add('hidden');
-      runnerMagnetIcon.classList.add('hidden');
-
-      let lastSpawnTime = performance.now();
-
-      function gameLoop(now) {
+      let lastSpawn = performance.now();
+      function loop(now) {
         if (!isRunnerRunning) return;
+        if (now - lastSpawn > 2200) {
+          lastSpawn = now;
+          const lane = Math.floor(Math.random() * 3) - 1, rand = Math.random();
+          if (rand < 0.35) trackObjects.push({ type: 'barrier', lane, z: 1.0 });
+          else if (rand < 0.55) trackObjects.push({ type: 'gate', lane, z: 1.0 });
+          else if (rand < 0.75) trackObjects.push({ type: 'train', lane, z: 1.0 });
+          else if (rand < 0.85) trackObjects.push({ type: Math.random() < 0.5 ? 'magnet' : 'board', lane, z: 1.0 });
+          else for (let i = 0; i < 3; i++) trackObjects.push({ type: 'coin', lane, z: 1.0 + i * 0.08 });
+        }
+        trackOffset = (trackOffset + 0.008) % 1;
+        playerX += (playerTargetLane - playerX) * 0.2;
 
-        // Появление препятствий раз в 2.2 секунды, чтобы успевать реагировать
-        if (now - lastSpawnTime > 2200) {
-          lastSpawnTime = now;
-          spawnTrackRow();
+        if (isJumping) {
+          playerY += jumpVel;
+          jumpVel -= 0.55;
+          if (playerY <= 0) { playerY = 0; isJumping = false; }
+        }
+        if (isSliding) {
+          slideTimer--;
+          if (slideTimer <= 0) isSliding = false;
+        }
+        if (magnetTime > 0) {
+          magnetTime--;
+          document.getElementById('runnerMagnetIcon').classList.toggle('hidden', magnetTime <= 0);
         }
 
-        updateSubwayGame();
-        drawSubwayGame();
-
-        runnerAnimFrame = requestAnimationFrame(gameLoop);
-      }
-      runnerAnimFrame = requestAnimationFrame(gameLoop);
-    }
-
-    function spawnTrackRow() {
-      const lane = Math.floor(Math.random() * 3) - 1;
-      const rand = Math.random();
-
-      if (rand < 0.35) {
-        trackObjects.push({ type: 'barrier', lane, z: 1.0 });
-      } else if (rand < 0.55) {
-        trackObjects.push({ type: 'gate', lane, z: 1.0 });
-      } else if (rand < 0.75) {
-        trackObjects.push({ type: 'train', lane, z: 1.0 });
-      } else if (rand < 0.85) {
-        const pType = Math.random() < 0.5 ? 'magnet' : 'board';
-        trackObjects.push({ type: pType, lane, z: 1.0 });
-      } else {
-        for (let i = 0; i < 3; i++) {
-          trackObjects.push({ type: 'coin', lane, z: 1.0 + i * 0.08 });
-        }
-      }
-    }
-
-    function updateSubwayGame() {
-      // Плавное движение шпал
-      trackOffset = (trackOffset + 0.008) % 1;
-
-      // Плавный переход котика по линиям
-      playerX += (playerTargetLane - playerX) * 0.2;
-
-      // Зависающий прыжок
-      if (isJumping) {
-        playerY += jumpVelocity;
-        jumpVelocity -= 0.55; // Мягкая гравитация
-        if (playerY <= 0) {
-          playerY = 0;
-          isJumping = false;
-        }
-      }
-
-      // Подкат длится чуть дольше
-      if (isSliding) {
-        slideTimer--;
-        if (slideTimer <= 0) isSliding = false;
-      }
-
-      if (magnetTime > 0) {
-        magnetTime--;
-        runnerMagnetIcon.classList.remove('hidden');
-        if (magnetTime <= 0) runnerMagnetIcon.classList.add('hidden');
-      }
-
-      // Движение объектов
-      for (let i = trackObjects.length - 1; i >= 0; i--) {
-        const obj = trackObjects[i];
-        obj.z -= runnerSpeed;
-
-        // Магнит плавно тянет монеты
-        if (magnetTime > 0 && obj.type === 'coin' && obj.z < 0.7) {
-          obj.lane += (playerTargetLane - obj.lane) * 0.15;
-        }
-
-        // Зона коллизии прямо перед котиком (расширенная и плавная)
-        if (obj.z < 0.22 && obj.z > 0.05) {
-          const laneMatch = Math.abs(obj.lane - playerX) < 0.5;
-
-          if (laneMatch) {
+        for (let i = trackObjects.length - 1; i >= 0; i--) {
+          const obj = trackObjects[i];
+          obj.z -= 0.0055;
+          if (magnetTime > 0 && obj.type === 'coin' && obj.z < 0.7) obj.lane += (playerTargetLane - obj.lane) * 0.15;
+          if (obj.z < 0.22 && obj.z > 0.05 && Math.abs(obj.lane - playerX) < 0.5) {
             if (obj.type === 'coin') {
               runnerCoins++;
               sound.pop();
               triggerHaptic();
-              runnerScoreText.innerText = `🪙 ${runnerCoins}`;
+              document.getElementById('runnerScoreText').innerText = `🪙 ${runnerCoins}`;
               trackObjects.splice(i, 1);
               continue;
             }
+            if (obj.type === 'magnet') { magnetTime = 500; sound.win(); trackObjects.splice(i, 1); continue; }
+            if (obj.type === 'board') { hasShield = true; document.getElementById('runnerShieldIcon').classList.remove('hidden'); sound.win(); trackObjects.splice(i, 1); continue; }
+            if (obj.type === 'barrier' && isJumping && playerY > 20) continue;
+            if (obj.type === 'gate' && isSliding) continue;
+            if (hasShield) { hasShield = false; document.getElementById('runnerShieldIcon').classList.add('hidden'); sound.pop(); trackObjects.splice(i, 1); continue; }
 
-            if (obj.type === 'magnet') {
-              magnetTime = 500;
-              sound.win();
-              trackObjects.splice(i, 1);
-              continue;
-            }
-
-            if (obj.type === 'board') {
-              hasShield = true;
-              runnerShieldIcon.classList.remove('hidden');
-              sound.win();
-              trackObjects.splice(i, 1);
-              continue;
-            }
-
-            // Барьер: нужно перепрыгнуть
-            if (obj.type === 'barrier' && isJumping && playerY > 20) {
-              continue;
-            }
-
-            // Шлагбаум: нужно проскользнуть
-            if (obj.type === 'gate' && isSliding) {
-              continue;
-            }
-
-            // Столкновение со щитом
-            if (hasShield) {
-              hasShield = false;
-              runnerShieldIcon.classList.add('hidden');
-              sound.pop();
-              confetti({ particleCount: 20 });
-              trackObjects.splice(i, 1);
-              continue;
-            }
-
-            // Конец забега
-            endSubwayGame();
+            isRunnerRunning = false;
+            cancelAnimationFrame(runnerAnimFrame);
+            sound.win();
+            confetti({ particleCount: 35, spread: 70 });
+            const earned = Math.min(ACTIVE_ECONOMY.maxRunner, Math.max(10, runnerCoins));
+            pet.coins += earned;
+            pet.energy = Math.max(5, pet.energy - 15);
+            addXP(earned);
+            logAuditEvent(`Subway Cat (+${earned} 🪙)`, '🏃');
+            document.getElementById('runnerOverlay').classList.remove('hidden');
+            document.getElementById('runnerOverlay').innerHTML = `<span class="text-5xl">💥</span><h4 class="cute-font text-amber-300 font-bold mt-2">Забег окончен!</h4><p class="text-xs text-gray-200">+${earned} 🪙</p><button id="btnRestartSubway" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-2.5 px-6 rounded-2xl text-xs mt-4 active:scale-95" onclick="document.getElementById('btnStartRunner').click()">ЕЩЕ ЗАБЕГ 🛹</button>`;
+            checkRareWishDrop(ACTIVE_WISH_CHANCES.subway, "Subway Cat");
+            updatePetUI();
             return;
           }
+          if (obj.z <= 0.01) trackObjects.splice(i, 1);
         }
 
-        // Удаление объекта только когда он ушел совсем назад
-        if (obj.z <= 0.01) {
-          trackObjects.splice(i, 1);
+        const w = 300, h = 420, horY = h * 0.38;
+        rCtx.fillStyle = '#111827'; rCtx.fillRect(0, horY, w, h - horY);
+        rCtx.fillStyle = '#0a0a14'; rCtx.fillRect(0, 0, w, horY);
+
+        function project(lane, z, yOff = 0) {
+          const f = 1 - z;
+          return { x: (w / 2) + lane * 130 * f, y: horY + (h - horY) * (f * f) - yOff * (f + 0.1), f };
         }
-      }
-    }
 
-    function drawSubwayGame() {
-      const w = runnerCanvas.width;
-      const h = runnerCanvas.height;
+        rCtx.strokeStyle = '#f43f5e'; rCtx.lineWidth = 2;
+        [-1.3, -0.42, 0.42, 1.3].forEach(l => {
+          const top = project(l, 0.95), bot = project(l, 0.05);
+          rCtx.beginPath(); rCtx.moveTo(top.x, top.y); rCtx.lineTo(bot.x, bot.y); rCtx.stroke();
+        });
 
-      // 1. Небо
-      const gradSky = rCtx.createLinearGradient(0, 0, 0, h * 0.4);
-      gradSky.addColorStop(0, '#0a0a14');
-      gradSky.addColorStop(1, '#1e1b4b');
-      rCtx.fillStyle = gradSky;
-      rCtx.fillRect(0, 0, w, h * 0.4);
+        trackObjects.sort((a, b) => b.z - a.z).forEach(obj => {
+          const p = project(obj.lane, obj.z), sz = Math.max(12, Math.floor(20 + 32 * p.f));
+          rCtx.font = `${sz}px sans-serif`; rCtx.textAlign = 'center';
+          rCtx.fillText({ coin: '🪙', barrier: '🚧', gate: '⛔', train: '🚆', magnet: '🧲', board: '🛹' }[obj.type] || '❓', p.x, p.y);
+        });
 
-      // Городской горизонт
-      rCtx.fillStyle = '#312e81';
-      for (let i = 0; i < 6; i++) {
-        rCtx.fillRect(i * 55 + 10, h * 0.32 - (i % 3) * 12, 35, 50);
-      }
-
-      // 2. Пол и рельсы
-      const horizonY = h * 0.38;
-      const gradGround = rCtx.createLinearGradient(0, horizonY, 0, h);
-      gradGround.addColorStop(0, '#111827');
-      gradGround.addColorStop(1, '#030712');
-      rCtx.fillStyle = gradGround;
-      rCtx.fillRect(0, horizonY, w, h - horizonY);
-
-      // НОВАЯ СГЛАЖЕННАЯ ПЕРСПЕКТИВА (без резкого рывка в лицо)
-      function project(lane, z, yOffset = 0) {
-        const factor = 1 - z; // Чистый линейный масштаб
-        // Квадратичное плавное опускание вниз
-        const screenY = horizonY + (h - horizonY) * (factor * factor) - yOffset * (factor + 0.1);
-        const laneSpread = 130 * factor;
-        const screenX = (w / 2) + lane * laneSpread;
-        return { x: screenX, y: screenY, factor };
-      }
-
-      // Шпалы рельсов
-      rCtx.strokeStyle = '#374151';
-      rCtx.lineWidth = 2.5;
-      for (let i = 0; i < 8; i++) {
-        const z = (i / 8 - trackOffset * 0.125 + 1) % 1;
-        if (z < 0.05 || z > 0.95) continue;
-        const pL = project(-1.3, z);
-        const pR = project(1.3, z);
-        rCtx.beginPath();
-        rCtx.moveTo(pL.x, pL.y);
-        rCtx.lineTo(pR.x, pR.y);
-        rCtx.stroke();
-      }
-
-      // 3 полосы путей
-      rCtx.strokeStyle = '#f43f5e';
-      rCtx.lineWidth = 2;
-      [-1.3, -0.42, 0.42, 1.3].forEach(l => {
-        const top = project(l, 0.95);
-        const bot = project(l, 0.05);
-        rCtx.beginPath();
-        rCtx.moveTo(top.x, top.y);
-        rCtx.lineTo(bot.x, bot.y);
-        rCtx.stroke();
-      });
-
-      // Сортировка предметов
-      const sorted = [...trackObjects].sort((a, b) => b.z - a.z);
-
-      sorted.forEach(obj => {
-        const p = project(obj.lane, obj.z);
-        // Плавный рост размера по мере приближения
-        const sz = Math.max(12, Math.floor(20 + 32 * p.factor));
-
-        if (obj.type === 'coin') {
-          rCtx.font = `${sz}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('🪙', p.x, p.y);
-        } else if (obj.type === 'barrier') {
-          rCtx.font = `${sz + 6}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('🚧', p.x, p.y);
-        } else if (obj.type === 'gate') {
-          rCtx.font = `${sz + 6}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('⛔', p.x, p.y - sz * 0.4);
-        } else if (obj.type === 'train') {
-          rCtx.font = `${sz + 18}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('🚆', p.x, p.y + 4);
-        } else if (obj.type === 'magnet') {
-          rCtx.font = `${sz + 4}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('🧲', p.x, p.y);
-        } else if (obj.type === 'board') {
-          rCtx.font = `${sz + 4}px sans-serif`;
-          rCtx.textAlign = 'center';
-          rCtx.fillText('🛹', p.x, p.y);
-        }
-      });
-
-      // Котик
-      const playerPos = project(playerX, 0.14, playerY);
-
-      // Тень
-      rCtx.fillStyle = 'rgba(0,0,0,0.6)';
-      rCtx.beginPath();
-      rCtx.ellipse(playerPos.x, project(playerX, 0.14).y, 22, 6, 0, 0, Math.PI * 2);
-      rCtx.fill();
-
-      rCtx.save();
-      rCtx.translate(playerPos.x, playerPos.y);
-
-      if (isSliding) {
-        rCtx.font = '34px sans-serif';
-        rCtx.textAlign = 'center';
-        rCtx.fillText('🐾💨', 0, 0);
-      } else {
+        const pPos = project(playerX, 0.14, playerY);
         rCtx.font = hasShield ? '46px sans-serif' : '42px sans-serif';
         rCtx.textAlign = 'center';
-        rCtx.fillText(hasShield ? '🐱🛹' : '🐱', 0, 0);
+        rCtx.fillText(isSliding ? '🐾💨' : hasShield ? '🐱🛹' : '🐱', pPos.x, pPos.y);
+        runnerAnimFrame = requestAnimationFrame(loop);
       }
-      rCtx.restore();
-    }
-
-    function endSubwayGame() {
-      isRunnerRunning = false;
-      cancelAnimationFrame(runnerAnimFrame);
-      sound.win();
-      confetti({ particleCount: 35, spread: 70 });
-
-      const earned = Math.min(25, Math.max(10, runnerCoins));
-      pet.coins += earned;
-      pet.energy = Math.max(5, pet.energy - 15);
-      addXP(earned);
-      logAuditEvent(`Сыграла в Subway Cat (Собрано: ${runnerCoins} 🪙, Итог: +${earned} 🪙)`, '🏃');
-
-      runnerOverlay.classList.remove('hidden');
-      runnerOverlay.innerHTML = `
-        <span class="text-5xl">💥</span>
-        <h4 class="cute-font text-amber-300 font-bold text-base mt-2">Забег окончен!</h4>
-        <p class="text-xs text-gray-200 mt-1 mb-4 leading-relaxed">
-          Монет собрано: <b class="text-amber-300 text-sm">${runnerCoins}</b><br>
-          Награда котику: <b class="text-pink-400 text-sm">+${earned} 🪙</b>
-        </p>
-        <button id="btnRestartSubway" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-2.5 px-6 rounded-2xl text-xs active:scale-95 transition shadow-lg">
-          ЕЩЕ ЗАБЕГ 🛹
-        </button>
-      `;
-      document.getElementById('btnRestartSubway').addEventListener('click', startSubwayGame);
-      checkRareWishDrop(0.4, "Subway Cat Раннер");
-      updatePetUI();
-    }
-
-    btnCtrlLeft.addEventListener('click', () => { if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); } });
-    btnCtrlRight.addEventListener('click', () => { if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); } });
-    btnCtrlJump.addEventListener('click', () => {
-      if (!isJumping && !isSliding) { isJumping = true; jumpVelocity = 11; sound.tick(); }
-    });
-    btnCtrlSlide.addEventListener('click', () => {
-      if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
+      runnerAnimFrame = requestAnimationFrame(loop);
     });
 
-    window.addEventListener('keydown', (e) => {
+    document.getElementById('btnCtrlLeft').addEventListener('click', () => { if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); } });
+    document.getElementById('btnCtrlRight').addEventListener('click', () => { if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); } });
+    document.getElementById('btnCtrlJump').addEventListener('click', () => { if (!isJumping && !isSliding) { isJumping = true; jumpVel = 11; sound.tick(); } });
+    document.getElementById('btnCtrlSlide').addEventListener('click', () => { if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); } });
+
+    let tStartX = 0, tStartY = 0;
+    document.getElementById('runnerCanvas').addEventListener('touchstart', (e) => { tStartX = e.touches[0].clientX; tStartY = e.touches[0].clientY; }, { passive: true });
+    document.getElementById('runnerCanvas').addEventListener('touchend', (e) => {
       if (!isRunnerRunning) return;
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); }
-      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); }
-      } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
-        if (!isJumping && !isSliding) { isJumping = true; jumpVelocity = 11; sound.tick(); }
-      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-        if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
-      }
-    });
-
-    let touchStartX = 0, touchStartY = 0;
-    runnerCanvas.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    runnerCanvas.addEventListener('touchend', (e) => {
-      if (!isRunnerRunning) return;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-
+      const dx = e.changedTouches[0].clientX - tStartX, dy = e.changedTouches[0].clientY - tStartY;
       if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 35 && playerTargetLane < 1) { playerTargetLane++; sound.tick(); }
         else if (dx < -35 && playerTargetLane > -1) { playerTargetLane--; sound.tick(); }
       } else {
-        if (dy < -35 && !isJumping && !isSliding) { isJumping = true; jumpVelocity = 14; sound.tick(); }
+        if (dy < -35 && !isJumping && !isSliding) { isJumping = true; jumpVel = 11; sound.tick(); }
         else if (dy > 35 && !isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
       }
     }, { passive: true });
 
-    // 3. КУРЬЕР
-    const modalMiniGame = document.getElementById('modalMiniGame');
-    const miniGameCanvas = document.getElementById('miniGameCanvas');
-    const gameStartOverlay = document.getElementById('gameStartOverlay');
-    const btnStartGame = document.getElementById('btnStartGame');
-    const gameScoreText = document.getElementById('gameScoreText');
-    const gameTimerText = document.getElementById('gameTimerText');
-    const closeMiniGameBtn = document.getElementById('closeMiniGameBtn');
-
+    // =========================================================
+    // КУРЬЕР И СТРИМЕР
+    // =========================================================
     let gameScore = 0, gameTimeLeft = 15, gameInterval = null, isGameRunning = false;
-
     document.getElementById('btnJobCatcher').addEventListener('click', () => {
-      modalWork.classList.add('hidden');
-      modalMiniGame.classList.remove('hidden');
-      gameStartOverlay.classList.remove('hidden');
-      logAuditEvent('Запустила Курьера вкусняшек', '🛵');
+      document.getElementById('modalWork').classList.add('hidden');
+      document.getElementById('modalMiniGame').classList.remove('hidden');
+      document.getElementById('gameStartOverlay').classList.remove('hidden');
     });
-    closeMiniGameBtn.addEventListener('click', () => { stopMiniGame(); modalMiniGame.classList.add('hidden'); });
-    btnStartGame.addEventListener('click', startMiniGame);
-
-    function startMiniGame() {
-      gameStartOverlay.classList.add('hidden');
+    document.getElementById('closeMiniGameBtn').addEventListener('click', () => {
+      isGameRunning = false;
+      clearInterval(gameInterval);
+      document.getElementById('modalMiniGame').classList.add('hidden');
+    });
+    document.getElementById('btnStartGame').addEventListener('click', () => {
+      document.getElementById('gameStartOverlay').classList.add('hidden');
       gameScore = 0; gameTimeLeft = 15; isGameRunning = true;
-      gameScoreText.innerText = `Счет: 0`; gameTimerText.innerText = `15с`;
-
       gameInterval = setInterval(() => {
-        gameTimeLeft--;
-        gameTimerText.innerText = `${gameTimeLeft}с`;
-        if (gameTimeLeft <= 0) endMiniGame();
+        gameTimeLeft--; document.getElementById('gameTimerText').innerText = `${gameTimeLeft}с`;
+        if (gameTimeLeft <= 0) {
+          isGameRunning = false; clearInterval(gameInterval); sound.win();
+          const earned = Math.min(16, Math.max(8, Math.floor(gameScore * 1.2)));
+          pet.coins += earned; pet.energy = Math.max(5, pet.energy - 12); addXP(earned);
+          document.getElementById('gameStartOverlay').classList.remove('hidden');
+          document.getElementById('gameStartOverlay').innerHTML = `<span class="text-4xl">🛵</span><p class="text-xs text-gray-300 mt-1">+${earned} 🪙</p><button class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartGame').click()">ЕЩЕ СМЕНУ</button>`;
+          checkRareWishDrop(ACTIVE_WISH_CHANCES.catcher, "Курьер"); updatePetUI();
+        }
       }, 1000);
-      spawnGameFood();
-    }
+      function spawnFoodTarget() {
+        if (!isGameRunning) return;
+        const el = document.createElement('div');
+        el.className = 'absolute cursor-pointer text-4xl select-none active:scale-125';
+        el.innerText = ["🍣", "🍕", "🍤", "🍗", "🍓", "🧁"][Math.floor(Math.random() * 6)];
+        el.style.left = Math.floor(Math.random() * 320) + 'px';
+        el.style.top = Math.floor(Math.random() * 300) + 'px';
+        el.addEventListener('pointerdown', () => {
+          sound.pop(); triggerHaptic(); gameScore++;
+          document.getElementById('gameScoreText').innerText = `Счет: ${gameScore}`;
+          el.remove(); spawnFoodTarget();
+        });
+        document.getElementById('miniGameCanvas').appendChild(el);
+        setTimeout(() => { if (el.parentNode) { el.remove(); if (isGameRunning) spawnFoodTarget(); } }, 1050);
+      }
+      spawnFoodTarget();
+    });
 
-    function spawnGameFood() {
-      if (!isGameRunning) return;
-      const emojis = ["🍣", "🍕", "🍤", "🍗", "🍓", "🧁"];
-      const item = document.createElement('div');
-      item.className = 'absolute cursor-pointer text-4xl select-none active:scale-125 transition-transform';
-      item.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-      item.style.left = Math.floor(Math.random() * (miniGameCanvas.clientWidth - 50)) + 'px';
-      item.style.top = Math.floor(Math.random() * (miniGameCanvas.clientHeight - 60)) + 'px';
-
-      item.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        sound.pop(); triggerHaptic();
-        gameScore++;
-        gameScoreText.innerText = `Счет: ${gameScore}`;
-        item.remove();
-        spawnGameFood();
-      });
-      miniGameCanvas.appendChild(item);
-      setTimeout(() => { if (item.parentNode) { item.remove(); if (isGameRunning) spawnGameFood(); } }, 1050);
-    }
-
-    function stopMiniGame() {
-      isGameRunning = false; clearInterval(gameInterval);
-      miniGameCanvas.querySelectorAll('.text-4xl').forEach(it => it.remove());
-    }
-
-    function endMiniGame() {
-      stopMiniGame();
-      sound.win();
-      confetti({ particleCount: 25, spread: 60 });
-      const earnedCoins = Math.min(16, Math.max(8, Math.floor(gameScore * 1.2)));
-      pet.coins += earnedCoins;
-      pet.energy = Math.max(5, pet.energy - 12);
-      addXP(earnedCoins);
-      logAuditEvent(`Смена курьера (Заказов: ${gameScore}, +${earnedCoins} 🪙)`, '🛵');
-
-      gameStartOverlay.classList.remove('hidden');
-      gameStartOverlay.innerHTML = `
-        <span class="text-4xl">🛵</span>
-        <h4 class="cute-font text-amber-300 font-bold text-base">Смена курьера окончена!</h4>
-        <p class="text-xs text-gray-300">Доставлено заказов: <b class="text-pink-300">${gameScore}</b><br>Зарплата: <b class="text-amber-300">+${earnedCoins} 🪙</b></p>
-        <button id="btnRestartGame" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-2">
-          ЕЩЕ СМЕНУ 🛵
-        </button>
-      `;
-      document.getElementById('btnRestartGame').addEventListener('click', startMiniGame);
-      checkRareWishDrop(0.3, "Мини-игра Курьер");
-      updatePetUI();
-    }
-
-    // 4. СТРИМЕР
-    const modalRhythmGame = document.getElementById('modalRhythmGame');
-    const rhythmCanvas = document.getElementById('rhythmCanvas');
-    const rhythmStartOverlay = document.getElementById('rhythmStartOverlay');
-    const btnStartRhythm = document.getElementById('btnStartRhythm');
-    const rhythmScoreText = document.getElementById('rhythmScoreText');
-    const rhythmTimerText = document.getElementById('rhythmTimerText');
-    const closeRhythmBtn = document.getElementById('closeRhythmBtn');
-
-    let rhythmScore = 0, rhythmTimeLeft = 15, rhythmInterval = null, isRhythmRunning = false;
-
+    let rhythmScore = 0, rhythmTime = 15, rhythmInterval = null, isRhythmRunning = false;
     document.getElementById('btnJobRhythm').addEventListener('click', () => {
-      modalWork.classList.add('hidden');
-      modalRhythmGame.classList.remove('hidden');
-      rhythmStartOverlay.classList.remove('hidden');
-      logAuditEvent('Запустила Кошачий стрим (Ритм)', '🐾');
+      document.getElementById('modalWork').classList.add('hidden');
+      document.getElementById('modalRhythmGame').classList.remove('hidden');
+      document.getElementById('rhythmStartOverlay').classList.remove('hidden');
     });
-    closeRhythmBtn.addEventListener('click', () => { stopRhythmGame(); modalRhythmGame.classList.add('hidden'); });
-    btnStartRhythm.addEventListener('click', startRhythmGame);
-
-    function startRhythmGame() {
-      rhythmStartOverlay.classList.add('hidden');
-      rhythmScore = 0; rhythmTimeLeft = 15; isRhythmRunning = true;
-      rhythmScoreText.innerText = `Донаты: 0 🪙`; rhythmTimerText.innerText = `15с`;
-
-      rhythmInterval = setInterval(() => {
-        rhythmTimeLeft--;
-        rhythmTimerText.innerText = `${rhythmTimeLeft}с`;
-        if (rhythmTimeLeft <= 0) endRhythmGame();
-      }, 1000);
-      spawnRhythmTarget();
-    }
-
-    function spawnRhythmTarget() {
-      if (!isRhythmRunning) return;
-      const target = document.createElement('div');
-      target.className = 'absolute w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 border-2 border-white flex items-center justify-center text-xl cursor-pointer active:scale-90 transition-transform shadow-[0_0_15px_#f472b6]';
-      target.innerText = '🐾';
-      target.style.left = Math.floor(Math.random() * (rhythmCanvas.clientWidth - 70)) + 'px';
-      target.style.top = Math.floor(Math.random() * (rhythmCanvas.clientHeight - 70)) + 'px';
-
-      target.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        sound.playTone(520 + Math.random() * 200, 'triangle', 0.1, 0.2);
-        triggerHaptic();
-        rhythmScore++;
-        rhythmScoreText.innerText = `Донаты: ${rhythmScore} 🪙`;
-        target.remove();
-        spawnRhythmTarget();
-      });
-      rhythmCanvas.appendChild(target);
-      setTimeout(() => { if (target.parentNode) { target.remove(); if (isRhythmRunning) spawnRhythmTarget(); } }, 950);
-    }
-
-    function stopRhythmGame() {
+    document.getElementById('closeRhythmBtn').addEventListener('click', () => {
       isRhythmRunning = false; clearInterval(rhythmInterval);
-      rhythmCanvas.querySelectorAll('.w-14').forEach(t => t.remove());
-    }
-
-    function endRhythmGame() {
-      stopRhythmGame();
-      sound.win();
-      confetti({ particleCount: 30, spread: 60 });
-      const earned = Math.min(20, Math.max(10, rhythmScore));
-      pet.coins += earned;
-      pet.energy = Math.max(5, pet.energy - 12);
-      addXP(earned);
-      logAuditEvent(`Завершила стрим (Донатов: ${rhythmScore}, +${earned} 🪙)`, '🐾');
-
-      rhythmStartOverlay.classList.remove('hidden');
-      rhythmStartOverlay.innerHTML = `
-        <span class="text-4xl">🎙️</span>
-        <h4 class="cute-font text-purple-300 font-bold text-base">Стрим завершен!</h4>
-        <p class="text-xs text-gray-300">Зрители в восторге от лапок!<br>Собрано донатов: <b class="text-amber-300">+${earned} 🪙</b></p>
-        <button id="btnRestartRhythm" class="cute-font bg-purple-500 hover:bg-purple-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-2">
-          НОВЫЙ СТРИМ 🎙️
-        </button>
-      `;
-      document.getElementById('btnRestartRhythm').addEventListener('click', startRhythmGame);
-      checkRareWishDrop(0.3, "Мини-игра Стример");
-      updatePetUI();
-    }
-
-    // ДЗЕН-КЛИКЕР
-    const modalZen = document.getElementById('modalZen');
-    const zenTapArea = document.getElementById('zenTapArea');
-    const zenTotalClicks = document.getElementById('zenTotalClicks');
-    const zenComboText = document.getElementById('zenComboText');
-    const zenParticlesLayer = document.getElementById('zenParticlesLayer');
-    const zenEmoji = document.getElementById('zenEmoji');
-
-    let zenClicks = 0, zenCombo = 1, zenComboTimer = null;
-
-    document.getElementById('btnZenClicker').addEventListener('click', () => {
-      modalZen.classList.remove('hidden');
-      logAuditEvent('Зашла в Кошачий Дзен (ASMR)', '✨');
+      document.getElementById('modalRhythmGame').classList.add('hidden');
+    });
+    document.getElementById('btnStartRhythm').addEventListener('click', () => {
+      document.getElementById('rhythmStartOverlay').classList.add('hidden');
+      rhythmScore = 0; rhythmTime = 15; isRhythmRunning = true;
+      rhythmInterval = setInterval(() => {
+        rhythmTime--; document.getElementById('rhythmTimerText').innerText = `${rhythmTime}с`;
+        if (rhythmTime <= 0) {
+          isRhythmRunning = false; clearInterval(rhythmInterval); sound.win();
+          const earned = Math.min(20, Math.max(10, rhythmScore));
+          pet.coins += earned; pet.energy = Math.max(5, pet.energy - 12); addXP(earned);
+          document.getElementById('rhythmStartOverlay').classList.remove('hidden');
+          document.getElementById('rhythmStartOverlay').innerHTML = `<span class="text-4xl">🎙️</span><p class="text-xs text-gray-300 mt-1">+${earned} 🪙</p><button class="cute-font bg-purple-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartRhythm').click()">ЕЩЕ СТРИМ</button>`;
+          checkRareWishDrop(ACTIVE_WISH_CHANCES.rhythm, "Стример"); updatePetUI();
+        }
+      }, 1000);
+      function spawnRhythmNode() {
+        if (!isRhythmRunning) return;
+        const el = document.createElement('div');
+        el.className = 'absolute w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-xl cursor-pointer active:scale-90';
+        el.innerText = '🐾';
+        el.style.left = Math.floor(Math.random() * 300) + 'px';
+        el.style.top = Math.floor(Math.random() * 300) + 'px';
+        el.addEventListener('pointerdown', () => {
+          sound.playTone(550, 'triangle', 0.1); triggerHaptic(); rhythmScore++;
+          document.getElementById('rhythmScoreText').innerText = `Донаты: ${rhythmScore} 🪙`;
+          el.remove(); spawnRhythmNode();
+        });
+        document.getElementById('rhythmCanvas').appendChild(el);
+        setTimeout(() => { if (el.parentNode) { el.remove(); if (isRhythmRunning) spawnRhythmNode(); } }, 950);
+      }
+      spawnRhythmNode();
     });
 
-    zenTapArea.addEventListener('pointerdown', (e) => {
+    // =========================================================
+    // ДЗЕН-КЛИКЕР
+    // =========================================================
+    let zenClicks = 0;
+    document.getElementById('btnZenClicker').addEventListener('click', () => document.getElementById('modalZen').classList.remove('hidden'));
+    document.getElementById('zenTapArea').addEventListener('pointerdown', (e) => {
       zenClicks++;
-      zenTotalClicks.innerText = zenClicks;
-      clearTimeout(zenComboTimer);
-      zenCombo = Math.min(10, zenCombo + 1);
-      zenComboText.innerText = `Мур-комбо: x${zenCombo} 🔥`;
-      zenComboTimer = setTimeout(() => { zenCombo = 1; zenComboText.innerText = `Комбо: x1`; }, 1600);
-
-      sound.purr(); triggerHaptic();
-
-      zenEmoji.style.transform = `scale(${1 + zenCombo * 0.04}) rotate(${(Math.random() - 0.5) * 15}deg)`;
-      setTimeout(() => zenEmoji.style.transform = 'scale(1) rotate(0deg)', 150);
-
+      document.getElementById('zenTotalClicks').innerText = zenClicks;
+      sound.purr();
+      triggerHaptic();
+      pet.happy = Math.min(100, pet.happy + 1);
       const p = document.createElement('div');
-      p.className = 'absolute font-bold text-pink-300 pointer-events-none select-none text-xl';
-      p.innerText = ['💖', '✨', '🐾', '🌸'][Math.floor(Math.random() * 4)];
+      p.className = 'absolute font-bold text-pink-300 pointer-events-none text-xl';
+      p.innerText = ['💖', '✨', '🐾'][Math.floor(Math.random() * 3)];
       p.style.left = (e.offsetX || 120) + 'px';
       p.style.top = (e.offsetY || 120) + 'px';
       p.style.animation = 'floatParticle 0.7s ease-out forwards';
-      zenParticlesLayer.appendChild(p);
+      document.getElementById('zenParticlesLayer').appendChild(p);
       setTimeout(() => p.remove(), 700);
-
-      pet.happy = Math.min(100, pet.happy + 1);
-      checkRareWishDrop(0.005, "Дзен-кликер");
-
+      checkRareWishDrop(ACTIVE_WISH_CHANCES.zen, "Дзен-кликер");
       if (zenClicks % 80 === 0) {
-        sound.win();
-        confetti({ particleCount: 25, spread: 50, origin: { y: 0.6 } });
-        const bonusCoins = 10 + Math.floor(Math.random() * 8);
-        pet.coins += bonusCoins;
-        logAuditEvent(`Открыла Дзен-сундучок (+${bonusCoins} 🪙)`, '🎁');
-        alert(`🎁 МАЛЕНЬКИЙ СУНДУЧОК ДЗЕНА!\nКотик так счастлив от почесушек, что дарит вам +${bonusCoins} 🪙!`);
-        updatePetUI();
+        pet.coins += 10; sound.win(); confetti({ particleCount: 25 });
+        alert("🎁 СУНДУЧОК ДЗЕНА! +10 🪙!"); updatePetUI();
       }
     });
 
     // =========================================================
-    // ГАРДЕРОБ, ЦВЕТА И ЛОКАЦИИ
+    // РУЛЕТКА ВКУСНОСТЕЙ
     // =========================================================
-    const modalWardrobe = document.getElementById('modalWardrobe');
-    const shopItemsContainer = document.getElementById('wardrobeAccSection');
-    const wardrobeRoomsSection = document.getElementById('wardrobeRoomsSection');
-    const wardrobeColorSection = document.getElementById('wardrobeColorSection');
-    const shopCoinsVal = document.getElementById('shopCoinsVal');
-
-    const tabWardrobeAccs = document.getElementById('tabWardrobeAccs');
-    const tabWardrobeRooms = document.getElementById('tabWardrobeRooms');
-    const tabWardrobeColors = document.getElementById('tabWardrobeColors');
-
-    function resetWardrobeTabs() {
-      [tabWardrobeAccs, tabWardrobeRooms, tabWardrobeColors].forEach(t => {
-        t.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]";
-      });
-      shopItemsContainer.classList.add('hidden');
-      wardrobeRoomsSection.classList.add('hidden');
-      wardrobeColorSection.classList.add('hidden');
-    }
-
-    tabWardrobeAccs.addEventListener('click', () => {
-      resetWardrobeTabs();
-      tabWardrobeAccs.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
-      shopItemsContainer.classList.remove('hidden');
-    });
-
-    tabWardrobeRooms.addEventListener('click', () => {
-      resetWardrobeTabs();
-      tabWardrobeRooms.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
-      wardrobeRoomsSection.classList.remove('hidden');
-      renderRoomsShop();
-    });
-
-    tabWardrobeColors.addEventListener('click', () => {
-      resetWardrobeTabs();
-      tabWardrobeColors.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white transition text-[11px]";
-      wardrobeColorSection.classList.remove('hidden');
-      renderColorShop();
-    });
-
-    document.getElementById('btnWardrobe').addEventListener('click', () => {
-      renderShop();
-      renderRoomsShop();
-      renderColorShop();
-      modalWardrobe.classList.remove('hidden');
-      logAuditEvent('Открыла Гардероб и Интерьер', '🛍️');
-    });
-
-    function renderRoomsShop() {
-      wardrobeRoomsSection.innerHTML = '';
-      ROOM_THEMES.forEach(room => {
-        const isOwned = ownedRooms.includes(room.id);
-        const isActive = pet.activeRoom === room.id;
-
-        const row = document.createElement('div');
-        row.className = `p-2.5 rounded-2xl flex items-center justify-between border ${
-          isActive ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'
-        }`;
-
-        let btnHtml = '';
-        if (isActive) {
-          btnHtml = `<span class="text-[11px] font-extrabold text-pink-400">Включено ✓</span>`;
-        } else if (isOwned) {
-          btnHtml = `<button class="px-3 py-1 rounded-lg bg-pink-500/80 text-[11px] font-bold text-white active:scale-95" onclick="setRoomTheme('${room.id}')">Включить</button>`;
-        } else {
-          btnHtml = `<button class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-[11px] font-bold text-[#11111b] active:scale-95" onclick="buyRoomTheme('${room.id}', ${room.cost})">${room.cost} 🪙</button>`;
-        }
-
-        row.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <span class="text-2xl">${room.icon}</span>
-            <div>
-              <div class="text-xs font-bold text-gray-200">${room.name}</div>
-              <div class="text-[10px] text-gray-400">${room.desc}</div>
-            </div>
-          </div>
-          ${btnHtml}
-        `;
-        wardrobeRoomsSection.appendChild(row);
-      });
-    }
-
-    window.buyRoomTheme = function(roomId, cost) {
-      if (pet.coins < cost) {
-        alert("Не хватает монеток! На эту локацию придется подкопить в мини-играх ✨");
-        return;
-      }
-      sound.win();
-      pet.coins -= cost;
-      analytics.spentCoins += cost;
-      ownedRooms.push(roomId);
-      pet.activeRoom = roomId;
-      saveRooms();
-      logAuditEvent(`Купила локацию «${roomId}» (-${cost} 🪙)`, '🏠');
-      renderRoomsShop();
-      updatePetUI();
-    };
-
-    window.setRoomTheme = function(roomId) {
-      sound.pop();
-      pet.activeRoom = roomId;
-      logAuditEvent(`Сменила локацию на «${roomId}»`, '🏠');
-      renderRoomsShop();
-      updatePetUI();
-    };
-
-    function renderColorShop() {
-      wardrobeColorSection.innerHTML = '';
-      Object.keys(CAT_COLORS).forEach(cKey => {
-        const c = CAT_COLORS[cKey];
-        const isCurrent = pet.color === cKey;
-        const row = document.createElement('div');
-        row.className = `p-2.5 rounded-2xl flex items-center justify-between border ${isCurrent ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'}`;
-        row.innerHTML = `
-          <div class="flex items-center gap-2.5">
-            <div class="w-6 h-6 rounded-full border border-white/50" style="background-color: ${c.hex}"></div>
-            <span class="text-xs font-bold text-gray-200">${c.label}</span>
-          </div>
-          ${isCurrent ? '<span class="text-[11px] font-extrabold text-pink-400">Выбрано ✓</span>' : `<button class="px-3 py-1 rounded-lg bg-[#313244] hover:bg-pink-500 text-[11px] font-bold text-white transition active:scale-95" onclick="selectCatColor('${cKey}')">Выбрать</button>`}
-        `;
-        wardrobeColorSection.appendChild(row);
-      });
-    }
-
-    window.selectCatColor = function(colorKey) {
-      sound.pop(); pet.color = colorKey; logAuditEvent(`Сменила окрас котика на «${colorKey}»`, '🎨'); renderColorShop(); updatePetUI();
-    };
-
-    function renderShop() {
-      shopCoinsVal.innerText = pet.coins;
-      shopItemsContainer.innerHTML = '';
-      SHOP_ITEMS.forEach(item => {
-        const isOwned = inventory.includes(item.id);
-        const isEquipped = pet.activeAcc === item.id;
-        const el = document.createElement('div');
-        el.className = `p-3 rounded-2xl flex flex-col items-center justify-between gap-1 border transition ${isEquipped ? 'bg-pink-950/40 border-pink-500' : 'bg-[#181825] border-[#313244]'}`;
-        let actionBtnHtml = isEquipped ? `<span class="text-[11px] font-extrabold text-pink-400">Надето ✓</span>` : isOwned ? `<button class="w-full py-1 rounded-lg bg-pink-500/80 text-[11px] font-bold text-white active:scale-95" onclick="equipItem('${item.id}')">Надеть</button>` : `<button class="w-full py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-[11px] font-bold text-[#11111b] active:scale-95" onclick="buyItem('${item.id}', ${item.cost})">${item.cost} 🪙</button>`;
-        el.innerHTML = `<span class="text-3xl">${item.icon}</span><span class="text-xs font-bold">${item.name}</span>${actionBtnHtml}`;
-        shopItemsContainer.appendChild(el);
-      });
-    }
-
-    window.buyItem = function(id, cost) {
-      if (pet.coins < cost) { alert("Не хватает монеток! Отправь котика на работу 💼"); return; }
-      sound.win(); pet.coins -= cost; analytics.spentCoins += cost; inventory.push(id); pet.activeAcc = id;
-      logAuditEvent(`Купила аксессуар «${id}» (-${cost} 🪙)`, '🎀');
-      saveInventory(); renderShop(); updatePetUI();
-    };
-
-    window.equipItem = function(id) { sound.pop(); pet.activeAcc = id; logAuditEvent(`Надела аксессуар «${id}»`, '🎀'); renderShop(); updatePetUI(); };
-    document.getElementById('btnRemoveAcc').addEventListener('click', () => { pet.activeAcc = 'none'; logAuditEvent('Сняла все аксессуары', '❌'); renderShop(); updatePetUI(); });
-
-    // =========================================================
-    // CS:GO КЕЙС С ПРИЗАМИ ДЛЯ ТАГАНРОГА
-    // =========================================================
-    const modalCsgoCase = document.getElementById('modalCsgoCase');
-    const caseRouletteTrack = document.getElementById('caseRouletteTrack');
-    const btnOpenCase = document.getElementById('btnOpenCase');
-    const caseWonBanner = document.getElementById('caseWonBanner');
-    const caseWonTitle = document.getElementById('caseWonTitle');
-    const caseWonDesc = document.getElementById('caseWonDesc');
-
-    let isCaseSpinning = false;
-
-    document.getElementById('btnCsgoCase').addEventListener('click', () => {
-      buildCaseRouletteItems();
-      caseWonBanner.classList.add('hidden');
-      modalCsgoCase.classList.remove('hidden');
-      logAuditEvent('Открыла меню CS:GO Кейса', '📦');
-    });
-
-    function buildCaseRouletteItems() {
-      caseRouletteTrack.style.transition = 'none';
-      caseRouletteTrack.style.transform = 'translateX(0px)';
-      caseRouletteTrack.innerHTML = '';
-
-      for (let i = 0; i < 60; i++) {
-        const item = CASE_ITEMS[Math.floor(Math.random() * CASE_ITEMS.length)];
-        const card = document.createElement('div');
-        card.className = `flex-shrink-0 w-20 h-20 bg-[#1e1e2e] rounded-xl flex flex-col items-center justify-center p-1 border-b-4`;
-        card.style.borderColor = item.color;
-        card.innerHTML = `<span class="text-2xl">${item.icon}</span><span class="text-[9px] text-gray-300 font-bold truncate max-w-[70px] mt-1">${item.name}</span>`;
-        caseRouletteTrack.appendChild(card);
-      }
-    }
-
-    btnOpenCase.addEventListener('click', () => {
-      if (isCaseSpinning) return;
-      if (pet.coins < 120) {
-        alert("Для открытия кейса нужно 120 🪙! Подкопи монеток в мини-играх ✨");
-        return;
-      }
-
-      pet.coins -= 120;
-      analytics.spentCoins += 120;
-      analytics.casesOpened++;
-      updatePetUI();
-
-      isCaseSpinning = true;
-      btnOpenCase.disabled = true;
-      caseWonBanner.classList.add('hidden');
-      sound.tick();
-
-      const rand = Math.random() * 100;
-      let winningItem;
-      if (rand < 2.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "super_taganrog_box");
-      } else if (rand < 10.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "taganrog_coffee");
-      } else if (rand < 22.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "argument_shield");
-      } else if (rand < 37.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "cinema_night");
-      } else if (rand < 55.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "voice_song");
-      } else if (rand < 75.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "gold_coins");
-      } else if (rand < 90.0) {
-        winningItem = CASE_ITEMS.find(i => i.id === "cat_feast");
-      } else {
-        winningItem = CASE_ITEMS.find(i => i.id === "consolation");
-      }
-
-      const winningIndex = 44;
-      const cards = caseRouletteTrack.children;
-      if (cards[winningIndex]) {
-        cards[winningIndex].style.borderColor = winningItem.color;
-        cards[winningIndex].innerHTML = `<span class="text-2xl">${winningItem.icon}</span><span class="text-[9px] text-gray-300 font-bold truncate max-w-[70px] mt-1">${winningItem.name}</span>`;
-      }
-
-      const cardWidthWithGap = 88;
-      const offset = (winningIndex * cardWidthWithGap) - 150 + (cardWidthWithGap / 2) + (Math.random() * 20 - 10);
-
-      caseRouletteTrack.style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)';
-      caseRouletteTrack.style.transform = `translateX(-${offset}px)`;
-
-      let tickInterval = setInterval(() => sound.tick(), 140);
-      setTimeout(() => { clearInterval(tickInterval); tickInterval = setInterval(() => sound.tick(), 280); }, 2800);
-      setTimeout(() => { clearInterval(tickInterval); tickInterval = setInterval(() => sound.tick(), 450); }, 4000);
-
-      setTimeout(() => {
-        clearInterval(tickInterval);
-        isCaseSpinning = false;
-        btnOpenCase.disabled = false;
-        sound.win();
-        confetti({ particleCount: 50, spread: 70 });
-
-        caseWonTitle.innerText = `${winningItem.icon} ${winningItem.name}`;
-        caseWonTitle.style.color = winningItem.color;
-        caseWonDesc.innerText = winningItem.desc;
-        caseWonBanner.classList.remove('hidden');
-
-        if (winningItem.id === "consolation") { pet.coins += 20; }
-        if (winningItem.id === "gold_coins") { pet.coins += 50; }
-        if (winningItem.id === "cat_feast") { pet.hunger = 100; pet.happy = 100; }
-        updatePetUI();
-
-        caseHistory.push({
-          name: winningItem.name,
-          icon: winningItem.icon,
-          desc: winningItem.desc,
-          time: new Date().toLocaleString("ru-RU")
-        });
-        localStorage.setItem(STORAGE_KEY_CASE_DROPS, JSON.stringify(caseHistory));
-        logAuditEvent(`Открыла кейс: выбила «${winningItem.name}»`, winningItem.icon);
-        syncToCloud();
-
-        const tgCaseMsg = 
-          `📦 <b>Катя открыла Кейс Фортуны CS:GO!</b>\n\n` +
-          `🎁 <b>Выигрыш:</b> ${winningItem.icon} <b>${winningItem.name}</b>\n` +
-          `ℹ️ <i>${winningItem.desc}</i>\n` +
-          `💰 Баланс: ${pet.coins} 🪙\n` +
-          `🐱 Питомец: ${pet.name} (Ур. ${pet.level})\n` +
-          `⏰ Время: ${new Date().toLocaleString("ru-RU")}`;
-
-        sendTelegramLog(tgCaseMsg);
-      }, 5200);
-    });
-
-    // ЕЖЕДНЕВНЫЙ БОНУС
-    const btnDailyBonus = document.getElementById('btnDailyBonus');
-    const dailyBonusLabel = document.getElementById('dailyBonusLabel');
-
-    function updateBonusButtonStatus() {
-      const lastBonus = parseInt(localStorage.getItem(STORAGE_KEY_BONUS)) || 0;
-      const now = Date.now();
-      const diff = now - lastBonus;
-      const oneDay = 24 * 60 * 60 * 1000;
-
-      if (diff >= oneDay) {
-        btnDailyBonus.classList.remove('opacity-50');
-        dailyBonusLabel.innerText = '🎁 Бонус';
-      } else {
-        btnDailyBonus.classList.add('opacity-50');
-        const remainingHours = Math.ceil((oneDay - diff) / (1000 * 60 * 60));
-        dailyBonusLabel.innerText = `⏳ ${remainingHours}ч`;
-      }
-    }
-
-    btnDailyBonus.addEventListener('click', () => {
-      const lastBonus = parseInt(localStorage.getItem(STORAGE_KEY_BONUS)) || 0;
-      const now = Date.now();
-      const oneDay = 24 * 60 * 60 * 1000;
-
-      if (now - lastBonus < oneDay) {
-        const remainingHours = Math.ceil((oneDay - (now - lastBonus)) / (1000 * 60 * 60));
-        alert(`Ежедневный подарок уже получен! Следующий будет через ${remainingHours} ч.`);
-        return;
-      }
-
-      localStorage.setItem(STORAGE_KEY_BONUS, now);
-      sound.win();
-      pet.coins += 15;
-      pet.happy = Math.min(100, pet.happy + 20);
-      addXP(15);
-      confetti({ particleCount: 35, spread: 60, origin: { y: 0.6 } });
-      catSpeechBubble.innerText = "«Ежедневный бонус: +15 🪙 в копилочку!» 🎁";
-      logAuditEvent('Собрала ежедневный бонус (+15 🪙)', '🎁');
-      checkRareWishDrop(0.2, "Ежедневный бонус");
-      updatePetUI();
-    });
-
-    document.querySelectorAll('.closeModalBtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#modalFeed, #modalWork, #modalWardrobe, #modalWheelSettings, #modalMiniGame, #modalRhythmGame, #modalZen, #modalTetris, #modalRunner, #modalCsgoCase').forEach(m => m.classList.add('hidden'));
-      });
-    });
-
-    /* =========================================================
-     * РУЛЕТКА ВКУСНЯШЕК
-     * ========================================================= */
-    const canvas = document.getElementById('rouletteCanvas');
-    const ctx = canvas.getContext('2d');
-    const btnSpinWheel = document.getElementById('btnSpinWheel');
-    const rouletteResultText = document.getElementById('rouletteResultText');
-
-    const PALETTE = ["#FF5E57", "#FFA940", "#FFD53F", "#1DD1A1", "#48DBFB", "#9B59B6", "#FF6B81", "#54A0FF", "#10AC84"];
+    const canvas = document.getElementById('rouletteCanvas'), ctx = canvas.getContext('2d');
     let currentAngle = 0, isSpinning = false;
+    const PALETTE = ["#FF5E57", "#FFA940", "#FFD53F", "#1DD1A1", "#48DBFB", "#9B59B6", "#FF6B81", "#54A0FF"];
 
     function drawWheel() {
-      const w = canvas.width, h = canvas.height;
-      const cx = w / 2, cy = h / 2, radius = cx - 18;
-      const count = wheelItems.length, arc = (2 * Math.PI) / count;
-
+      const w = 300, h = 300, cx = 150, cy = 150, radius = 132, arc = (2 * Math.PI) / wheelItems.length;
       ctx.clearRect(0, 0, w, h);
-      if (count === 0) return;
-
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < wheelItems.length; i++) {
         const start = currentAngle + i * arc;
-        const end = start + arc;
         ctx.beginPath();
         ctx.fillStyle = PALETTE[i % PALETTE.length];
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, radius, start, end);
+        ctx.arc(cx, cy, radius, start, start + arc);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = "#181825";
-        ctx.lineWidth = 5;
-        ctx.stroke();
-
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(start + arc / 2);
         ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "rgba(0,0,0,0.7)";
-        ctx.shadowBlur = 4;
-        ctx.font = "bold 20px 'Nunito', sans-serif";
+        ctx.font = "bold 16px 'Nunito', sans-serif";
         ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-
-        let text = wheelItems[i];
-        if (text.length > 15) text = text.slice(0, 13) + "..";
-        ctx.fillText(text, radius - 28, 0);
+        ctx.fillText(wheelItems[i].slice(0, 14), radius - 20, 0);
         ctx.restore();
       }
-
       ctx.beginPath();
-      ctx.arc(cx, cy, 38, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
       ctx.fillStyle = "#1e1e2e";
       ctx.fill();
       ctx.strokeStyle = "#f38ba8";
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 4;
       ctx.stroke();
       ctx.fillStyle = "#f38ba8";
-      ctx.font = "22px sans-serif";
+      ctx.font = "18px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("💖", cx, cy + 2);
     }
 
-    function spinWheel() {
+    btnSpinWheel = document.getElementById('btnSpinWheel');
+    btnSpinWheel.addEventListener('click', () => {
       if (isSpinning || wheelItems.length < 2) return;
       isSpinning = true;
       btnSpinWheel.disabled = true;
-      rouletteResultText.innerText = "Барабан крутится... Выбираем вкусняшку! ⏳";
-
-      const startRot = currentAngle;
-      const extraRounds = (6 + Math.random() * 4) * 2 * Math.PI;
-      const targetRot = startRot + extraRounds + Math.random() * 2 * Math.PI;
-      const duration = 4800;
-      const startTime = performance.now();
-      let lastTickSector = -1;
+      const startRot = currentAngle, targetRot = startRot + 6 * 2 * Math.PI + Math.random() * 2 * Math.PI, startTime = performance.now();
 
       function animate(time) {
-        const elapsed = time - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        currentAngle = startRot + (targetRot - startRot) * easeOut;
-
-        const currentSector = Math.floor((currentAngle / ((2 * Math.PI) / wheelItems.length))) % wheelItems.length;
-        if (currentSector !== lastTickSector) {
-          sound.tick();
-          triggerHaptic();
-          lastTickSector = currentSector;
-        }
+        const progress = Math.min((time - startTime) / 4500, 1);
+        currentAngle = startRot + (targetRot - startRot) * (1 - Math.pow(1 - progress, 3));
         drawWheel();
-
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
           isSpinning = false;
           btnSpinWheel.disabled = false;
-          finalizeWinner();
+          const arc = (2 * Math.PI) / wheelItems.length;
+          const index = Math.floor(((3 * Math.PI / 2 - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI)) / arc) % wheelItems.length;
+          const winner = wheelItems[index];
+          const winId = `#WIN-` + Math.floor(1000 + Math.random() * 9000);
+
+          sound.win();
+          confetti({ particleCount: 75, spread: 80, origin: { y: 0.55 } });
+          document.getElementById('rouletteResultText').innerHTML = `🎉 Заказываем:<br><span class="text-pink-400 font-black">${winner}</span> (${winId})!`;
+
+          let rHist = JSON.parse(localStorage.getItem('katya_master_roulette_history')) || [];
+          rHist.push({ id: winId, item: winner, time: new Date().toLocaleString("ru-RU") });
+          if (rHist.length > 50) rHist.shift();
+          localStorage.setItem('katya_master_roulette_history', JSON.stringify(rHist));
+
+          pet.coins += 8;
+          logAuditEvent(`Рулетка: выпало «${winner}» [${winId}] (+8 🪙)`, '🎰');
+          checkRareWishDrop(ACTIVE_WISH_CHANCES.roulette || 0.08, "Рулетка");
+          updatePetUI();
         }
       }
       requestAnimationFrame(animate);
-    }
-
-    function finalizeWinner() {
-      const count = wheelItems.length, arc = (2 * Math.PI) / count;
-      const pointerAngle = (3 * Math.PI) / 2;
-      const normalized = (pointerAngle - (currentAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
-      const index = Math.floor(normalized / arc) % count;
-      const winner = wheelItems[index];
-
-      sound.win();
-      confetti({ particleCount: 75, spread: 80, origin: { y: 0.55 }, colors: ['#fab387', '#f38ba8', '#a6e3a1', '#89b4fa'] });
-      rouletteResultText.innerHTML = `🎉 Сегодня заказываем:<br><span class="text-pink-400 text-base font-black">${winner}</span>!`;
-
-      pet.coins += 8;
-      pet.happy = Math.min(100, pet.happy + 15);
-      addXP(15);
-      logAuditEvent(`Прокрутила рулетку: выпало «${winner}» (+8 🪙)`, '🎰');
-      checkRareWishDrop(0.08, "Рулетка вкусняшек");
-      updatePetUI();
-    }
-
-    btnSpinWheel.addEventListener('click', spinWheel);
-
-    const modalWheelSettings = document.getElementById('modalWheelSettings');
-    const settingsWheelList = document.getElementById('settingsWheelList');
-    const inputNewItem = document.getElementById('inputNewItem');
-    const btnAddWheelItem = document.getElementById('btnAddWheelItem');
+    });
 
     document.getElementById('btnOpenWheelSettings').addEventListener('click', () => {
       renderWheelSettingsList();
-      modalWheelSettings.classList.remove('hidden');
+      document.getElementById('modalWheelSettings').classList.remove('hidden');
     });
 
     function renderWheelSettingsList() {
-      settingsWheelList.innerHTML = '';
+      const list = document.getElementById('settingsWheelList');
+      list.innerHTML = '';
       wheelItems.forEach((item, idx) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between bg-[#181825] border border-[#313244] px-3 py-2 rounded-xl text-xs';
-        row.innerHTML = `<span class="truncate pr-2">${item}</span><button class="text-rose-400 hover:text-rose-300 font-bold px-1" onclick="deleteWheelItem(${idx})">✕</button>`;
-        settingsWheelList.appendChild(row);
+        list.innerHTML += `<div class="flex items-center justify-between bg-[#181825] border border-[#313244] px-3 py-2 rounded-xl text-xs"><span class="truncate pr-2">${item}</span><button class="text-rose-400 hover:text-rose-300 font-bold px-1" onclick="deleteWheelItem(${idx})">✕</button></div>`;
       });
     }
 
     window.deleteWheelItem = function(idx) {
       if (wheelItems.length <= 2) { alert("Оставь минимум 2 варианта!"); return; }
       wheelItems.splice(idx, 1);
-      saveWheel(); renderWheelSettingsList(); drawWheel();
+      localStorage.setItem('katya_master_wheel_items', JSON.stringify(wheelItems));
+      renderWheelSettingsList(); drawWheel();
     };
 
-    btnAddWheelItem.addEventListener('click', () => {
-      const val = inputNewItem.value.trim();
+    document.getElementById('btnAddWheelItem').addEventListener('click', () => {
+      const val = document.getElementById('inputNewItem').value.trim();
       if (val) {
         wheelItems.push(val);
-        saveWheel(); inputNewItem.value = ''; renderWheelSettingsList(); drawWheel();
+        localStorage.setItem('katya_master_wheel_items', JSON.stringify(wheelItems));
+        document.getElementById('inputNewItem').value = '';
+        renderWheelSettingsList(); drawWheel();
       }
     });
 
     // Навигация
-    const tabPet = document.getElementById('tabPet');
-    const tabRoulette = document.getElementById('tabRoulette');
-    const navTabPet = document.getElementById('navTabPet');
-    const navTabRoulette = document.getElementById('navTabRoulette');
-
-    navTabPet.addEventListener('click', () => {
-      tabPet.classList.remove('hidden');
-      tabRoulette.classList.add('hidden');
-      tabRoulette.classList.remove('flex');
-      navTabPet.className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
-      navTabRoulette.className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
+    document.getElementById('navTabPet').addEventListener('click', () => {
+      document.getElementById('tabPet').classList.remove('hidden');
+      document.getElementById('tabRoulette').classList.add('hidden');
+      document.getElementById('navTabPet').className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
+      document.getElementById('navTabRoulette').className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
     });
 
-    navTabRoulette.addEventListener('click', () => {
-      tabRoulette.classList.remove('hidden');
-      tabRoulette.classList.add('flex');
-      tabPet.classList.add('hidden');
-      navTabRoulette.className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
-      navTabPet.className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
+    document.getElementById('navTabRoulette').addEventListener('click', () => {
+      document.getElementById('tabRoulette').classList.remove('hidden');
+      document.getElementById('tabRoulette').classList.add('flex');
+      document.getElementById('tabPet').classList.add('hidden');
+      document.getElementById('navTabRoulette').className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
+      document.getElementById('navTabPet').className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
       drawWheel();
     });
 
-    const soundToggleBtn = document.getElementById('soundToggleBtn');
-    soundToggleBtn.addEventListener('click', () => {
+    document.getElementById('soundToggleBtn').addEventListener('click', () => {
       sound.enabled = !sound.enabled;
-      soundToggleBtn.innerText = sound.enabled ? '🔔' : '🔕';
-      soundToggleBtn.classList.toggle('opacity-50', !sound.enabled);
+      document.getElementById('soundToggleBtn').innerText = sound.enabled ? '🔔' : '🔕';
+      document.getElementById('soundToggleBtn').classList.toggle('opacity-50', !sound.enabled);
     });
+
+    document.getElementById('btnDailyBonus').addEventListener('click', () => {
+      const last = parseInt(localStorage.getItem('katya_master_last_bonus')) || 0;
+      if (Date.now() - last < 86400000) return alert("Бонус уже получен!");
+      localStorage.setItem('katya_master_last_bonus', Date.now());
+      const reward = ACTIVE_ECONOMY.dailyBonus || 15;
+      pet.coins += reward;
+      pet.happy = Math.min(100, pet.happy + 20);
+      addXP(15);
+      sound.win();
+      confetti({ particleCount: 35, spread: 60, origin: { y: 0.6 } });
+      document.getElementById('catSpeechBubble').innerText = `«Ежедневный бонус: +${reward} 🪙 в копилочку!» 🎁`;
+      logAuditEvent(`Собрала ежедневный бонус (+${reward} 🪙)`, '🎁');
+      checkRareWishDrop(ACTIVE_WISH_CHANCES.dailyBonus || 0.2, "Ежедневный бонус");
+      updatePetUI();
+    });
+
+    let secretClicks = 0, secretTimer = null;
+    document.getElementById('headerLevel').addEventListener('click', () => {
+      secretClicks++;
+      clearTimeout(secretTimer);
+      secretTimer = setTimeout(() => secretClicks = 0, 1200);
+      if (secretClicks >= 3) window.location.href = 'dashboard.html';
+    });
+
+    document.querySelectorAll('.closeModalBtn').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('#modalCasesHub, #modalCsgoCase, #modalWardrobe, #modalFeed, #modalWork, #modalTetris, #modalRunner, #modalMiniGame, #modalRhythmGame, #modalZen, #modalSecretWish, #modalWheelSettings').forEach(m => m.classList.add('hidden'));
+    }));
 
     setInterval(() => {
       if (pet.isSleeping) {
@@ -2855,7 +2214,6 @@ let cloudSyncTimer = null;
         pet.happy = Math.max(5, pet.happy - 1);
         pet.energy = Math.max(5, pet.energy - 1);
         pet.clean = Math.max(5, pet.clean - 1);
-
         if (pet.hunger > 35 && Math.random() < 0.12) spawnPoop(true);
       }
       updatePetUI();

@@ -3,104 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lex Labs Telemetry Suite 🛸</title>
+  <title>Lex Labs Enterprise Mission Control 🛰️</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Comfortaa:wght@700;900&family=Nunito:wght@600;800;900&display=swap');
-    body { font-family: 'Nunito', sans-serif; }
+    
+    body { 
+      font-family: 'Nunito', sans-serif; 
+    }
+    
     .mono-font { font-family: 'JetBrains Mono', monospace; }
     .cute-font { font-family: 'Comfortaa', cursive, sans-serif; }
+    
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0b0c16; }
     ::-webkit-scrollbar-thumb { background: #2b2d42; border-radius: 4px; }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-8px); }
-      40%, 80% { transform: translateX(8px); }
+    
+    @keyframes shake { 
+      0%, 100% { transform: translateX(0); } 
+      20%, 60% { transform: translateX(-8px); } 
+      40%, 80% { transform: translateX(8px); } 
     }
     .animate-shake { animation: shake 0.35s ease-in-out; }
+
+    @keyframes pulseGold {
+      0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+      50% { box-shadow: 0 0 35px rgba(251, 191, 36, 0.7); }
+    }
+    .animate-gold-glow { animation: pulseGold 2s infinite ease-in-out; }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      #authOverlay, header, button, nav, .no-print { display: none !important; }
+      .print-box { border: 1px solid #ccc !important; background: white !important; color: black !important; }
+    }
   </style>
 </head>
-<body class="bg-[#080911] text-[#cdd6f4] min-h-screen p-4 sm:p-8 selection:bg-pink-500 selection:text-white">
+<body class="bg-[#080911] text-[#cdd6f4] min-h-screen p-3 sm:p-8 selection:bg-pink-500 selection:text-white">
 
-  <!-- ЭКРАН ВВОДА ПАРОЛЯ -->
+  <!-- ========================================================= -->
+  <!-- ЭКРАН АВТОРИЗАЦИИ СОТРУДНИКА                              -->
+  <!-- ========================================================= -->
   <div id="authOverlay" class="fixed inset-0 bg-[#080911] z-50 flex items-center justify-center p-4">
-    <div id="authCard" class="w-full max-w-xs bg-[#111222] border border-[#2a2d4a] rounded-3xl p-6 flex flex-col items-center gap-4 shadow-[0_0_40px_rgba(0,0,0,0.9)]">
-      <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center text-3xl">
-        🔒
+    <div id="authCard" class="w-full max-w-sm bg-[#111222] border border-[#2a2d4a] rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-4 shadow-[0_0_50px_rgba(0,0,0,0.9)]">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/20 via-purple-500/20 to-amber-500/20 border border-pink-500/40 flex items-center justify-center text-3xl shadow-inner">
+        🛡️
       </div>
       
       <div class="text-center">
-        <h2 class="cute-font text-base font-bold text-gray-200">Доступ ограничен</h2>
-        <p class="text-[11px] text-gray-400 mt-1">Введите PIN-код для входа в панель</p>
+        <h2 class="cute-font text-lg font-black text-gray-100">Lex Labs Control Portal</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Вход в систему управления & Аналитики</p>
       </div>
 
-      <div class="w-full">
-        <input 
-          type="password" 
-          id="pinInput" 
-          maxlength="8" 
-          placeholder="••••" 
-          autocomplete="off"
-          class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-2xl px-4 py-3 text-center mono-font text-2xl tracking-[0.4em] text-pink-400 outline-none focus:border-pink-500 transition shadow-inner"
-        />
-        <div id="pinError" class="text-[11px] text-rose-400 text-center font-bold mt-2 min-h-[16px] opacity-0 transition-opacity">
-          Неверный PIN-код
+      <div class="w-full flex flex-col gap-3 mt-1">
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 block mb-1">Сотрудник / Должность:</label>
+          <select id="employeeSelect" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2.5 text-xs text-pink-300 font-bold outline-none focus:border-pink-500 transition cursor-pointer">
+            <option value="alex">Алексей (Lead Dev / Architect)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-gray-400 block mb-1">PIN-код доступа:</label>
+          <input 
+            type="password" 
+            id="pinInput" 
+            maxlength="8" 
+            placeholder="••••" 
+            autocomplete="off" 
+            class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-4 py-2.5 text-center mono-font text-xl tracking-[0.3em] text-amber-300 outline-none focus:border-pink-500 transition shadow-inner" 
+          />
+          <div id="pinError" class="text-[11px] text-rose-400 text-center font-bold mt-1.5 min-h-[16px] opacity-0 transition-opacity">
+            Неверный PIN-код сотрудника
+          </div>
         </div>
       </div>
 
-      <button id="btnSubmitPin" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition active:scale-95 shadow-lg">
-        ПОДТВЕРДИТЬ
+      <button id="btnSubmitPin" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition active:scale-95 shadow-lg mt-1">
+        АВТОРИЗОВАТЬСЯ
       </button>
 
-      <a href="index.html" class="text-[11px] text-gray-500 hover:text-gray-400 transition mt-1">
-        ← Вернуться на главную
+      <a href="index.html" class="text-[11px] text-gray-500 hover:text-gray-400 transition">
+        ← Вернуться к игре
       </a>
     </div>
   </div>
 
-  <!-- ДАШБОРД -->
-  <div id="dashboardContent" class="hidden max-w-5xl mx-auto flex flex-col gap-6">
+  <!-- ========================================================= -->
+  <!-- ОСНОВНАЯ ПАНЕЛЬ УПРАВЛЕНИЯ                                -->
+  <!-- ========================================================= -->
+  <div id="dashboardContent" class="hidden max-w-6xl mx-auto flex flex-col gap-6">
 
-    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#111222]/90 border border-[#2a2d4a] p-5 rounded-3xl backdrop-blur-md gap-4 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+    <!-- ХЕДЕР И ВЫБОР ИГРОКА -->
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-[#111222]/90 border border-[#2a2d4a] p-5 rounded-3xl backdrop-blur-md gap-4 shadow-2xl">
       <div>
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-3">
           <span class="text-3xl animate-pulse">🛰️</span>
           <div>
             <h1 class="cute-font text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-300 to-amber-300">
-              Lex Labs — Скрытый Дашборд Телеметрии
+              Lex Labs Mission Control & AI Economy
             </h1>
             <p class="mono-font text-[11px] text-gray-400 mt-0.5">
-              Пользователь: Катя • Таганрог ⇄ Орск • Обновлено: <span id="dashLastSyncTime" class="text-pink-300 font-bold">...</span>
+              Оператор: <b id="currentOperatorLabel" class="text-emerald-400 font-bold">Алексей</b> • Синхронизация: <span id="dashLastSyncTime" class="text-pink-300 font-bold">...</span> • Автообновление: <span id="autoRefreshCountdown" class="text-amber-300 font-bold">60с</span>
             </p>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5 self-end sm:self-auto">
-        <button id="btnRefresh" class="px-3.5 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] hover:border-pink-500 text-xs font-bold text-gray-200 transition active:scale-95 flex items-center gap-1.5">
+      <div class="flex flex-wrap items-center gap-2 self-end lg:self-auto no-print">
+        <!-- СЕЛЕКТОР ПРОФИЛЕЙ (КАТЯ / ДРУГИЕ ИГРОКИ) -->
+        <div class="flex items-center gap-1.5 bg-[#0b0c16] border border-[#2a2d4a] px-3 py-1.5 rounded-xl">
+          <span class="text-xs">👤</span>
+          <select id="targetPlayerSelect" class="bg-transparent text-xs text-pink-300 font-bold outline-none cursor-pointer">
+            <option value="katya">Катя (Таганрог)</option>
+          </select>
+        </div>
+
+        <button id="btnPrintReport" class="px-3 py-2 rounded-xl bg-purple-900/40 border border-purple-500/50 hover:bg-purple-800/50 text-xs font-bold text-purple-200 transition active:scale-95 flex items-center gap-1.5">
+          <span>📄</span> Отчет
+        </button>
+        <button id="btnOpenAiAdvisorModal" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold transition active:scale-95 flex items-center gap-1.5 shadow-lg">
+          <span>🧠</span> Пакет ИИ
+        </button>
+        <button id="btnRefresh" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] hover:border-pink-500 text-xs font-bold text-gray-200 transition active:scale-95 flex items-center gap-1.5">
           <span>🔄</span> Обновить
         </button>
-        <button id="btnResetCloudTelemetry" class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/60 text-xs font-bold text-rose-300 transition active:scale-95">
-          🗑️ Очистить телеметрию
+        <button id="btnResetTelemetry" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition active:scale-95">
+          🗑️ Очистить логи
         </button>
-        <button id="btnLogout" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition active:scale-95">
+        <button id="btnLogout" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] text-xs font-bold text-gray-400 hover:text-white transition active:scale-95">
           Выйти ✕
         </button>
-        <a href="index.html" class="px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-bold hover:bg-pink-500/20 transition">
-          🐱 В игру
-        </a>
       </div>
     </header>
 
-    <div class="flex bg-[#0b0c16] p-1 rounded-xl border border-[#2a2d4a] text-xs font-bold gap-1">
-      <button id="btnSwitchKatya" class="px-3 py-1 rounded-lg bg-pink-500 text-white transition" onclick="selectedDashboardUser='katya'; renderDashboard();">Катя 💖</button>
-      <button id="btnSwitchAlex" class="px-3 py-1 rounded-lg text-gray-400 hover:text-white transition" onclick="selectedDashboardUser='alex'; renderDashboard();">Алексей 🎮</button>
-    </div>
+    <!-- ДЕТЕКТОР РИСКА ОТТОКА И ПРЕДУПРЕЖДЕНИЯ (CHURN ANALYZER) -->
+    <section id="churnWarningCard" class="bg-[#18182d] border-2 border-rose-500/50 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="text-4xl" id="churnRiskEmoji">🚨</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="cute-font text-sm font-black text-rose-300">Индикатор риска оттока игрока:</h3>
+            <span id="churnRiskPercentBadge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">15% (Низкий)</span>
+          </div>
+          <p id="churnRiskDetails" class="text-xs text-gray-300 mt-1">Регулярные заходы, баланс стабилен, интерес к игре высокий.</p>
+        </div>
+      </div>
+      <button id="btnTriggerAdvisorAction" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs whitespace-nowrap active:scale-95 transition shadow-lg">
+        Открыть рекомендации ИИ ➔
+      </button>
+    </section>
 
-    <!-- Сетка KPI -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <!-- KPI КАРТОЧКИ -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 print-card">
       <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
         <span class="text-xs text-gray-400">⏱️ Время в игре</span>
         <span id="kpiTotalTime" class="mono-font text-2xl font-black text-pink-400 mt-1">0 м</span>
@@ -120,107 +175,279 @@
       </div>
 
       <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
-        <span class="text-xs text-gray-400">📦 CS:GO Кейсы</span>
+        <span class="text-xs text-gray-400">📦 Открыто кейсов (Всех)</span>
         <span id="kpiCasesOpened" class="mono-font text-2xl font-black text-purple-400 mt-1">0</span>
-        <span class="text-[10px] text-gray-500 mt-0.5">Открытых рулеток</span>
+        <span class="text-[10px] text-gray-500 mt-0.5">Суммарно из 3-х типов</span>
       </div>
     </div>
 
-    <!-- Текущий статус котика -->
-    <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center text-2xl">
-          🐱
+    <!-- РЕДАКТОР ПАРАМЕТРОВ КОТИКА (LIVE CONTROL) -->
+    <section class="bg-[#111222] border-2 border-pink-500/30 rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base font-black text-pink-300 flex items-center gap-2">
+            <span>⚙️</span> Редактор состояния котика
+          </h2>
+          <p class="text-xs text-gray-400">Изменения мгновенно применяются на устройстве выбранного игрока</p>
+        </div>
+        <button id="btnSavePetEdits" class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-black text-xs active:scale-95 transition shadow-lg">
+          💾 СОХРАНИТЬ КОТИКА
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div>
+          <label class="text-gray-400 block mb-1">Имя котика:</label>
+          <input type="text" id="editPetName" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-pink-300 font-bold outline-none focus:border-pink-500">
         </div>
         <div>
-          <div class="text-sm font-bold text-gray-200">
-            Питомец: <span id="dashPetName" class="text-pink-300 font-extrabold">...</span>
-            <span class="text-xs text-amber-400 font-bold ml-1.5">(Уровень <span id="dashPetLevel">1</span>)</span>
-          </div>
-          <div class="text-xs text-gray-400 mt-0.5">
-            Баланс: <b id="dashPetCoins" class="text-amber-300">0</b> 🪙 | Окрас: <span id="dashPetColor">...</span> | Локация: <span id="dashPetRoom">...</span>
-          </div>
+          <label class="text-gray-400 block mb-1">Баланс (🪙):</label>
+          <input type="number" id="editPetCoins" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-amber-300 font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Уровень:</label>
+          <input type="number" id="editPetLevel" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-white font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Опыт (XP):</label>
+          <input type="number" id="editPetXp" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-white font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Сытость (%):</label>
+          <input type="number" min="0" max="100" id="editPetHunger" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-rose-300 font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Счастье (%):</label>
+          <input type="number" min="0" max="100" id="editPetHappy" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-purple-300 font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Энергия (%):</label>
+          <input type="number" min="0" max="100" id="editPetEnergy" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-yellow-300 font-bold outline-none focus:border-pink-500">
+        </div>
+        <div>
+          <label class="text-gray-400 block mb-1">Чистота (%):</label>
+          <input type="number" min="0" max="100" id="editPetClean" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-3 py-2 text-cyan-300 font-bold outline-none focus:border-pink-500">
         </div>
       </div>
+    </section>
 
-      <div class="flex items-center gap-3 text-xs bg-[#0b0c16] px-3.5 py-2 rounded-xl border border-[#1f2138]">
-        <div>Сытость: <b id="dashPetHunger" class="text-rose-300">0%</b></div>
-        <div class="text-gray-600">|</div>
-        <div>Счастье: <b id="dashPetHappy" class="text-purple-300">0%</b></div>
-        <div class="text-gray-600">|</div>
-        <div>Энергия: <b id="dashPetEnergy" class="text-amber-300">0%</b></div>
-        <div class="text-gray-600">|</div>
-        <div>Чистота: <b id="dashPetClean" class="text-cyan-300">0%</b></div>
-      </div>
-    </div>
-
-    <!-- Инвентарь купонов -->
+    <!-- ПОЛНЫЙ РУЧНОЙ РЕДАКТОР ЭКОНОМИКИ, ЦЕН И ЗАРАБОТКОВ -->
     <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
         <div>
-          <h2 class="cute-font text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
-            <span>💌</span> Инвентарь выбитых купонов и билетов
+          <h2 class="cute-font text-base font-black text-emerald-300 flex items-center gap-2">
+            <span>🪙</span> Полный ручной редактор цен и наград
           </h2>
-          <p class="text-xs text-gray-400">Секретные купоны на желания с источниками дропа</p>
+          <p class="text-xs text-gray-400">Глобальные настройки экономики (применяются ко всем профилям)</p>
         </div>
-        <span id="badgeWishCount" class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold">
-          0 шт
-        </span>
+        <button id="btnSaveFullEconomy" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg">
+          💾 СОХРАНИТЬ ЭКОНОМИКУ
+        </button>
       </div>
 
-      <div id="wishesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1"></div>
+      <div class="flex gap-2 border-b border-[#22243d] pb-2 text-xs font-bold overflow-x-auto">
+        <button id="tabEcoFood" class="px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap">🍱 Еда</button>
+        <button id="tabEcoShop" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">🎀 Наряды</button>
+        <button id="tabEcoRewards" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">🎮 Награды</button>
+        <button id="tabEcoCases" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">📦 Цены 3 кейсов</button>
+      </div>
+
+      <div id="ecoFoodContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
+      <div id="ecoShopContainer" class="hidden grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
+      <div id="ecoRewardsContainer" class="hidden grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
+      <div id="ecoCasesContainer" class="hidden grid-cols-1 sm:grid-cols-3 gap-3 text-xs"></div>
     </section>
 
-    <!-- История открытий кейсов -->
+    <!-- РЕДАКТОР ШАНСОВ КЕЙСА CS:GO -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base font-black text-amber-300 flex items-center gap-2">
+            <span>🎲</span> Настройка шансов дропа в Кейсах
+          </h2>
+          <p class="text-xs text-gray-400">Глобальные настройки пула призов и вероятностей выпадения</p>
+        </div>
+        <button id="btnSaveChances" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg">
+          💾 СОХРАНИТЬ ШАНСЫ
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="caseItemsSettingsGrid"></div>
+      <div class="text-[11px] text-gray-400 text-right font-mono mt-1">
+        Сумма шансов: <b id="sumChancesVal" class="text-amber-300">100%</b>
+      </div>
+    </section>
+
+    <!-- АНАЛИТИКА: ПОПУЛЯРНОСТЬ ИГР И ВРЕМЯ ЗАХОДОВ -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <section class="bg-[#111222] border border-[#22243d] p-5 rounded-3xl flex flex-col gap-3 shadow-lg">
+        <div class="flex justify-between items-center border-b border-[#22243d] pb-2">
+          <h2 class="cute-font text-sm font-black text-pink-300 flex items-center gap-2">
+            <span>🎮</span> Популярность мини-игр
+          </h2>
+          <span id="statTotalGamesPlayed" class="text-xs font-mono text-gray-400 font-bold">0 игр</span>
+        </div>
+        <div class="flex flex-col gap-2.5 text-xs mt-1" id="gamesPopularityList"></div>
+      </section>
+
+      <section class="bg-[#111222] border border-[#22243d] p-5 rounded-3xl flex flex-col gap-3 shadow-lg">
+        <div class="flex justify-between items-center border-b border-[#22243d] pb-2">
+          <h2 class="cute-font text-sm font-black text-amber-300 flex items-center gap-2">
+            <span>⏰</span> Активность по времени суток
+          </h2>
+          <span class="text-[11px] text-gray-400">Анализ сессий</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center mt-1">
+          <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
+            <span class="text-xl">🌙</span><span class="text-[10px] text-gray-400 mt-1">Ночь</span>
+            <span id="timeNightCount" class="font-mono text-base font-black text-purple-300 mt-0.5">0</span>
+          </div>
+          <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
+            <span class="text-xl">🌅</span><span class="text-[10px] text-gray-400 mt-1">Утро</span>
+            <span id="timeMorningCount" class="font-mono text-base font-black text-amber-300 mt-0.5">0</span>
+          </div>
+          <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
+            <span class="text-xl">☀️</span><span class="text-[10px] text-gray-400 mt-1">День</span>
+            <span id="timeDayCount" class="font-mono text-base font-black text-yellow-300 mt-0.5">0</span>
+          </div>
+          <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
+            <span class="text-xl">🌆</span><span class="text-[10px] text-gray-400 mt-1">Вечер</span>
+            <span id="timeEveningCount" class="font-mono text-base font-black text-rose-300 mt-0.5">0</span>
+          </div>
+        </div>
+        <p id="peakTimeSummary" class="text-[11px] text-gray-400 text-center mt-1">Игрок чаще всего заходит: <b class="text-pink-300">Определяется...</b></p>
+      </section>
+    </div>
+
+    <!-- ИНВЕНТАРЬ КУПОНОВ -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base font-black text-pink-300 flex items-center gap-2">
+            <span>💌</span> Инвентарь выбитых купонов
+          </h2>
+          <p class="text-xs text-gray-400">Секретные купоны на желания с возможностью погашения</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnClearExpiredWishes" class="px-3 py-1 rounded-xl bg-rose-900/40 border border-rose-600/50 hover:bg-rose-800/50 text-[11px] font-bold text-rose-300 transition">
+            🧹 Удалить просроченные
+          </button>
+          <span id="badgeWishCount" class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold">0 шт</span>
+        </div>
+      </div>
+      <div id="wishesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- ИСТОРИЯ РУЛЕТКИ ВКУСНЯШЕК С УНИКАЛЬНЫМИ ID -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base font-black text-yellow-300 flex items-center gap-2">
+            <span>🎰</span> История Рулетки вкусностей
+          </h2>
+          <p class="text-xs text-gray-400">Все выбранные заказы с номерами вида #WIN-XXXX</p>
+        </div>
+        <span id="badgeRouletteCount" class="text-xs text-gray-400 font-bold">0 спинов</span>
+      </div>
+      <div id="rouletteHistoryList" class="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- ИСТОРИЯ ОТКРЫТИЯ КЕЙСОВ -->
     <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
       <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
         <div>
           <h2 class="cute-font text-base sm:text-lg font-black text-purple-300 flex items-center gap-2">
-            <span>📦</span> История открытия CS:GO кейсов (призы для Таганрога)
+            <span>📦</span> История выпадений из 3-х кейсов
           </h2>
-          <p class="text-xs text-gray-400">Все выпавшие предметы из рулетки за 120 🪙</p>
+          <p class="text-xs text-gray-400">Все выпавшие предметы из рулеток с деталями редкости</p>
         </div>
         <span id="badgeCaseCount" class="text-xs text-gray-400 font-bold">0 открытий</span>
       </div>
-
       <div id="caseDropsList" class="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1"></div>
     </section>
 
-    <!-- Аудит активности -->
+    <!-- ПОМИНУТНЫЙ АУДИТ ДЕЙСТВИЙ -->
     <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
       <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
-        <div>
-          <h2 class="cute-font text-base sm:text-lg font-black text-pink-300 flex items-center gap-2">
-            <span>🔍</span> Поминутный журнал кликов и активности
-          </h2>
-          <p class="text-xs text-gray-400">Точная хронология: во сколько зашла, куда тыкала, что запускала</p>
-        </div>
+        <h2 class="cute-font text-base sm:text-lg font-black text-gray-300 flex items-center gap-2">
+          <span>📜</span> Поминутный журнал аудита (Audit Trail)
+        </h2>
+        <p class="text-xs text-gray-400">Точная хронология: клики игрока и правки оператора</p>
       </div>
-
       <div id="auditLogContainer" class="flex flex-col gap-1.5 max-h-96 overflow-y-auto pr-1 mono-font text-xs"></div>
     </section>
 
   </div>
 
+  <!-- МОДАЛКА: ПАКЕТ ПРАВОК ИИ -->
+  <div id="modalAdvisor" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#18182b] border-2 border-indigo-500/80 rounded-3xl w-full max-w-xl p-6 flex flex-col gap-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-[#2a2d4a] pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-3xl">🧠</span>
+          <div>
+            <h3 class="cute-font font-black text-indigo-300 text-base">Пакет предложений Экономического ИИ</h3>
+            <p class="text-[11px] text-gray-400">Скорректируй любое число руками перед подтверждением</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('modalAdvisor').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div id="advisorFormList" class="flex flex-col gap-3 max-h-96 overflow-y-auto pr-1 text-xs"></div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#2a2d4a]">
+        <button id="btnApplyAdvisorPackage" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-indigo-600 text-[#090910] font-black text-xs active:scale-95 transition shadow-lg">
+          ✅ ПРИМЕНИТЬ ПАКЕТ
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const DASHBOARD_PIN = "1703";
     const SESSION_AUTH_KEY = "lex_dashboard_auth_token";
+    const SESSION_OPERATOR_KEY = "lex_dashboard_operator";
 
     const JSONBIN_BIN_ID = "6acb3d30ac6210605a272eb6";
     const JSONBIN_API_KEY = "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
 
+    let currentCloudData = {};
+    let countdownSec = 60;
+
+    const DEFAULT_CASE_SETTINGS = [
+      { id: "item_taganrog_box_gold", name: "★ Секретный бокс в Таганрог ★", icon: "⭐", chance: 2.0, color: "#fbbf24", desc: "Главный приз с подарками в ПВЗ" },
+      { id: "item_taganrog_coffee_red", name: "Сладкий привет в Таганрог", icon: "☕", chance: 8.0, color: "#ef4444", desc: "Доставка любимого кофе" },
+      { id: "item_argument_shield_pink", name: "Иммунитет «Твоя правота»", icon: "🛡️", chance: 12.0, color: "#f472b6", desc: "Карта победы в споре" },
+      { id: "item_cinema_night_pink", name: "Уютный Киновечер онлайн", icon: "🎬", chance: 15.0, color: "#f472b6", desc: "Фильм и доставка вкусняшек" },
+      { id: "item_voice_song_purple", name: "Личный трек / Голосовой привет", icon: "🎵", chance: 18.0, color: "#c084fc", desc: "Кавер под гитару от Алексея" },
+      { id: "item_gold_coins_purple", name: "Мешочек золота: 50 🪙", icon: "💰", chance: 20.0, color: "#c084fc", desc: "Возврат монет в игре" },
+      { id: "item_cat_feast_blue", name: "Королевский пир для Зефирки", icon: "🍱", chance: 15.0, color: "#60a5fa", desc: "Сытость и счастье на 100%" },
+      { id: "item_consolation_blue", name: "Кэшбэк: 20 🪙", icon: "🪙", chance: 10.0, color: "#60a5fa", desc: "Утешительный приз" }
+    ];
+
+    const DEFAULT_ECONOMY = { 
+      caseCostStandard: 80, 
+      caseCostPremium: 160, 
+      caseCostBlack: 320, 
+      dailyBonus: 15, 
+      maxRunner: 25, 
+      maxTetris: 25 
+    };
+
+    // Авторизация
     const authOverlay = document.getElementById('authOverlay');
     const authCard = document.getElementById('authCard');
     const pinInput = document.getElementById('pinInput');
     const pinError = document.getElementById('pinError');
-    const btnSubmitPin = document.getElementById('btnSubmitPin');
+    const employeeSelect = document.getElementById('employeeSelect');
     const dashboardContent = document.getElementById('dashboardContent');
-    const btnLogout = document.getElementById('btnLogout');
+    const currentOperatorLabel = document.getElementById('currentOperatorLabel');
 
     function checkAuth() {
       if (sessionStorage.getItem(SESSION_AUTH_KEY) === "authorized") {
         authOverlay.classList.add('hidden');
         dashboardContent.classList.remove('hidden');
+        currentOperatorLabel.innerText = sessionStorage.getItem(SESSION_OPERATOR_KEY) || "Алексей";
         renderDashboard();
       } else {
         authOverlay.classList.remove('hidden');
@@ -229,206 +456,513 @@
       }
     }
 
-  document.getElementById('btnResetCloudTelemetry').addEventListener('click', async () => {
-    const profileName = selectedDashboardUser === 'katya' ? 'Кати' : 'Алексея';
-    if (!confirm(`Точно очистить всю телеметрию и логи для профиля ${profileName}? Котик и уровень сохранятся, но счетчики и логи обнулятся.`)) {
-      return;
-    }
-
-    try {
-      // 1. Получаем текущий JSON из облака
-      const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-        headers: { "X-Master-Key": JSONBIN_API_KEY }
-      });
-      const cloudData = await getRes.json();
-      const rootRecord = cloudData.record || {};
-
-      // 2. Сбрасываем только логи и счетчики, оставляя котика
-      if (rootRecord[selectedDashboardUser]) {
-        rootRecord[selectedDashboardUser].analytics = {
-          sessionsCount: 0,
-          totalSecondsPlayed: 0,
-          spentCoins: 0,
-          casesOpened: 0
-        };
-        rootRecord[selectedDashboardUser].wishes = [];
-        rootRecord[selectedDashboardUser].caseHistory = [];
-        rootRecord[selectedDashboardUser].audit = [];
-        rootRecord[selectedDashboardUser].lastActive = "Очищено";
-      }
-
-      // 3. Отправляем чистый слепок обратно в JSONBin
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": JSONBIN_API_KEY
-        },
-        body: JSON.stringify(rootRecord)
-      });
-
-      alert("Телеметрия успешно очищена!");
-      renderDashboard();
-    } catch (err) {
-      alert("Ошибка при очистке: " + err);
-    }
-  });
-
-      function verifyPin() {
-        const val = pinInput.value.trim();
-        if (val === DASHBOARD_PIN) {
-          sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
-          pinError.style.opacity = '0';
-          authOverlay.classList.add('hidden');
-          dashboardContent.classList.remove('hidden');
-          renderDashboard();
-        } else {
-          pinError.style.opacity = '1';
-          authCard.classList.remove('animate-shake');
-          void authCard.offsetWidth;
-          authCard.classList.add('animate-shake');
-          pinInput.value = '';
-          pinInput.focus();
-        }
-      }
-
-      btnSubmitPin.addEventListener('click', verifyPin);
-      pinInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') verifyPin();
-      });
-
-      btnLogout.addEventListener('click', () => {
-        sessionStorage.removeItem(SESSION_AUTH_KEY);
-        pinInput.value = '';
+    document.getElementById('btnSubmitPin').addEventListener('click', () => {
+      if (pinInput.value.trim() === DASHBOARD_PIN) {
+        sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
+        const opName = employeeSelect.options[employeeSelect.selectedIndex].text.split(' ')[0];
+        sessionStorage.setItem(SESSION_OPERATOR_KEY, opName);
+        pinError.style.opacity = '0';
         checkAuth();
+      } else {
+        pinError.style.opacity = '1';
+        authCard.classList.add('animate-shake');
+        setTimeout(() => authCard.classList.remove('animate-shake'), 400);
+      }
+    });
+
+    document.getElementById('pinInput').addEventListener('keydown', (e) => { 
+      if (e.key === 'Enter') document.getElementById('btnSubmitPin').click(); 
+    });
+    
+    document.getElementById('btnLogout').addEventListener('click', () => { 
+      sessionStorage.removeItem(SESSION_AUTH_KEY); 
+      pinInput.value = ''; 
+      checkAuth(); 
+    });
+
+    document.getElementById('btnPrintReport').addEventListener('click', () => window.print());
+
+    // Селектор игроков
+    document.getElementById('targetPlayerSelect').addEventListener('change', () => { 
+      renderDashboard(); 
+    });
+
+    // Автообновление раз в 60 сек
+    setInterval(() => {
+      countdownSec--; 
+      document.getElementById('autoRefreshCountdown').innerText = `${countdownSec}с`;
+      if (countdownSec <= 0) { 
+        countdownSec = 60; 
+        renderDashboard(); 
+      }
+    }, 1000);
+
+    document.getElementById('btnRefresh').addEventListener('click', () => { 
+      countdownSec = 60; 
+      renderDashboard(); 
+    });
+
+    // Вкладки редактора экономики
+    function switchEcoTab(activeBtn, activeBox) {
+      [document.getElementById('tabEcoFood'), document.getElementById('tabEcoShop'), document.getElementById('tabEcoRewards'), document.getElementById('tabEcoCases')].forEach(b => {
+        b.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap";
       });
+      [document.getElementById('ecoFoodContainer'), document.getElementById('ecoShopContainer'), document.getElementById('ecoRewardsContainer'), document.getElementById('ecoCasesContainer')].forEach(c => { 
+        c.classList.add('hidden'); 
+        c.classList.remove('grid'); 
+      });
+      activeBtn.className = "px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap";
+      activeBox.classList.remove('hidden'); 
+      activeBox.classList.add('grid');
+    }
 
-      let selectedDashboardUser = "katya"; // По умолчанию Катя!
+    document.getElementById('tabEcoFood').addEventListener('click', () => switchEcoTab(document.getElementById('tabEcoFood'), document.getElementById('ecoFoodContainer')));
+    document.getElementById('tabEcoShop').addEventListener('click', () => switchEcoTab(document.getElementById('tabEcoShop'), document.getElementById('ecoShopContainer')));
+    document.getElementById('tabEcoRewards').addEventListener('click', () => switchEcoTab(document.getElementById('tabEcoRewards'), document.getElementById('ecoRewardsContainer')));
+    document.getElementById('tabEcoCases').addEventListener('click', () => switchEcoTab(document.getElementById('tabEcoCases'), document.getElementById('ecoCasesContainer')));
 
+    // ==========================================
+    // РЕНДЕР ДАШБОРДА
+    // ==========================================
     async function renderDashboard() {
-      const refreshBtn = document.getElementById('btnRefresh');
-      if (refreshBtn) refreshBtn.innerHTML = "<span>⏳</span> Загрузка...";
-
       try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-          headers: { "X-Master-Key": JSONBIN_API_KEY }
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { 
+          headers: { "X-Master-Key": JSONBIN_API_KEY } 
         });
-        const cloudData = await response.json();
-        const rootRecord = cloudData.record || {};
+        const cloud = await response.json();
+        currentCloudData = cloud.record || {};
+        
+        // Автоматическое заполнение списка пользователей
+        const sel = document.getElementById('targetPlayerSelect');
+        const currentUser = sel.value;
+        sel.innerHTML = '';
+        const skipKeys = ['economyConfig', 'customFood', 'customShop', 'customRewards', 'customCases', 'wishChances', 'caseSettings'];
+        
+        Object.keys(currentCloudData).forEach(k => {
+          if (!skipKeys.includes(k)) {
+            const opt = document.createElement('option');
+            opt.value = k; 
+            opt.innerText = k === 'katya' ? 'Катя (Таганрог)' : `Игрок: ${k}`;
+            if (k === currentUser) opt.selected = true;
+            sel.appendChild(opt);
+          }
+        });
 
-        // Читаем конкретно профиль Кати (или выбранного пользователя)
-        const record = rootRecord[selectedDashboardUser] || rootRecord.katya || rootRecord;
+        if (!sel.value && currentCloudData.katya) sel.value = 'katya';
 
+        const record = currentCloudData[sel.value] || {};
         const pet = record.pet || {};
         const analytics = record.analytics || { sessionsCount: 0, totalSecondsPlayed: 0, spentCoins: 0, casesOpened: 0 };
         const wishes = record.wishes || [];
         const caseDrops = record.caseHistory || [];
+        const rouletteHistory = record.rouletteHistory || [];
         const audit = record.audit || [];
         const lastSync = record.lastActive || "Еще нет данных";
 
-        document.getElementById('dashLastSyncTime').innerText = `${lastSync} (${selectedDashboardUser === 'katya' ? 'Катя' : 'Алексей'})`;
+        document.getElementById('dashLastSyncTime').innerText = `${lastSync} (${sel.value === 'katya' ? 'Катя' : sel.value})`;
 
-        // Отрисовка KPI
-        const mins = Math.round((analytics.totalSecondsPlayed || 0) / 60);
-        document.getElementById('kpiTotalTime').innerText = `${mins} м`;
+        // KPI
+        document.getElementById('kpiTotalTime').innerText = `${Math.round((analytics.totalSecondsPlayed || 0) / 60)} м`;
         document.getElementById('kpiSessions').innerText = analytics.sessionsCount || 0;
         document.getElementById('kpiSpentCoins').innerText = `${analytics.spentCoins || 0} 🪙`;
         document.getElementById('kpiCasesOpened').innerText = analytics.casesOpened || 0;
 
-        // Статус котика
-        document.getElementById('dashPetName').innerText = pet.name || 'Зефирка';
-        document.getElementById('dashPetLevel').innerText = pet.level || 1;
-        document.getElementById('dashPetCoins').innerText = pet.coins || 0;
-        document.getElementById('dashPetColor').innerText = pet.color || 'Розовый';
-        document.getElementById('dashPetRoom').innerText = pet.activeRoom || 'Неон';
-        document.getElementById('dashPetHunger').innerText = `${pet.hunger || 0}%`;
-        document.getElementById('dashPetHappy').innerText = `${pet.happy || 0}%`;
-        document.getElementById('dashPetEnergy').innerText = `${pet.energy || 0}%`;
-        document.getElementById('dashPetClean').innerText = `${pet.clean || 0}%`;
+        // Питомец
+        document.getElementById('editPetName').value = pet.name || '';
+        document.getElementById('editPetCoins').value = pet.coins || 0;
+        document.getElementById('editPetLevel').value = pet.level || 1;
+        document.getElementById('editPetXp').value = pet.xp || 0;
+        document.getElementById('editPetHunger').value = pet.hunger || 0;
+        document.getElementById('editPetHappy').value = pet.happy || 0;
+        document.getElementById('editPetEnergy').value = pet.energy || 0;
+        document.getElementById('editPetClean').value = pet.clean || 0;
 
-        // Купоны
-        const wishesGrid = document.getElementById('wishesGrid');
-        document.getElementById('badgeWishCount').innerText = `${wishes.length} шт`;
-        wishesGrid.innerHTML = '';
+        // Редакторы экономики и шансов
+        renderFullEconomyEditor();
+        renderCaseSettings(currentCloudData.caseSettings || DEFAULT_CASE_SETTINGS);
+        calculateChurnAndGenerateAdvisor(pet, analytics, audit);
 
-        if (wishes.length === 0) {
-          wishesGrid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-6">Купоны еще не выбиты ✨</div>`;
-        } else {
-          wishes.slice().reverse().forEach(w => {
-            const card = document.createElement('div');
-            card.className = 'bg-[#0a0b14] border border-amber-500/40 rounded-2xl p-4 flex flex-col justify-between gap-2 shadow-lg';
-            card.innerHTML = `
-              <div class="flex justify-between items-start">
-                <span class="text-2xl">💌</span>
-                <span class="mono-font text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-bold">${w.code}</span>
-              </div>
-              <div>
-                <div class="text-xs font-bold text-gray-200">Купон на желание</div>
-                <div class="text-[11px] text-gray-400 mt-1">Откуда: <b class="text-pink-300">${w.source || 'Игра'}</b></div>
-                <div class="text-[10px] text-emerald-400 mt-0.5">Срок: до ${w.expiry}</div>
-              </div>
-              <div class="text-[10px] text-gray-500 pt-1.5 border-t border-[#1f2138] flex justify-between">
-                <span>Выбит: ${w.date}</span>
-                <span class="text-amber-400 font-semibold">Активен ✓</span>
-              </div>
-            `;
-            wishesGrid.appendChild(card);
-          });
-        }
-
-        // Кейсы
-        const caseList = document.getElementById('caseDropsList');
+        // Дропы из кейсов
+        const dropBox = document.getElementById('caseDropsList');
         document.getElementById('badgeCaseCount').innerText = `${caseDrops.length} открытий`;
-        caseList.innerHTML = '';
-
+        dropBox.innerHTML = '';
         if (caseDrops.length === 0) {
-          caseList.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Кейсы еще не открывались</div>`;
+          dropBox.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Кейсы еще не открывались или история пуста</div>`;
         } else {
           caseDrops.slice().reverse().forEach(drop => {
-            const row = document.createElement('div');
-            row.className = 'bg-[#0a0b14] border border-[#22243d] p-3 rounded-xl flex items-center justify-between text-xs';
-            row.innerHTML = `
-              <div class="flex items-center gap-2.5">
-                <span class="text-2xl">${drop.icon}</span>
+            const b = drop.isEpic 
+              ? 'border-amber-400 bg-amber-950/20 shadow-[0_0_15px_rgba(251,191,36,0.3)]' 
+              : 'border-[#22243d] bg-[#0a0b14]';
+            dropBox.innerHTML += `
+              <div class="${b} border p-3 rounded-2xl flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-2xl">${drop.icon}</span>
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-gray-200">${drop.name}</span>
+                      ${drop.caseTitle ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-[#181825] text-gray-400 border border-[#313244]">${drop.caseTitle}</span>` : ''}
+                    </div>
+                    <span class="text-[10px] text-gray-400 block">${drop.desc}</span>
+                  </div>
+                </div>
+                <span class="mono-font text-[10px] text-gray-500 ml-2">${drop.time}</span>
+              </div>
+            `;
+          });
+        }
+
+        // Рулетка
+        const rBox = document.getElementById('rouletteHistoryList');
+        document.getElementById('badgeRouletteCount').innerText = `${rouletteHistory.length} спинов`;
+        rBox.innerHTML = '';
+        if (rouletteHistory.length === 0) {
+          rBox.innerHTML = `<div class="text-center text-xs text-gray-500 py-3">Рулетка еще не запускалась</div>`;
+        } else {
+          rouletteHistory.slice().reverse().forEach(h => {
+            rBox.innerHTML += `
+              <div class="bg-[#0a0b14] border border-[#22243d] p-2.5 rounded-xl flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="mono-font bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">${h.id}</span>
+                  <span class="font-bold text-gray-200">${h.item}</span>
+                </div>
+                <span class="mono-font text-[10px] text-gray-500">${h.time}</span>
+              </div>
+            `;
+          });
+        }
+
+        // Купоны
+        const wBox = document.getElementById('wishesGrid');
+        document.getElementById('badgeWishCount').innerText = `${wishes.length} шт`;
+        wBox.innerHTML = '';
+        if (wishes.length === 0) {
+          wBox.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-6">Купоны еще не выбиты ✨</div>`;
+        } else {
+          wishes.slice().reverse().forEach((w, idx) => {
+            const isUsed = w.status === 'used';
+            let isExpired = false;
+            if (w.expiry) {
+              const p = w.expiry.split('.');
+              if (p.length === 3 && new Date(p[2], p[1] - 1, p[0]) < new Date()) isExpired = true;
+            }
+            wBox.innerHTML += `
+              <div class="bg-[#0a0b14] border ${isUsed ? 'border-gray-700 opacity-60' : isExpired ? 'border-rose-500/50' : 'border-amber-500/40'} rounded-2xl p-4 flex flex-col justify-between gap-2 shadow-lg">
+                <div class="flex justify-between items-start">
+                  <span class="text-2xl">${isUsed ? '✅' : isExpired ? '⏰' : '💌'}</span>
+                  <span class="mono-font text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-bold">${w.code}</span>
+                </div>
                 <div>
-                  <span class="font-bold text-gray-200">${drop.name}</span>
-                  <span class="text-[10px] text-gray-400 block">${drop.desc}</span>
+                  <div class="text-xs font-bold text-gray-200">Купон на желание</div>
+                  <div class="text-[11px] text-gray-400 mt-1">Откуда: <b class="text-pink-300">${w.source || 'Игра'}</b></div>
+                  <div class="text-[10px] ${isExpired ? 'text-rose-400 font-bold' : 'text-emerald-400'} mt-0.5">Срок: до ${w.expiry} ${isExpired ? '(ПРОСРОЧЕН)' : ''}</div>
+                </div>
+                <div class="text-[10px] text-gray-500 pt-2 border-t border-[#1f2138] flex justify-between items-center">
+                  <span>Выбит: ${w.date}</span>
+                  ${isUsed ? '<span class="text-emerald-400 font-bold">Использован ✓</span>' : `<button onclick="markWishUsed(${wishes.length - 1 - idx})" class="px-2.5 py-1 rounded-lg bg-pink-500/80 hover:bg-pink-500 text-white font-bold transition">Отметить как исп.</button>`}
                 </div>
               </div>
-              <span class="mono-font text-[10px] text-gray-500 whitespace-nowrap ml-2">${drop.time}</span>
             `;
-            caseList.appendChild(row);
           });
         }
 
-        // Лог активности
-        const auditContainer = document.getElementById('auditLogContainer');
-        auditContainer.innerHTML = '';
-
+        // Аудит
+        const aBox = document.getElementById('auditLogContainer');
+        aBox.innerHTML = '';
         if (audit.length === 0) {
-          auditContainer.innerHTML = `<div class="text-center text-gray-500 py-3">Лог действий пуст</div>`;
+          aBox.innerHTML = `<div class="text-center text-gray-500 py-3">Лог действий пуст</div>`;
         } else {
-          audit.slice().reverse().slice(0, 80).forEach(ev => {
-            const line = document.createElement('div');
-            line.className = 'bg-[#0a0b14]/70 px-3 py-1.5 rounded-lg border border-[#191b30] flex items-center justify-between text-gray-300';
-            line.innerHTML = `
-              <span class="flex items-center gap-2">
-                <span>${ev.icon || '📌'}</span>
-                <span>${ev.text}</span>
-              </span>
-              <span class="text-[10px] text-gray-500">${ev.time}</span>
+          audit.slice().reverse().slice(0, 100).forEach(ev => {
+            aBox.innerHTML += `
+              <div class="bg-[#0a0b14]/70 px-3 py-1.5 rounded-lg border border-[#191b30] flex items-center justify-between text-gray-300">
+                <span class="flex items-center gap-2"><span>${ev.icon || '📌'}</span><span>${ev.text}</span></span>
+                <span class="text-[10px] text-gray-500">${ev.time}</span>
+              </div>
             `;
-            auditContainer.appendChild(line);
           });
         }
-      } catch (err) {
-        console.error("Ошибка загрузки:", err);
-      } finally {
-        if (refreshBtn) refreshBtn.innerHTML = "<span>🔄</span> Обновить";
+
+      } catch (err) { console.error(err); }
+    }
+
+    // ==========================================
+    // ЛОГИКА ИИ И АНАЛИТИКИ ОТТОКА
+    // ==========================================
+    let generatedAdvisorEdits = [];
+    function calculateChurnAndGenerateAdvisor(pet, analytics, audit) {
+      const coins = pet.coins || 0, spent = analytics.spentCoins || 0;
+      let risk = 12, reasons = []; generatedAdvisorEdits = [];
+      
+      if (coins < 25 && spent > 150) { 
+        risk += 40; reasons.push("Дефицит монет после активных покупок"); 
+        generatedAdvisorEdits.push({ key: "runner", title: "Поднять награду за Мур-Раннер", oldVal: currentCloudData.economyConfig?.maxRunner || 25, newVal: 35, unit: "🪙" }); 
+      }
+      
+      const bCost = currentCloudData.economyConfig?.caseCostBlack || 320;
+      if (coins < bCost * 0.4 && analytics.casesOpened > 3) { 
+        risk += 25; reasons.push("Элитный Black Box кажется слишком дорогим"); 
+        generatedAdvisorEdits.push({ key: "blackCase", title: "Снизить цену Black Box", oldVal: bCost, newVal: 250, unit: "🪙" }); 
+      }
+      
+      risk = Math.min(95, risk);
+      const pBadge = document.getElementById('churnRiskPercentBadge');
+      pBadge.innerText = `${risk}% (${risk > 50 ? 'ВЫСОКИЙ' : risk > 25 ? 'Умеренный' : 'Низкий'})`;
+      pBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-mono font-black ${risk > 50 ? 'bg-rose-500/30 text-rose-300 border border-rose-500' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`;
+      document.getElementById('churnRiskEmoji').innerText = risk > 50 ? '🚨' : risk > 25 ? '⚠️' : '✅';
+      document.getElementById('churnRiskDetails').innerText = reasons.length > 0 ? reasons.join(' • ') : "Поведение стабильное, интерес высокий.";
+
+      // Анализ активности по играм
+      const gameCounts = { runner: 0, tetris: 0, catcher: 0, rhythm: 0, zen: 0 };
+      const timeSlots = { night: 0, morning: 0, day: 0, evening: 0 };
+      audit.forEach(a => {
+        const t = a.text || '';
+        if (t.includes('Subway') || t.includes('Раннер')) gameCounts.runner++;
+        if (t.includes('Тетрис')) gameCounts.tetris++;
+        if (t.includes('курьер') || t.includes('Курьер')) gameCounts.catcher++;
+        if (t.includes('стрим') || t.includes('Стрим')) gameCounts.rhythm++;
+        if (t.includes('Дзен')) gameCounts.zen++;
+        if (a.time) {
+          const h = parseInt(a.time.split(':')[0], 10);
+          if (!isNaN(h)) {
+            if (h >= 0 && h < 6) timeSlots.night++; 
+            else if (h >= 6 && h < 12) timeSlots.morning++; 
+            else if (h >= 12 && h < 18) timeSlots.day++; 
+            else timeSlots.evening++;
+          }
+        }
+      });
+
+      const totalGames = Object.values(gameCounts).reduce((a, b) => a + b, 0);
+      document.getElementById('statTotalGamesPlayed').innerText = `${totalGames} партий`;
+      
+      const popList = document.getElementById('gamesPopularityList'); popList.innerHTML = '';
+      [{ name: "Subway Cat", icon: "🏃", count: gameCounts.runner, color: "bg-pink-500" },
+       { name: "Кэт-Тетрис", icon: "🧱", count: gameCounts.tetris, color: "bg-purple-500" },
+       { name: "Курьер", icon: "🛵", count: gameCounts.catcher, color: "bg-amber-500" },
+       { name: "Кошачий стример", icon: "🐾", count: gameCounts.rhythm, color: "bg-emerald-500" },
+       { name: "Дзен (ASMR)", icon: "✨", count: gameCounts.zen, color: "bg-cyan-500" }
+      ].sort((a, b) => b.count - a.count).forEach(g => {
+        const percent = totalGames > 0 ? Math.round((g.count / totalGames) * 100) : 0;
+        popList.innerHTML += `
+          <div class="bg-[#0b0c16] p-2.5 rounded-xl border border-[#22243d]">
+            <div class="flex justify-between items-center mb-1"><span class="font-bold text-gray-200">${g.icon} ${g.name}</span><span class="mono-font text-gray-400"><b>${g.count}</b> раз (${percent}%)</span></div>
+            <div class="w-full bg-[#181825] h-2 rounded-full overflow-hidden"><div class="${g.color} h-full rounded-full" style="width: ${percent}%;"></div></div>
+          </div>
+        `;
+      });
+
+      document.getElementById('timeNightCount').innerText = timeSlots.night; 
+      document.getElementById('timeMorningCount').innerText = timeSlots.morning;
+      document.getElementById('timeDayCount').innerText = timeSlots.day; 
+      document.getElementById('timeEveningCount').innerText = timeSlots.evening;
+      const maxSlot = Object.keys(timeSlots).reduce((a, b) => timeSlots[a] > timeSlots[b] ? a : b);
+      const slotNames = { night: "Ночью", morning: "Утром", day: "Днем", evening: "Вечером" };
+      document.getElementById('peakTimeSummary').innerHTML = `Игрок чаще всего заходит: <b class="text-pink-300">${slotNames[maxSlot]}</b>`;
+
+      // Генерация модалки советника
+      const container = document.getElementById('advisorFormList'); container.innerHTML = '';
+      if (generatedAdvisorEdits.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-400 py-6">Экономика сбалансирована идеально! ✨</div>`;
+      } else {
+        generatedAdvisorEdits.forEach((it, idx) => { 
+          container.innerHTML += `
+            <div class="bg-[#0b0c16] border border-[#2a2d4a] p-3 rounded-2xl flex items-center justify-between gap-3">
+              <div><div class="font-bold text-gray-200">${it.title}</div><div class="text-[10px] text-gray-500">Текущее: ${it.oldVal} ${it.unit}</div></div>
+              <div class="flex items-center gap-1.5"><input type="number" id="advInput_${idx}" value="${it.newVal}" class="w-20 bg-[#181825] border border-indigo-500/50 rounded-xl px-2.5 py-1 text-center font-bold text-amber-300 outline-none"><span class="text-gray-400 font-bold">${it.unit}</span></div>
+            </div>
+          `; 
+        });
       }
     }
 
-    document.getElementById('btnRefresh').addEventListener('click', renderDashboard);
+    document.getElementById('btnApplyAdvisorPackage').addEventListener('click', async () => {
+      if (!currentCloudData.economyConfig) currentCloudData.economyConfig = DEFAULT_ECONOMY;
+      generatedAdvisorEdits.forEach((item, idx) => {
+        const val = parseInt(document.getElementById(`advInput_${idx}`).value, 10);
+        if (item.key === 'blackCase' && val) currentCloudData.economyConfig.caseCostBlack = val;
+        if (item.key === 'runner' && val) currentCloudData.economyConfig.maxRunner = val;
+      });
+      const sel = document.getElementById('targetPlayerSelect').value;
+      if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+      currentCloudData[sel].audit.push({ text: `[AI ADVISOR] Применил пакет правок`, icon: '🧠', time: new Date().toLocaleTimeString("ru-RU") });
+      await saveCloud(); 
+      alert("Пакет изменений успешно применен в глобальные настройки!"); 
+      document.getElementById('modalAdvisor').classList.add('hidden'); 
+      renderDashboard();
+    });
+
+    // ==========================================
+    // РЕДАКТОРЫ ЦЕН И ШАНСОВ
+    // ==========================================
+    function renderFullEconomyEditor() {
+      const food = currentCloudData.customFood || { sushi: 18, pizza: 16, kfc: 16, bento: 15, earl_grey: 8, puer: 10, cheese: 12, chips: 9 };
+      ecoFoodContainer.innerHTML = '';
+      Object.keys(food).forEach(k => { 
+        ecoFoodContainer.innerHTML += `<div><label class="text-gray-400 block mb-1">${k}:</label><input type="number" id="ecoFood_${k}" value="${food[k]}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>`; 
+      });
+
+      const shop = currentCloudData.customShop || { bow: 0, flower: 35, glasses: 50, crown: 90, wizard: 130, hoodie: 150, scarf: 45 };
+      ecoShopContainer.innerHTML = '';
+      Object.keys(shop).forEach(k => { 
+        ecoShopContainer.innerHTML += `<div><label class="text-gray-400 block mb-1">${k}:</label><input type="number" id="ecoShop_${k}" value="${shop[k]}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-pink-300 font-bold outline-none"></div>`; 
+      });
+
+      const rew = currentCloudData.economyConfig || DEFAULT_ECONOMY;
+      ecoRewardsContainer.innerHTML = `
+        <div><label class="text-gray-400 block mb-1">Мур-Раннер (макс):</label><input type="number" id="ecoRew_runner" value="${rew.maxRunner}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+        <div><label class="text-gray-400 block mb-1">Тетрис (макс):</label><input type="number" id="ecoRew_tetris" value="${rew.maxTetris}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+        <div><label class="text-gray-400 block mb-1">Курьер (макс):</label><input type="number" id="ecoRew_catcher" value="${rew.catcher || 16}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+        <div><label class="text-gray-400 block mb-1">Daily Бонус:</label><input type="number" id="ecoRew_dailyBonus" value="${rew.dailyBonus}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      `;
+
+      ecoCasesContainer.innerHTML = `
+        <div class="bg-[#0b0c16] p-3 rounded-2xl border border-blue-500/40"><label class="text-blue-300 font-bold block mb-1">📦 Стандартный Кейс:</label><input type="number" id="ecoCase_standard" value="${rew.caseCostStandard}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+        <div class="bg-[#0b0c16] p-3 rounded-2xl border border-purple-500/40"><label class="text-purple-300 font-bold block mb-1">💜 Премиум Кейс Таганрога:</label><input type="number" id="ecoCase_premium" value="${rew.caseCostPremium}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+        <div class="bg-[#0b0c16] p-3 rounded-2xl border border-amber-500/50"><label class="text-amber-300 font-bold block mb-1">👑 ★ BLACK BOX ★:</label><input type="number" id="ecoCase_black" value="${rew.caseCostBlack}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      `;
+    }
+
+    document.getElementById('btnSaveFullEconomy').addEventListener('click', async () => {
+      const foodKeys = ['sushi', 'pizza', 'kfc', 'bento', 'earl_grey', 'puer', 'cheese', 'chips']; 
+      const newFood = {}; 
+      foodKeys.forEach(k => newFood[k] = parseInt(document.getElementById(`ecoFood_${k}`).value, 10) || 10);
+      
+      const shopKeys = ['bow', 'flower', 'glasses', 'crown', 'wizard', 'hoodie', 'scarf']; 
+      const newShop = {}; 
+      shopKeys.forEach(k => newShop[k] = parseInt(document.getElementById(`ecoShop_${k}`).value, 10) || 0);
+
+      currentCloudData.customFood = newFood; 
+      currentCloudData.customShop = newShop;
+      currentCloudData.economyConfig = {
+        maxRunner: parseInt(document.getElementById('ecoRew_runner').value, 10),
+        maxTetris: parseInt(document.getElementById('ecoRew_tetris').value, 10),
+        catcher: parseInt(document.getElementById('ecoRew_catcher').value, 10),
+        dailyBonus: parseInt(document.getElementById('ecoRew_dailyBonus').value, 10),
+        caseCostStandard: parseInt(document.getElementById('ecoCase_standard').value, 10),
+        caseCostPremium: parseInt(document.getElementById('ecoCase_premium').value, 10),
+        caseCostBlack: parseInt(document.getElementById('ecoCase_black').value, 10)
+      };
+
+      const sel = document.getElementById('targetPlayerSelect').value;
+      if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+      currentCloudData[sel].audit.push({ text: `[ADMIN] Обновил все цены в экономике`, icon: '🪙', time: new Date().toLocaleTimeString("ru-RU") });
+
+      await saveCloud(); 
+      alert("Вся экономика сохранена!"); 
+      renderDashboard();
+    });
+
+    function renderCaseSettings(items) {
+      const container = document.getElementById('caseItemsSettingsGrid'); 
+      container.innerHTML = '';
+      items.forEach((item) => {
+        container.innerHTML += `
+          <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2.5 flex-1 min-w-0">
+              <span class="text-2xl">${item.icon}</span>
+              <div class="truncate">
+                <div class="font-bold text-gray-200 truncate">${item.name}</div>
+                <div class="mono-font text-[10px] text-gray-500 truncate">ID: ${item.id}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <input type="number" step="0.1" min="0" max="100" value="${item.chance}" data-item-id="${item.id}" class="case-chance-input w-16 bg-[#181825] border border-[#313244] rounded-lg px-2 py-1 text-center font-mono font-bold text-amber-300 outline-none" />
+              <span class="text-gray-400 font-bold">%</span>
+            </div>
+          </div>
+        `;
+      });
+      document.querySelectorAll('.case-chance-input').forEach(inp => inp.addEventListener('input', () => {
+        let sum = 0; 
+        document.querySelectorAll('.case-chance-input').forEach(i => sum += parseFloat(i.value) || 0);
+        document.getElementById('sumChancesVal').innerText = `${sum.toFixed(1)}%`;
+      }));
+    }
+
+    document.getElementById('btnSaveChances').addEventListener('click', async () => {
+      const inputs = document.querySelectorAll('.case-chance-input'), updatedSettings = [];
+      inputs.forEach(inp => { 
+        const id = inp.dataset.itemId, orig = DEFAULT_CASE_SETTINGS.find(i => i.id === id); 
+        if (orig) updatedSettings.push({ ...orig, chance: parseFloat(inp.value) || 0 }); 
+      });
+      currentCloudData.caseSettings = updatedSettings;
+      const sel = document.getElementById('targetPlayerSelect').value;
+      if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+      currentCloudData[sel].audit.push({ text: `[ADMIN] Обновил шансы в кейсах`, icon: '🎲', time: new Date().toLocaleTimeString("ru-RU") });
+      await saveCloud(); 
+      alert("Шансы сохранены!"); 
+      renderDashboard();
+    });
+
+    document.getElementById('btnSavePetEdits').addEventListener('click', async () => {
+      const sel = document.getElementById('targetPlayerSelect').value;
+      const target = currentCloudData[sel] || {}; 
+      if (!target.pet) target.pet = {};
+      target.pet.name = document.getElementById('editPetName').value.trim();
+      target.pet.coins = parseInt(document.getElementById('editPetCoins').value, 10) || 0;
+      target.pet.level = parseInt(document.getElementById('editPetLevel').value, 10) || 1;
+      target.pet.xp = parseInt(document.getElementById('editPetXp').value, 10) || 0;
+      target.pet.hunger = parseInt(document.getElementById('editPetHunger').value, 10) || 0;
+      target.pet.happy = parseInt(document.getElementById('editPetHappy').value, 10) || 0;
+      target.pet.energy = parseInt(document.getElementById('editPetEnergy').value, 10) || 0;
+      target.pet.clean = parseInt(document.getElementById('editPetClean').value, 10) || 0;
+      if (!target.audit) target.audit = [];
+      target.audit.push({ text: `[ADMIN] Изменил параметры питомца`, icon: '⚙️', time: new Date().toLocaleTimeString("ru-RU") });
+      await saveCloud(); 
+      alert("Котик сохранен!"); 
+      renderDashboard();
+    });
+
+    window.markWishUsed = async function(idx) {
+      const sel = document.getElementById('targetPlayerSelect').value;
+      const target = currentCloudData[sel] || {};
+      if (target.wishes && target.wishes[idx]) {
+        target.wishes[idx].status = 'used';
+        if (!target.audit) target.audit = []; 
+        target.audit.push({ text: `[ADMIN] Отметил купон ${target.wishes[idx].code} как исполненный`, icon: '✅', time: new Date().toLocaleTimeString("ru-RU") });
+        await saveCloud(); 
+        renderDashboard();
+      }
+    };
+
+    document.getElementById('btnClearExpiredWishes').addEventListener('click', async () => {
+      const sel = document.getElementById('targetPlayerSelect').value;
+      const target = currentCloudData[sel] || {};
+      if (!target.wishes) return;
+      const now = new Date(), prev = target.wishes.length;
+      target.wishes = target.wishes.filter(w => {
+        if (w.status === 'used') return true;
+        if (!w.expiry) return true;
+        const p = w.expiry.split('.'); 
+        return p.length === 3 ? new Date(p[2], p[1] - 1, p[0]) >= now : true;
+      });
+      if (prev - target.wishes.length > 0) { 
+        await saveCloud(); 
+        alert(`Удалено ${prev - target.wishes.length} просроченных купонов!`); 
+        renderDashboard(); 
+      } else {
+        alert("Просроченных купонов нет!");
+      }
+    });
+
+    document.getElementById('btnResetTelemetry').addEventListener('click', async () => {
+      if (!confirm("Очистить журнал кликов и счетчики сессий? Параметры котика и купоны сохранятся.")) return;
+      const sel = document.getElementById('targetPlayerSelect').value;
+      const target = currentCloudData[sel] || currentCloudData;
+      target.analytics = { sessionsCount: 0, totalSecondsPlayed: 0, spentCoins: 0, casesOpened: 0 };
+      target.audit = [{ text: `[ADMIN] Очистил логи телеметрии`, icon: '🗑️', time: new Date().toLocaleTimeString("ru-RU") }];
+      await saveCloud(); 
+      alert("Логи очищены!"); 
+      renderDashboard();
+    });
+
+    async function saveCloud() {
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: "PUT", 
+        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_API_KEY },
+        body: JSON.stringify(currentCloudData)
+      });
+    }
+
     checkAuth();
   </script>
 </body>
