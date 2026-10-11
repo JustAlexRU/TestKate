@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lex Labs Telemetry Suite 🛸</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Comfortaa:wght@700;900&family=Nunito:wght@600;800;900&display=swap');
+    body { font-family: 'Nunito', sans-serif; }
+    .mono-font { font-family: 'JetBrains Mono', monospace; }
+    .cute-font { font-family: 'Comfortaa', cursive, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0b0c16; }
+    ::-webkit-scrollbar-thumb { background: #2b2d42; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-[#080911] text-[#cdd6f4] min-h-screen p-4 sm:p-8 selection:bg-pink-500 selection:text-white">
+
+  <div class="max-w-5xl mx-auto flex flex-col gap-6">
+
+    <!-- Шапка дашборда -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#111222]/90 border border-[#2a2d4a] p-5 rounded-3xl backdrop-blur-md gap-4 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="text-3xl animate-pulse">🛰️</span>
+          <div>
+            <h1 class="cute-font text-lg sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-300 to-amber-300">
+              Lex Labs — Скрытый Дашборд Аналитики
+            </h1>
+            <p class="mono-font text-[11px] text-gray-400 mt-0.5">
+              Мониторинг: Катя • Маршрут: Таганрог ⇄ Орск • Статус: Конфиденциально
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5 self-end sm:self-auto">
+        <button id="btnRefresh" class="px-3.5 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] hover:border-pink-500 text-xs font-bold text-gray-200 transition active:scale-95 flex items-center gap-1.5">
+          <span>🔄</span> Обновить
+        </button>
+        <a href="index.html" class="px-4 py-2 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-bold hover:bg-pink-500/20 transition">
+          🐱 В игру
+        </a>
+      </div>
+    </header>
+
+    <!-- Сетка KPI -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
+        <span class="text-xs text-gray-400">⏱️ Время в игре</span>
+        <span id="kpiTotalTime" class="mono-font text-2xl font-black text-pink-400 mt-1">0 м</span>
+        <span class="text-[10px] text-gray-500 mt-0.5">Суммарный онлайн</span>
+      </div>
+
+      <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
+        <span class="text-xs text-gray-400">🚪 Всего заходов</span>
+        <span id="kpiSessions" class="mono-font text-2xl font-black text-amber-300 mt-1">0</span>
+        <span class="text-[10px] text-gray-500 mt-0.5">Количество сессий</span>
+      </div>
+
+      <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
+        <span class="text-xs text-gray-400">🪙 Потрачено монет</span>
+        <span id="kpiSpentCoins" class="mono-font text-2xl font-black text-emerald-400 mt-1">0 🪙</span>
+        <span class="text-[10px] text-gray-500 mt-0.5">В магазине, кейсах, еде</span>
+      </div>
+
+      <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
+        <span class="text-xs text-gray-400">📦 CS:GO Кейсы</span>
+        <span id="kpiCasesOpened" class="mono-font text-2xl font-black text-purple-400 mt-1">0</span>
+        <span class="text-[10px] text-gray-500 mt-0.5">Открытых рулеток</span>
+      </div>
+    </div>
+
+    <!-- Текущий статус котика -->
+    <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/40 flex items-center justify-center text-2xl">
+          🐱
+        </div>
+        <div>
+          <div class="text-sm font-bold text-gray-200">
+            Питомец: <span id="dashPetName" class="text-pink-300 font-extrabold">...</span>
+            <span class="text-xs text-amber-400 font-bold ml-1.5">(Уровень <span id="dashPetLevel">1</span>)</span>
+          </div>
+          <div class="text-xs text-gray-400 mt-0.5">
+            Баланс: <b id="dashPetCoins" class="text-amber-300">0</b> 🪙 | Окрас: <span id="dashPetColor">...</span> | Локация: <span id="dashPetRoom">...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs bg-[#0b0c16] px-3.5 py-2 rounded-xl border border-[#1f2138]">
+        <div>Сытость: <b id="dashPetHunger" class="text-rose-300">0%</b></div>
+        <div class="text-gray-600">|</div>
+        <div>Счастье: <b id="dashPetHappy" class="text-purple-300">0%</b></div>
+        <div class="text-gray-600">|</div>
+        <div>Энергия: <b id="dashPetEnergy" class="text-amber-300">0%</b></div>
+        <div class="text-gray-600">|</div>
+        <div>Чистота: <b id="dashPetClean" class="text-cyan-300">0%</b></div>
+      </div>
+    </div>
+
+    <!-- Реестр купонов и билетов -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base sm:text-lg font-black text-amber-300 flex items-center gap-2">
+            <span>💌</span> Инвентарь выбитых купонов и билетов
+          </h2>
+          <p class="text-xs text-gray-400">Полный список секретных купонов на желания с источниками дропа</p>
+        </div>
+        <span id="badgeWishCount" class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold">
+          0 шт
+        </span>
+      </div>
+
+      <div id="wishesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- История дропов кейса -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base sm:text-lg font-black text-purple-300 flex items-center gap-2">
+            <span>📦</span> История открытия CS:GO кейсов (призы для Таганрога)
+          </h2>
+          <p class="text-xs text-gray-400">Все выпавшие предметы из рулетки за 120 🪙</p>
+        </div>
+        <span id="badgeCaseCount" class="text-xs text-gray-400 font-bold">0 открытий</span>
+      </div>
+
+      <div id="caseDropsList" class="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- Поминутный таймлайн кликов -->
+    <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
+      <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
+        <div>
+          <h2 class="cute-font text-base sm:text-lg font-black text-pink-300 flex items-center gap-2">
+            <span>🔍</span> Поминутный журнал кликов и активности
+          </h2>
+          <p class="text-xs text-gray-400">Точная фиксация: во сколько зашла, куда тыкала, что запускала</p>
+        </div>
+        <button id="btnClearAudit" class="text-xs text-rose-400 hover:text-rose-300 font-bold transition">
+          Очистить лог
+        </button>
+      </div>
+
+      <div id="auditLogContainer" class="flex flex-col gap-1.5 max-h-96 overflow-y-auto pr-1 mono-font text-xs"></div>
+    </section>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY_PET = 'katya_master_pet_state';
+    const STORAGE_KEY_ANALYTICS = 'katya_master_analytics';
+    const STORAGE_KEY_WISHES = 'katya_master_wishes_vault';
+    const STORAGE_KEY_CASE_DROPS = 'katya_master_case_history';
+    const STORAGE_KEY_AUDIT = 'katya_master_audit_events';
+
+    function renderDashboard() {
+      const pet = JSON.parse(localStorage.getItem(STORAGE_KEY_PET)) || {};
+      const analytics = JSON.parse(localStorage.getItem(STORAGE_KEY_ANALYTICS)) || {
+        sessionsCount: 0,
+        totalSecondsPlayed: 0,
+        spentCoins: 0,
+        casesOpened: 0
+      };
+      const wishes = JSON.parse(localStorage.getItem(STORAGE_KEY_WISHES)) || [];
+      const caseDrops = JSON.parse(localStorage.getItem(STORAGE_KEY_CASE_DROPS)) || [];
+      const audit = JSON.parse(localStorage.getItem(STORAGE_KEY_AUDIT)) || [];
+
+      // KPI
+      const mins = Math.round((analytics.totalSecondsPlayed || 0) / 60);
+      document.getElementById('kpiTotalTime').innerText = `${mins} м`;
+      document.getElementById('kpiSessions').innerText = analytics.sessionsCount || 0;
+      document.getElementById('kpiSpentCoins').innerText = `${analytics.spentCoins || 0} 🪙`;
+      document.getElementById('kpiCasesOpened').innerText = analytics.casesOpened || 0;
+
+      // Питомец
+      document.getElementById('dashPetName').innerText = pet.name || 'Зефирка';
+      document.getElementById('dashPetLevel').innerText = pet.level || 1;
+      document.getElementById('dashPetCoins').innerText = pet.coins || 0;
+      document.getElementById('dashPetColor').innerText = pet.color || 'Розовый';
+      document.getElementById('dashPetRoom').innerText = pet.activeRoom || 'Неон';
+      document.getElementById('dashPetHunger').innerText = `${pet.hunger || 0}%`;
+      document.getElementById('dashPetHappy').innerText = `${pet.happy || 0}%`;
+      document.getElementById('dashPetEnergy').innerText = `${pet.energy || 0}%`;
+      document.getElementById('dashPetClean').innerText = `${pet.clean || 0}%`;
+
+      // Купоны
+      const wishesGrid = document.getElementById('wishesGrid');
+      document.getElementById('badgeWishCount').innerText = `${wishes.length} шт`;
+      wishesGrid.innerHTML = '';
+
+      if (wishes.length === 0) {
+        wishesGrid.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-6">Купоны на желания пока не выпадали. Они выбиваются с редким шансом (0.2%) в играх! ✨</div>`;
+      } else {
+        wishes.slice().reverse().forEach(w => {
+          const card = document.createElement('div');
+          card.className = 'bg-[#0a0b14] border border-amber-500/40 rounded-2xl p-4 flex flex-col justify-between gap-2 shadow-lg';
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <span class="text-2xl">💌</span>
+              <span class="mono-font text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-bold">${w.code}</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-gray-200">Купон на исполнение любого желания</div>
+              <div class="text-[11px] text-gray-400 mt-1">Откуда получен: <b class="text-pink-300">${w.source || 'Активность'}</b></div>
+              <div class="text-[10px] text-emerald-400 mt-0.5">Срок действия: до ${w.expiry}</div>
+            </div>
+            <div class="text-[10px] text-gray-500 pt-1.5 border-t border-[#1f2138] flex justify-between">
+              <span>Выбит: ${w.date}</span>
+              <span class="text-amber-400 font-semibold">Активен ✓</span>
+            </div>
+          `;
+          wishesGrid.appendChild(card);
+        });
+      }
+
+      // Кейсы
+      const caseList = document.getElementById('caseDropsList');
+      document.getElementById('badgeCaseCount').innerText = `${caseDrops.length} открытий`;
+      caseList.innerHTML = '';
+
+      if (caseDrops.length === 0) {
+        caseList.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Кейсы еще не открывались</div>`;
+      } else {
+        caseDrops.slice().reverse().forEach(drop => {
+          const row = document.createElement('div');
+          row.className = 'bg-[#0a0b14] border border-[#22243d] p-3 rounded-xl flex items-center justify-between text-xs';
+          row.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">${drop.icon}</span>
+              <div>
+                <span class="font-bold text-gray-200">${drop.name}</span>
+                <span class="text-[10px] text-gray-400 block">${drop.desc}</span>
+              </div>
+            </div>
+            <span class="mono-font text-[10px] text-gray-500 whitespace-nowrap ml-2">${drop.time}</span>
+          `;
+          caseList.appendChild(row);
+        });
+      }
+
+      // Журнал аудита
+      const auditContainer = document.getElementById('auditLogContainer');
+      auditContainer.innerHTML = '';
+
+      if (audit.length === 0) {
+        auditContainer.innerHTML = `<div class="text-center text-gray-500 py-3">Лог действий пока пуст</div>`;
+      } else {
+        audit.slice().reverse().slice(0, 80).forEach(ev => {
+          const line = document.createElement('div');
+          line.className = 'bg-[#0a0b14]/70 px-3 py-1.5 rounded-lg border border-[#191b30] flex items-center justify-between text-gray-300';
+          line.innerHTML = `
+            <span class="flex items-center gap-2">
+              <span>${ev.icon || '📌'}</span>
+              <span>${ev.text}</span>
+            </span>
+            <span class="text-[10px] text-gray-500">${ev.time}</span>
+          `;
+          auditContainer.appendChild(line);
+        });
+      }
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', renderDashboard);
+    document.getElementById('btnClearAudit').addEventListener('click', () => {
+      if (confirm("Очистить журнал кликов и активности?")) {
+        localStorage.removeItem(STORAGE_KEY_AUDIT);
+        renderDashboard();
+      }
+    });
+
+    renderDashboard();
+  </script>
+</body>
+</html>
