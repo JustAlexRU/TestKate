@@ -117,7 +117,7 @@
       <!-- Комната котика -->
       <div id="petRoomCard" class="relative bg-theme-neon border border-[#313244] rounded-3xl p-4 flex flex-col items-center shadow-2xl transition-all duration-700 overflow-hidden min-h-[300px]">
         
-        <!-- Красивый ночной оверлей сна (не перекрывает тело кота) -->
+        <!-- Красивый ночной оверлей сна -->
         <div id="sleepOverlay" class="absolute inset-0 bg-gradient-to-b from-[#090a18]/90 via-[#101228]/50 to-[#090a18]/90 backdrop-blur-[1px] opacity-0 pointer-events-none transition-opacity duration-700 z-30 flex flex-col items-center justify-start pt-3">
           <div class="flex items-center gap-2 bg-[#191b34]/95 border border-indigo-400/50 px-4 py-1.5 rounded-full shadow-lg">
             <span class="text-sm animate-pulse">🌙</span>
@@ -147,14 +147,14 @@
             <span class="absolute font-bold text-purple-300 text-xs animate-zzz" style="animation-delay: 1.4s;">z</span>
           </div>
 
-          <!-- SVG Котик с многослойным гардеробом -->
+          <!-- SVG Котик -->
           <svg id="catSvg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl animate-breathe pointer-events-none transition-all duration-500">
             <ellipse cx="100" cy="182" rx="60" ry="12" fill="#0b0b12" opacity="0.6"/>
             <path id="catTail" class="animate-tail" d="M 45 150 C 15 145, 10 115, 25 105 C 32 100, 42 115, 42 135" fill="none" stroke="#f2cdcd" stroke-width="14" stroke-linecap="round"/>
             <ellipse id="catBody" cx="100" cy="142" rx="55" ry="42" fill="#f5e0dc"/>
             <ellipse cx="100" cy="146" rx="36" ry="28" fill="#ffffff" opacity="0.85"/>
 
-            <!-- СЛОЙ ТЕЛА / ОДЕЖДЫ: ХУДИ -->
+            <!-- СЛОЙ ТЕЛА: ХУДИ -->
             <g id="accLayerHoodie" class="hidden">
               <path d="M 52 132 C 55 110, 145 110, 148 132 C 148 165, 52 165, 52 132 Z" fill="#ec4899" stroke="#db2777" stroke-width="2"/>
               <polygon points="90,118 100,128 110,118" fill="#fbcfe8"/>
@@ -417,7 +417,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: CS:GO РУЛЕТКА ДЛЯ ВЫБРАННОГО КЕЙСА -->
+  <!-- МОДАЛКА: CS:GO РУЛЕТКА -->
   <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
     <div id="caseRouletteCard" class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-2xl">
       <div class="w-full flex justify-between items-center">
@@ -502,7 +502,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: МИНИ-ИГРЫ -->
+  <!-- МОДАЛКА: ВЫБОР МИНИ-ИГР -->
   <div id="modalWork" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-2.5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -548,11 +548,11 @@
           <div class="flex items-center gap-2.5 text-left">
             <span class="text-3xl">🐾</span>
             <div>
-              <div class="text-xs font-bold text-pink-200">Кошачий стример</div>
-              <div class="text-[10px] text-gray-400">Ритм-кликер лапками по нотам</div>
+              <div class="text-xs font-bold text-pink-200">Osu! Cat Streamer</div>
+              <div class="text-[10px] text-gray-400">Классика, ритм и лапки!</div>
             </div>
           </div>
-          <span class="text-xs font-extrabold text-amber-300">+10-20 🪙</span>
+          <span class="text-xs font-extrabold text-amber-300">+10-40 🪙</span>
         </button>
       </div>
     </div>
@@ -662,29 +662,65 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: СТРИМЕР -->
-  <div id="modalRhythmGame" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-4">
-    <div class="w-full max-w-sm flex justify-between items-center pt-2">
+  <!-- МОДАЛКА: OSU! CAT STREAMER -->
+  <div id="modalRhythmGame" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3 select-none">
+    <div class="w-full max-w-sm flex justify-between items-center pt-1">
       <div class="flex items-center gap-2">
         <span class="text-xl">🐾</span>
-        <span class="cute-font text-pink-300 font-bold text-sm">Кошачий стрим</span>
+        <div>
+          <span class="cute-font text-pink-300 font-bold text-xs block leading-none">Osu! Cat Live 🎧</span>
+          <span id="osuGenreBadge" class="text-[9px] text-gray-400 font-mono">Моцарт • Хвостик</span>
+        </div>
       </div>
       <div class="flex items-center gap-3">
-        <span id="rhythmScoreText" class="font-extrabold text-amber-300 text-sm">Донаты: 0 🪙</span>
-        <span id="rhythmTimerText" class="bg-purple-900/60 border border-purple-600/50 px-2.5 py-0.5 rounded-full text-xs font-bold text-purple-200">15с</span>
+        <div class="text-right">
+          <span id="osuScoreText" class="font-black text-amber-300 text-xs block leading-none">0</span>
+          <span id="osuAccuracyText" class="text-[9px] text-emerald-400 font-mono">100.0%</span>
+        </div>
         <button id="closeRhythmBtn" class="text-gray-400 hover:text-white text-base ml-1">✕</button>
       </div>
     </div>
 
-    <div id="rhythmCanvas" class="relative w-full max-w-sm h-[380px] bg-[#181825] border-2 border-[#313244] rounded-3xl overflow-hidden my-auto shadow-2xl flex items-center justify-center">
-      <div id="rhythmStartOverlay" class="flex flex-col items-center gap-3 text-center p-4">
-        <span class="text-5xl animate-bounce">🎧</span>
-        <h4 class="cute-font text-purple-300 font-bold text-base">Тапай лапками в ритм!</h4>
-        <p class="text-xs text-gray-400">Быстро нажимай на круги-ноты до того, как они исчезнут!</p>
-        <button id="btnStartRhythm" class="cute-font bg-purple-500 hover:bg-purple-400 text-white font-bold py-2.5 px-6 rounded-2xl text-xs active:scale-95 transition shadow-lg">
+    <div class="relative w-full max-w-sm h-[400px] bg-[#0c0d18] border-2 border-purple-500/40 rounded-3xl overflow-hidden my-auto shadow-2xl flex items-center justify-center">
+      <canvas id="osuCanvas" width="340" height="400" class="w-full h-full block cursor-crosshair"></canvas>
+
+      <div id="rhythmStartOverlay" class="absolute inset-0 bg-[#0c0d18]/95 flex flex-col items-center justify-between p-4 text-center z-30">
+        <div>
+          <span class="text-4xl animate-bounce block">🎧</span>
+          <h4 class="cute-font text-purple-300 font-black text-base mt-1">Osu! Cat Streamer</h4>
+          <p class="text-[11px] text-gray-400 mt-0.5">Попадай лапкой в круги точно под ритм музыки!</p>
+        </div>
+
+        <div class="w-full flex flex-col gap-1 text-left">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">1. Жанр музыки:</span>
+          <div class="grid grid-cols-2 gap-1.5" id="osuGenrePicker">
+            <button data-genre="mozart" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-purple-500/30 border-2 border-purple-500 text-[11px] font-bold text-purple-200 active:scale-95 transition">🎻 Вальс (Моцарт)</button>
+            <button data-genre="storm" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">⚡ Вивальди «Шторм»</button>
+            <button data-genre="moonlight" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">🎹 Лунная соната</button>
+            <button data-genre="kawaii" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">🌸 Kawaii Pop</button>
+            <button data-genre="phonk" class="osu-genre-btn col-span-2 py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">🏎️ Drift Phonk</button>
+          </div>
+        </div>
+
+        <div class="w-full flex flex-col gap-1 text-left">
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">2. Уровень сложности:</span>
+          <div class="grid grid-cols-4 gap-1" id="osuDiffPicker">
+            <button data-diff="easy" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-emerald-400 active:scale-95 transition">Лапка</button>
+            <button data-diff="normal" class="osu-diff-btn py-1.5 rounded-xl bg-pink-500/30 border-2 border-pink-500 text-[10px] font-bold text-pink-300 active:scale-95 transition">Хвостик</button>
+            <button data-diff="hard" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-amber-400 active:scale-95 transition">Тыгыдык</button>
+            <button data-diff="insane" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-rose-400 active:scale-95 transition">Безумие</button>
+          </div>
+        </div>
+
+        <button id="btnStartOsuGame" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white font-black text-xs active:scale-95 transition shadow-[0_0_20px_rgba(236,72,153,0.5)]">
           ВЫЙТИ В ЭФИР 🎙️
         </button>
       </div>
+    </div>
+
+    <div class="w-full max-w-sm flex justify-between items-center text-[10px] text-gray-500 px-2 pb-1">
+      <span>Жми, когда кольцо совпадет с кругом!</span>
+      <span id="osuComboText" class="font-bold text-pink-400 text-xs">Комбо: 0x</span>
     </div>
   </div>
 
@@ -817,7 +853,7 @@
     }
 
     /* =========================================================
-     * ИЗОЛЯЦИЯ СРЕДЫ И УМНАЯ ИДЕНТИФИКАЦИЯ КАТИ
+     * ИЗОЛЯЦИЯ СРЕДЫ И УМНАЯ ИДЕНТИФИКАЦИЯ
      * ========================================================= */
     const isLocalExecution = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isLocalExecution) {
@@ -1048,7 +1084,7 @@
     }
 
     // =========================================================
-    // СИНХРОНИЗАЦИЯ С ОБЛАКОМ (С ИЗОЛЯЦИЕЙ)
+    // СИНХРОНИЗАЦИЯ С ОБЛАКОМ
     // =========================================================
     let cloudSyncTimer = null;
     function syncToCloud() {
@@ -1138,36 +1174,170 @@
     if (!isLocalExecution) setInterval(pullCloudSettings, 20000);
 
     /* =========================================================
-     * ОБРАБОТЧИКИ ДЕЙСТВИЙ (С ПОДСКАЗКАМИ ВО ВРЕМЯ СНА)
+     * ФУНКЦИИ ВНЕШНЕГО ВИДА И ОФФЛАЙН-ЖИЗНИ (ГАРАНТИРОВАННО ОБЪЯВЛЕНЫ)
      * ========================================================= */
-    document.getElementById('btnActionFeed').addEventListener('click', () => {
-      if (pet.isSleeping) {
-        sound.pop();
-        triggerHaptic();
-        catSpeechBubble.innerText = "«Шшш... Котик спит! 🌙 Сначала нажми кнопку 'Разбудить' ☀️»";
-        return;
+    function applyCatColor(colorKey) {
+      const pal = CAT_COLORS[colorKey] || CAT_COLORS.pink;
+      const head = document.getElementById('catHead');
+      const body = document.getElementById('catBody');
+      const earL = document.getElementById('catEarL');
+      const earR = document.getElementById('catEarR');
+      const footL = document.getElementById('catFootL');
+      const footR = document.getElementById('catFootR');
+      const tail = document.getElementById('catTail');
+      if (head) head.setAttribute('fill', pal.main);
+      if (body) body.setAttribute('fill', pal.main);
+      if (earL) earL.setAttribute('fill', pal.main);
+      if (earR) earR.setAttribute('fill', pal.main);
+      if (footL) footL.setAttribute('fill', pal.accent);
+      if (footR) footR.setAttribute('fill', pal.accent);
+      if (tail) tail.setAttribute('stroke', pal.accent);
+    }
+
+    function applyRoomTheme(themeId) {
+      const theme = ROOM_THEMES.find(t => t.id === themeId) || ROOM_THEMES[0];
+      const card = document.getElementById('petRoomCard');
+      if (!card) return;
+      ROOM_THEMES.forEach(t => card.classList.remove(t.class));
+      card.classList.add(theme.class);
+    }
+
+    function applyOfflineDecay() {
+      const now = Date.now();
+      const lastSavedTime = parseInt(localStorage.getItem('katya_master_last_time')) || now;
+      const hoursPassed = (now - lastSavedTime) / (1000 * 60 * 60);
+
+      if (hoursPassed > 0.05) {
+        pet.hunger = Math.max(5, Math.round(pet.hunger - hoursPassed * 12));
+        pet.clean = Math.max(5, Math.round(pet.clean - hoursPassed * 8));
+        pet.happy = Math.max(5, Math.round(pet.happy - hoursPassed * 9));
+
+        if (pet.isSleeping) {
+          pet.energy = Math.min(100, Math.round(pet.energy + hoursPassed * 25));
+          if (pet.energy >= 100) pet.isSleeping = false;
+        } else {
+          pet.energy = Math.max(5, Math.round(pet.energy - hoursPassed * 8));
+        }
+
+        if (hoursPassed >= 2 && poops.length < 3) spawnPoop(false);
       }
-      renderFoodShop();
-      document.getElementById('modalFeed').classList.remove('hidden');
-      logAuditEvent('Открыла кафе вкусняшек', '🍱');
+      localStorage.setItem('katya_master_last_time', now);
+    }
+
+    function spawnFloatingText(text, x, y) {
+      const el = document.createElement('div');
+      el.className = 'absolute font-extrabold text-pink-300 text-lg pointer-events-none select-none z-50';
+      el.style.left = (x || 100) + 'px';
+      el.style.top = (y || 80) + 'px';
+      el.style.animation = 'floatParticle 0.8s ease-out forwards';
+      el.innerText = text;
+      document.getElementById('particlesLayer').appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }
+
+    function addXP(amount) {
+      pet.xp += amount;
+      const maxXp = pet.level * 100;
+      if (pet.xp >= maxXp) {
+        pet.xp -= maxXp;
+        pet.level += 1;
+        pet.coins += 20;
+        sound.win();
+        confetti({ particleCount: 45, spread: 60, origin: { y: 0.5 } });
+        document.getElementById('catSpeechBubble').innerText = `🎉 Новый ${pet.level} уровень! Награда: +20 🪙`;
+        logAuditEvent(`Получен уровень ${pet.level} (+20 🪙)`, '⭐');
+      }
+      updatePetUI();
+    }
+
+    function spawnPoop(playSound = true) {
+      if (poops.length >= 4) return;
+      poops.push({
+        id: Date.now() + Math.random(),
+        x: Math.floor(Math.random() * 220 + 20),
+        y: Math.floor(Math.random() * 120 + 110)
+      });
+      localStorage.setItem('katya_master_poops', JSON.stringify(poops));
+      pet.clean = Math.max(5, pet.clean - 25);
+      if (playSound) {
+        sound.poop();
+        triggerHaptic();
+        document.getElementById('catSpeechBubble').innerText = "«Ой... Котик сделал делишки! Убери, пожалуйста 🙈»";
+      }
+      updatePetUI();
+    }
+
+    function renderPoops() {
+      const pL = document.getElementById('poopLayer');
+      pL.innerHTML = '';
+      poops.forEach((p, idx) => {
+        const el = document.createElement('div');
+        el.className = 'absolute text-3xl cursor-pointer select-none animate-poop active:scale-125 z-40 p-2';
+        el.style.left = p.x + 'px';
+        el.style.top = p.y + 'px';
+        el.innerHTML = '💩';
+
+        const cleanFn = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          poops.splice(idx, 1);
+          localStorage.setItem('katya_master_poops', JSON.stringify(poops));
+          sound.clean();
+          triggerHaptic();
+          pet.clean = Math.min(100, pet.clean + 20);
+          pet.coins += 2;
+          addXP(4);
+          spawnFloatingText('+2 🪙', p.x, p.y);
+          logAuditEvent('Убрала какашки котика (+2 🪙)', '🧼');
+          checkRareWishDrop(ACTIVE_WISH_CHANCES.poop || 0.15, "Уборка какашек");
+          updatePetUI();
+        };
+        el.addEventListener('pointerdown', cleanFn);
+        pL.appendChild(el);
+      });
+    }
+
+    // =========================================================
+    // ОБРАБОТЧИКИ ДЕЙСТВИЙ И СНА
+    // =========================================================
+    document.getElementById('catTapZone').addEventListener('click', (e) => {
+      if (pet.isSleeping) return;
+      sound.purr();
+      triggerHaptic();
+      pet.happy = Math.min(100, pet.happy + 2);
+      addXP(2);
+      const rect = document.getElementById('particlesLayer').getBoundingClientRect();
+      spawnFloatingText('💖', e.clientX - rect.left - 15, e.clientY - rect.top - 20);
+      const phrases = [
+        `«Муррр! ${pet.name} так любит ласку!» ✨`,
+        "«Мяу! Катя — самое солнышко!» 💕",
+        "«Уррр! Котик замурчал от счастья!» 🐾",
+        "«Муррр... Покрутишь рулетку вкусняшек?» 🍣"
+      ];
+      document.getElementById('catSpeechBubble').innerText = phrases[Math.floor(Math.random() * phrases.length)];
+      checkRareWishDrop(0.01, "Поглаживание котика");
+      updatePetUI();
     });
 
-    document.getElementById('btnActionWork').addEventListener('click', () => {
+    document.getElementById('btnActionSleep').addEventListener('click', () => {
+      sound.playTone(320, 'sine', 0.2);
+      triggerHaptic();
+      pet.isSleeping = !pet.isSleeping;
       if (pet.isSleeping) {
-        sound.pop();
-        triggerHaptic();
-        catSpeechBubble.innerText = "«Котик сейчас без сил и спит! Нажми 'Разбудить' ☀️, чтобы играть 🎮»";
-        return;
+        pet.energy = Math.min(100, pet.energy + 15);
+        addXP(4);
+        logAuditEvent('Уложила котика спать', '🌙');
+      } else {
+        logAuditEvent('Разбудила котика', '☀️');
       }
-      document.getElementById('modalWork').classList.remove('hidden');
-      logAuditEvent('Открыла меню мини-игр', '🎮');
+      updatePetUI();
     });
 
     document.getElementById('btnActionWash').addEventListener('click', () => {
       if (pet.isSleeping) {
         sound.pop();
         triggerHaptic();
-        catSpeechBubble.innerText = "«Не купай спящего котика! Сначала разбуди его ☀️»";
+        document.getElementById('catSpeechBubble').innerText = "«Не купай спящего котика! Сначала разбуди его ☀️»";
         return;
       }
       sound.pop();
@@ -1175,7 +1345,7 @@
       pet.clean = Math.min(100, pet.clean + 25);
       pet.happy = Math.min(100, pet.happy + 4);
       addXP(6);
-      catSpeechBubble.innerText = `«Буль-буль! ${pet.name} весь в пене и вкусно пахнет!» 🫧`;
+      document.getElementById('catSpeechBubble').innerText = `«Буль-буль! ${pet.name} весь в пене и вкусно пахнет!» 🫧`;
       logAuditEvent('Искупала котика с пеной', '🫧');
 
       for (let i = 0; i < 7; i++) {
@@ -1197,31 +1367,36 @@
           bubble.remove();
           updatePetUI();
         });
-        particlesLayer.appendChild(bubble);
+        document.getElementById('particlesLayer').appendChild(bubble);
         setTimeout(() => bubble.remove(), 2600);
       }
       updatePetUI();
     });
 
-    document.getElementById('btnActionSleep').addEventListener('click', () => {
-      sound.playTone(320, 'sine', 0.2);
-      triggerHaptic();
-      pet.isSleeping = !pet.isSleeping;
+    document.getElementById('btnActionFeed').addEventListener('click', () => {
       if (pet.isSleeping) {
-        pet.energy = Math.min(100, pet.energy + 15);
-        addXP(4);
-        logAuditEvent('Уложила котика спать', '🌙');
-      } else {
-        logAuditEvent('Разбудила котика', '☀️');
+        sound.pop();
+        triggerHaptic();
+        document.getElementById('catSpeechBubble').innerText = "«Шшш... Котик спит! 🌙 Сначала нажми кнопку 'Разбудить' ☀️»";
+        return;
       }
-      updatePetUI();
+      renderFoodShop();
+      document.getElementById('modalFeed').classList.remove('hidden');
+      logAuditEvent('Открыла кафе вкусняшек', '🍱');
     });
 
-    /* =========================================================
-     * ОБНОВЛЕНИЕ UI И СОСТОЯНИЯ СНА (БЕЗ ОШИБОК)
-     * ========================================================= */
+    document.getElementById('btnActionWork').addEventListener('click', () => {
+      if (pet.isSleeping) {
+        sound.pop();
+        triggerHaptic();
+        document.getElementById('catSpeechBubble').innerText = "«Котик сейчас без сил и спит! Нажми 'Разбудить' ☀️, чтобы играть 🎮»";
+        return;
+      }
+      document.getElementById('modalWork').classList.remove('hidden');
+      logAuditEvent('Открыла меню мини-игр', '🎮');
+    });
+
     function updatePetLayers() {
-      // БЕЗОПАСНАЯ АКТИВАЦИЯ СЛОЕВ ОДЕЖДЫ И АКСЕССУАРОВ
       const elCrown = document.getElementById('accLayerCrown');
       const elWizard = document.getElementById('accLayerWizard');
       const elFlower = document.getElementById('accLayerFlower');
@@ -1240,10 +1415,10 @@
     }
 
     function updatePetUI() {
-      headerPetName.innerText = pet.name;
-      petNameLabel.innerText = pet.name;
-      headerCoins.innerText = pet.coins;
-      headerLevel.innerText = pet.level;
+      document.getElementById('headerPetName').innerText = pet.name;
+      document.getElementById('petNameLabel').innerText = pet.name;
+      document.getElementById('headerCoins').innerText = pet.coins;
+      document.getElementById('headerLevel').innerText = pet.level;
 
       const maxXp = pet.level * 100;
       const xpPercent = Math.min(100, Math.floor((pet.xp / maxXp) * 100));
@@ -1267,6 +1442,7 @@
       const sleepIcon = document.getElementById('sleepIcon');
       const sleepText = document.getElementById('sleepText');
       const catSvg = document.getElementById('catSvg');
+      const bubble = document.getElementById('catSpeechBubble');
 
       const btnFeed = document.getElementById('btnActionFeed');
       const btnWork = document.getElementById('btnActionWork');
@@ -1274,46 +1450,43 @@
       const btnSleep = document.getElementById('btnActionSleep');
 
       if (pet.isSleeping) {
-        sleepOverlay.style.opacity = '1';
-        sleepOverlay.style.pointerEvents = 'none';
-        zzzContainer.classList.remove('hidden');
-        eyesNormal.classList.add('hidden');
-        eyesHappy.classList.add('hidden');
-        eyesSleep.classList.remove('hidden');
-        sleepIcon.innerText = '☀️';
-        sleepText.innerText = 'Разбудить';
-        catSpeechBubble.innerText = `«Zzz... ${pet.name} сладко спит...» 🌙`;
-        catSvg.classList.add('brightness-90');
+        if (sleepOverlay) sleepOverlay.style.opacity = '1';
+        if (zzzContainer) zzzContainer.classList.remove('hidden');
+        if (eyesNormal) eyesNormal.classList.add('hidden');
+        if (eyesHappy) eyesHappy.classList.add('hidden');
+        if (eyesSleep) eyesSleep.classList.remove('hidden');
+        if (sleepIcon) sleepIcon.innerText = '☀️';
+        if (sleepText) sleepText.innerText = 'Разбудить';
+        if (bubble) bubble.innerText = `«Zzz... ${pet.name} сладко спит...» 🌙`;
+        if (catSvg) catSvg.classList.add('brightness-90');
 
-        btnFeed.classList.add('opacity-40');
-        btnWork.classList.add('opacity-40');
-        btnWash.classList.add('opacity-40');
-        btnSleep.classList.add('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
+        if (btnFeed) btnFeed.classList.add('opacity-40');
+        if (btnWork) btnWork.classList.add('opacity-40');
+        if (btnWash) btnWash.classList.add('opacity-40');
+        if (btnSleep) btnSleep.classList.add('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
       } else {
-        sleepOverlay.style.opacity = '0';
-        sleepOverlay.style.pointerEvents = 'none';
-        zzzContainer.classList.add('hidden');
-        sleepIcon.innerText = '🌙';
-        sleepText.innerText = 'Уложить';
-        eyesSleep.classList.add('hidden');
-        catSvg.classList.remove('brightness-90');
+        if (sleepOverlay) sleepOverlay.style.opacity = '0';
+        if (zzzContainer) zzzContainer.classList.add('hidden');
+        if (sleepIcon) sleepIcon.innerText = '🌙';
+        if (sleepText) sleepText.innerText = 'Уложить';
+        if (eyesSleep) eyesSleep.classList.add('hidden');
+        if (catSvg) catSvg.classList.remove('brightness-90');
 
-        btnFeed.classList.remove('opacity-40');
-        btnWork.classList.remove('opacity-40');
-        btnWash.classList.remove('opacity-40');
-        btnSleep.classList.remove('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
+        if (btnFeed) btnFeed.classList.remove('opacity-40');
+        if (btnWork) btnWork.classList.remove('opacity-40');
+        if (btnWash) btnWash.classList.remove('opacity-40');
+        if (btnSleep) btnSleep.classList.remove('border-amber-400', 'bg-amber-500/20', 'animate-pulse');
 
-        // СБРОС ТЕКСТА ПУЗЫРЯ ПРИ БОДРСТВОВАНИИ
-        if (catSpeechBubble.innerText.includes('Zzz')) {
-          catSpeechBubble.innerText = `«Муррр! ${pet.name} выспался и готов играть!» ✨`;
+        if (bubble && bubble.innerText.includes('Zzz')) {
+          bubble.innerText = `«Муррр! ${pet.name} выспался и готов играть!» ✨`;
         }
 
         if (pet.happy > 70) {
-          eyesNormal.classList.add('hidden');
-          eyesHappy.classList.remove('hidden');
+          if (eyesNormal) eyesNormal.classList.add('hidden');
+          if (eyesHappy) eyesHappy.classList.remove('hidden');
         } else {
-          eyesHappy.classList.add('hidden');
-          eyesNormal.classList.remove('hidden');
+          if (eyesHappy) eyesHappy.classList.add('hidden');
+          if (eyesNormal) eyesNormal.classList.remove('hidden');
         }
       }
 
@@ -1331,6 +1504,7 @@
     function updateFreeFoodBtn() {
       const freeFoodCount = document.getElementById('freeFoodCount');
       const btnFreeFood = document.getElementById('btnFreeFood');
+      if (!freeFoodCount || !btnFreeFood) return;
       freeFoodCount.innerText = freeFoodData.count;
       btnFreeFood.className = freeFoodData.count <= 0 
         ? 'px-2.5 py-1.5 rounded-xl bg-gray-600 text-gray-400 font-bold text-[11px] opacity-50' 
@@ -1583,7 +1757,9 @@
         const card = document.createElement('div');
         card.className = `flex-shrink-0 w-20 h-20 bg-[#1e1e2e] rounded-xl flex flex-col items-center justify-center p-1 border-b-4`;
         card.style.borderColor = item.color;
-        card.innerHTML = `<span class="text-2xl">${cData.isClassified ? "❓" : item.icon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${cData.isClassified ? "???" : item.name}</span>`;
+        const displayName = cData.isClassified ? "???" : item.name;
+        const displayIcon = cData.isClassified ? "❓" : item.icon;
+        card.innerHTML = `<span class="text-2xl">${displayIcon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${displayName}</span>`;
         tr.appendChild(card);
       }
 
@@ -1932,92 +2108,611 @@
     }, { passive: true });
 
     // =========================================================
-    // КУРЬЕР И СТРИМЕР
+    // 3. КУРЬЕР ВКУСНЯШЕК
     // =========================================================
-    let gameScore = 0, gameTimeLeft = 15, gameInterval = null, isGameRunning = false;
+    const modalMiniGame = document.getElementById('modalMiniGame');
+    const miniGameCanvas = document.getElementById('miniGameCanvas');
+    const gameStartOverlay = document.getElementById('gameStartOverlay');
+    const btnStartGame = document.getElementById('btnStartGame');
+    const gameScoreText = document.getElementById('gameScoreText');
+    const gameTimerText = document.getElementById('gameTimerText');
+    const closeMiniGameBtn = document.getElementById('closeMiniGameBtn');
+
+    let courierScore = 0, courierTimeLeft = 15, courierInterval = null, isCourierRunning = false;
+
     document.getElementById('btnJobCatcher').addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
-      document.getElementById('modalMiniGame').classList.remove('hidden');
-      document.getElementById('gameStartOverlay').classList.remove('hidden');
-    });
-    document.getElementById('closeMiniGameBtn').addEventListener('click', () => {
-      isGameRunning = false;
-      clearInterval(gameInterval);
-      document.getElementById('modalMiniGame').classList.add('hidden');
-    });
-    document.getElementById('btnStartGame').addEventListener('click', () => {
-      document.getElementById('gameStartOverlay').classList.add('hidden');
-      gameScore = 0; gameTimeLeft = 15; isGameRunning = true;
-      gameInterval = setInterval(() => {
-        gameTimeLeft--; document.getElementById('gameTimerText').innerText = `${gameTimeLeft}с`;
-        if (gameTimeLeft <= 0) {
-          isGameRunning = false; clearInterval(gameInterval); sound.win();
-          const earned = Math.min(16, Math.max(8, Math.floor(gameScore * 1.2)));
-          pet.coins += earned; pet.energy = Math.max(5, pet.energy - 12); addXP(earned);
-          document.getElementById('gameStartOverlay').classList.remove('hidden');
-          document.getElementById('gameStartOverlay').innerHTML = `<span class="text-4xl">🛵</span><p class="text-xs text-gray-300 mt-1">+${earned} 🪙</p><button class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartGame').click()">ЕЩЕ СМЕНУ</button>`;
-          checkRareWishDrop(ACTIVE_WISH_CHANCES.catcher, "Курьер"); updatePetUI();
-        }
-      }, 1000);
-      function spawnFoodTarget() {
-        if (!isGameRunning) return;
-        const el = document.createElement('div');
-        el.className = 'absolute cursor-pointer text-4xl select-none active:scale-125';
-        el.innerText = ["🍣", "🍕", "🍤", "🍗", "🍓", "🧁"][Math.floor(Math.random() * 6)];
-        el.style.left = Math.floor(Math.random() * 320) + 'px';
-        el.style.top = Math.floor(Math.random() * 300) + 'px';
-        el.addEventListener('pointerdown', () => {
-          sound.pop(); triggerHaptic(); gameScore++;
-          document.getElementById('gameScoreText').innerText = `Счет: ${gameScore}`;
-          el.remove(); spawnFoodTarget();
-        });
-        document.getElementById('miniGameCanvas').appendChild(el);
-        setTimeout(() => { if (el.parentNode) { el.remove(); if (isGameRunning) spawnFoodTarget(); } }, 1050);
-      }
-      spawnFoodTarget();
+      modalMiniGame.classList.remove('hidden');
+      gameStartOverlay.classList.remove('hidden');
+      logAuditEvent('Запустила Курьера вкусняшек', '🛵');
     });
 
-    let rhythmScore = 0, rhythmTime = 15, rhythmInterval = null, isRhythmRunning = false;
+    closeMiniGameBtn.addEventListener('click', () => {
+      isCourierRunning = false;
+      clearInterval(courierInterval);
+      modalMiniGame.classList.add('hidden');
+    });
+
+    btnStartGame.addEventListener('click', startCourierGame);
+
+    function startCourierGame() {
+      gameStartOverlay.classList.add('hidden');
+      courierScore = 0; courierTimeLeft = 15; isCourierRunning = true;
+      gameScoreText.innerText = `Счет: 0`; gameTimerText.innerText = `15с`;
+
+      courierInterval = setInterval(() => {
+        courierTimeLeft--;
+        gameTimerText.innerText = `${courierTimeLeft}с`;
+        if (courierTimeLeft <= 0) endCourierGame();
+      }, 1000);
+      spawnCourierFood();
+    }
+
+    function spawnCourierFood() {
+      if (!isCourierRunning) return;
+      const emojis = ["🍣", "🍕", "🍤", "🍗", "🍓", "🧁"];
+      const item = document.createElement('div');
+      item.className = 'absolute cursor-pointer text-4xl select-none active:scale-125 transition-transform';
+      item.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      item.style.left = Math.floor(Math.random() * (miniGameCanvas.clientWidth - 50)) + 'px';
+      item.style.top = Math.floor(Math.random() * (miniGameCanvas.clientHeight - 60)) + 'px';
+
+      item.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        sound.pop(); triggerHaptic();
+        courierScore++;
+        gameScoreText.innerText = `Счет: ${courierScore}`;
+        item.remove();
+        spawnCourierFood();
+      });
+      miniGameCanvas.appendChild(item);
+      setTimeout(() => { if (item.parentNode) { item.remove(); if (isCourierRunning) spawnCourierFood(); } }, 1050);
+    }
+
+    function endCourierGame() {
+      isCourierRunning = false; clearInterval(courierInterval);
+      miniGameCanvas.querySelectorAll('.text-4xl').forEach(it => it.remove());
+      sound.win();
+      confetti({ particleCount: 25, spread: 60 });
+      const earnedCoins = Math.min(16, Math.max(8, Math.floor(courierScore * 1.2)));
+      pet.coins += earnedCoins;
+      pet.energy = Math.max(5, pet.energy - 12);
+      addXP(earnedCoins);
+      logAuditEvent(`Смена курьера (Заказов: ${courierScore}, +${earnedCoins} 🪙)`, '🛵');
+
+      gameStartOverlay.classList.remove('hidden');
+      gameStartOverlay.innerHTML = `
+        <span class="text-4xl">🛵</span>
+        <h4 class="cute-font text-amber-300 font-bold text-base mt-2">Смена окончена!</h4>
+        <p class="text-xs text-gray-300 mt-1">Доставлено: <b class="text-pink-300">${courierScore}</b><br>Награда: <b class="text-amber-300">+${earnedCoins} 🪙</b></p>
+        <button id="btnRestartCourier" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-3">
+          ЕЩЕ СМЕНУ 🛵
+        </button>
+      `;
+      document.getElementById('btnRestartCourier').addEventListener('click', startCourierGame);
+      checkRareWishDrop(ACTIVE_WISH_CHANCES.catcher || 0.3, "Мини-игра Курьер");
+      updatePetUI();
+    }
+
+    // =========================================================
+    // 4. OSU! CAT: РИТМ-ДВИЖОК & СИНТЕЗАТОР (С КЛАССИКОЙ)
+    // =========================================================
+    const modalRhythmGame = document.getElementById('modalRhythmGame');
+    const rhythmStartOverlay = document.getElementById('rhythmStartOverlay');
+    const closeRhythmBtn = document.getElementById('closeRhythmBtn');
+    const btnStartOsuGame = document.getElementById('btnStartOsuGame');
+    const osuCanvas = document.getElementById('osuCanvas');
+    const oCtx = osuCanvas ? osuCanvas.getContext('2d') : null;
+
+    const osuScoreText = document.getElementById('osuScoreText');
+    const osuAccuracyText = document.getElementById('osuAccuracyText');
+    const osuComboText = document.getElementById('osuComboText');
+    const osuGenreBadge = document.getElementById('osuGenreBadge');
+
+    const OSU_GENRES = {
+      mozart: {
+        name: "Венский вальс (Моцарт)",
+        bpm: 126,
+        rootFreq: 261.63,
+        scale: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16],
+        style: 'waltz'
+      },
+      storm: {
+        name: "Вивальди «Шторм»",
+        bpm: 144,
+        rootFreq: 196.00,
+        scale: [0, 2, 3, 5, 7, 8, 11, 12, 14, 15],
+        style: 'baroque'
+      },
+      moonlight: {
+        name: "Лунная соната (Неоклассика)",
+        bpm: 104,
+        rootFreq: 220.00,
+        scale: [0, 2, 3, 5, 7, 8, 10, 12],
+        style: 'piano'
+      },
+      kawaii: {
+        name: "Kawaii Anime Pop",
+        bpm: 120,
+        rootFreq: 293.66,
+        scale: [0, 2, 4, 7, 9, 12, 14],
+        style: 'anime'
+      },
+      phonk: {
+        name: "Drift Phonk",
+        bpm: 136,
+        rootFreq: 146.83,
+        scale: [0, 1, 5, 7, 8, 12],
+        style: 'phonk'
+      }
+    };
+
+    const OSU_DIFFICULTIES = {
+      easy: {
+        name: "Лапка",
+        approachTime: 1.15,
+        radius: 34,
+        spawnStep: 2,
+        hpDrain: 4,
+        window300: 0.10,
+        window100: 0.18,
+        window50: 0.26,
+        multiplier: 1.0
+      },
+      normal: {
+        name: "Хвостик",
+        approachTime: 0.90,
+        radius: 29,
+        spawnStep: 1,
+        hpDrain: 6,
+        window300: 0.08,
+        window100: 0.15,
+        window50: 0.22,
+        multiplier: 1.3
+      },
+      hard: {
+        name: "Тыгыдык",
+        approachTime: 0.72,
+        radius: 25,
+        spawnStep: 0.5,
+        hpDrain: 9,
+        window300: 0.065,
+        window100: 0.12,
+        window50: 0.18,
+        multiplier: 1.7
+      },
+      insane: {
+        name: "Безумие",
+        approachTime: 0.52,
+        radius: 21,
+        spawnStep: 0.25,
+        hpDrain: 12,
+        window300: 0.05,
+        window100: 0.09,
+        window50: 0.14,
+        multiplier: 2.2
+      }
+    };
+
+    let selectedGenre = 'mozart';
+    let selectedDiff = 'normal';
+
+    let isOsuRunning = false;
+    let osuAudioCtx = null;
+    let osuAnimFrame = null;
+    let osuAudioTimer = null;
+
+    let osuCircles = [];
+    let osuHitFeedbacks = [];
+    let osuScore = 0;
+    let osuCombo = 0;
+    let osuMaxCombo = 0;
+    let osuHp = 100;
+    let osuHitsCount = { 300: 0, 100: 0, 50: 0, miss: 0 };
+    let currentCircleIndex = 1;
+
+    let nextNoteTime = 0;
+    let current16thStep = 0;
+
+    document.querySelectorAll('.osu-genre-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.osu-genre-btn').forEach(b => {
+          b.className = "osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition";
+        });
+        btn.className = "osu-genre-btn py-1.5 px-2 rounded-xl bg-purple-500/30 border-2 border-purple-500 text-[11px] font-bold text-purple-200 active:scale-95 transition";
+        selectedGenre = btn.dataset.genre;
+      });
+    });
+
+    document.querySelectorAll('.osu-diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.osu-diff-btn').forEach(b => {
+          b.className = "osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-gray-400 active:scale-95 transition";
+        });
+        btn.className = "osu-diff-btn py-1.5 rounded-xl bg-pink-500/30 border-2 border-pink-500 text-[10px] font-bold text-pink-300 active:scale-95 transition";
+        selectedDiff = btn.dataset.diff;
+      });
+    });
+
     document.getElementById('btnJobRhythm').addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
-      document.getElementById('modalRhythmGame').classList.remove('hidden');
-      document.getElementById('rhythmStartOverlay').classList.remove('hidden');
+      modalRhythmGame.classList.remove('hidden');
+      rhythmStartOverlay.classList.remove('hidden');
+      logAuditEvent('Открыла Osu! Cat Streamer', '🎧');
     });
-    document.getElementById('closeRhythmBtn').addEventListener('click', () => {
-      isRhythmRunning = false; clearInterval(rhythmInterval);
-      document.getElementById('modalRhythmGame').classList.add('hidden');
-    });
-    document.getElementById('btnStartRhythm').addEventListener('click', () => {
-      document.getElementById('rhythmStartOverlay').classList.add('hidden');
-      rhythmScore = 0; rhythmTime = 15; isRhythmRunning = true;
-      rhythmInterval = setInterval(() => {
-        rhythmTime--; document.getElementById('rhythmTimerText').innerText = `${rhythmTime}с`;
-        if (rhythmTime <= 0) {
-          isRhythmRunning = false; clearInterval(rhythmInterval); sound.win();
-          const earned = Math.min(20, Math.max(10, rhythmScore));
-          pet.coins += earned; pet.energy = Math.max(5, pet.energy - 12); addXP(earned);
-          document.getElementById('rhythmStartOverlay').classList.remove('hidden');
-          document.getElementById('rhythmStartOverlay').innerHTML = `<span class="text-4xl">🎙️</span><p class="text-xs text-gray-300 mt-1">+${earned} 🪙</p><button class="cute-font bg-purple-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartRhythm').click()">ЕЩЕ СТРИМ</button>`;
-          checkRareWishDrop(ACTIVE_WISH_CHANCES.rhythm, "Стример"); updatePetUI();
-        }
-      }, 1000);
-      function spawnRhythmNode() {
-        if (!isRhythmRunning) return;
-        const el = document.createElement('div');
-        el.className = 'absolute w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-xl cursor-pointer active:scale-90';
-        el.innerText = '🐾';
-        el.style.left = Math.floor(Math.random() * 300) + 'px';
-        el.style.top = Math.floor(Math.random() * 300) + 'px';
-        el.addEventListener('pointerdown', () => {
-          sound.playTone(550, 'triangle', 0.1); triggerHaptic(); rhythmScore++;
-          document.getElementById('rhythmScoreText').innerText = `Донаты: ${rhythmScore} 🪙`;
-          el.remove(); spawnRhythmNode();
-        });
-        document.getElementById('rhythmCanvas').appendChild(el);
-        setTimeout(() => { if (el.parentNode) { el.remove(); if (isRhythmRunning) spawnRhythmNode(); } }, 950);
+
+    closeRhythmBtn.addEventListener('click', stopOsuGame);
+    btnStartOsuGame.addEventListener('click', startOsuGame);
+
+    function initOsuAudioContext() {
+      if (!osuAudioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        osuAudioCtx = new AudioContextClass();
       }
-      spawnRhythmNode();
+      if (osuAudioCtx.state === 'suspended') {
+        osuAudioCtx.resume();
+      }
+    }
+
+    function playInstrumentNote(freq, time, duration, type, gainVal, filterFreq = null) {
+      if (!osuAudioCtx) return;
+      const osc = osuAudioCtx.createOscillator();
+      const gain = osuAudioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, time);
+
+      gain.gain.setValueAtTime(gainVal, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+      if (filterFreq) {
+        const filter = osuAudioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = filterFreq;
+        osc.connect(filter);
+        filter.connect(gain);
+      } else {
+        osc.connect(gain);
+      }
+
+      gain.connect(osuAudioCtx.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    }
+
+    function playRhythmDrums(stepIndex, time) {
+      if (!osuAudioCtx) return;
+      const g = OSU_GENRES[selectedGenre];
+      const step = stepIndex % 16;
+
+      if (g.style === 'waltz') {
+        if (step % 6 === 0) {
+          playInstrumentNote(g.rootFreq * 0.5, time, 0.45, 'triangle', 0.4);
+        } else if (step % 2 === 0) {
+          playInstrumentNote(g.rootFreq * 1.5, time, 0.12, 'sine', 0.18);
+        }
+      } else if (g.style === 'baroque') {
+        if (step % 4 === 0) {
+          playInstrumentNote(g.rootFreq * 0.5, time, 0.22, 'sawtooth', 0.25, 600);
+        }
+      } else {
+        if (step === 0 || step === 8) {
+          const osc = osuAudioCtx.createOscillator();
+          const gain = osuAudioCtx.createGain();
+          osc.frequency.setValueAtTime(140, time);
+          osc.frequency.exponentialRampToValueAtTime(35, time + 0.08);
+          gain.gain.setValueAtTime(0.6, time);
+          gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+          osc.connect(gain); gain.connect(osuAudioCtx.destination);
+          osc.start(time); osc.stop(time + 0.16);
+        }
+      }
+    }
+
+    function scheduleOsuStep(stepIndex, time) {
+      const g = OSU_GENRES[selectedGenre];
+      playRhythmDrums(stepIndex, time);
+
+      if (stepIndex % 2 === 0) {
+        const noteIdx = (stepIndex * 2 + Math.floor(stepIndex / 4)) % g.scale.length;
+        const semitone = g.scale[noteIdx];
+        const freq = g.rootFreq * Math.pow(2, semitone / 12) * (g.style === 'baroque' ? 2 : 1.5);
+
+        if (g.style === 'baroque') {
+          playInstrumentNote(freq, time, 0.14, 'sawtooth', 0.18, 2200);
+        } else if (g.style === 'piano' || g.style === 'waltz') {
+          playInstrumentNote(freq, time, 0.25, 'triangle', 0.22);
+        } else {
+          playInstrumentNote(freq, time, 0.12, 'square', 0.12, 1800);
+        }
+      }
+
+      const diffConf = OSU_DIFFICULTIES[selectedDiff];
+      const stepsBetweenNotes = Math.round(diffConf.spawnStep * 4);
+      if (stepIndex % stepsBetweenNotes === 0) {
+        spawnOsuCircle(time);
+      }
+    }
+
+    function osuSchedulerLoop() {
+      if (!isOsuRunning || !osuAudioCtx) return;
+      const g = OSU_GENRES[selectedGenre];
+      const secondsPer16th = (60 / g.bpm) / 4;
+
+      while (nextNoteTime < osuAudioCtx.currentTime + 0.15) {
+        scheduleOsuStep(current16thStep, nextNoteTime);
+        nextNoteTime += secondsPer16th;
+        current16thStep++;
+      }
+    }
+
+    function spawnOsuCircle(targetHitTime) {
+      const diffConf = OSU_DIFFICULTIES[selectedDiff];
+      const pad = diffConf.radius + 30;
+      const x = Math.floor(Math.random() * (osuCanvas.width - pad * 2) + pad);
+      const y = Math.floor(Math.random() * (osuCanvas.height - pad * 2 - 40) + pad + 30);
+
+      osuCircles.push({
+        id: currentCircleIndex,
+        x, y,
+        radius: diffConf.radius,
+        targetTime: targetHitTime,
+        color: ['#ec4899', '#a855f7', '#3b82f6', '#f59e0b', '#10b981'][currentCircleIndex % 5],
+        hit: false
+      });
+
+      currentCircleIndex++;
+      if (currentCircleIndex > 9) currentCircleIndex = 1;
+    }
+
+    function startOsuGame() {
+      initOsuAudioContext();
+      rhythmStartOverlay.classList.add('hidden');
+
+      isOsuRunning = true;
+      osuCircles = [];
+      osuHitFeedbacks = [];
+      osuScore = 0;
+      osuCombo = 0;
+      osuMaxCombo = 0;
+      osuHp = 100;
+      osuHitsCount = { 300: 0, 100: 0, 50: 0, miss: 0 };
+      currentCircleIndex = 1;
+      current16thStep = 0;
+
+      const g = OSU_GENRES[selectedGenre];
+      const d = OSU_DIFFICULTIES[selectedDiff];
+      osuGenreBadge.innerText = `${g.name} • ${d.name}`;
+      osuScoreText.innerText = '0';
+      osuAccuracyText.innerText = '100.0%';
+      osuComboText.innerText = 'Комбо: 0x';
+
+      nextNoteTime = osuAudioCtx.currentTime + 0.3;
+      clearInterval(osuAudioTimer);
+      osuAudioTimer = setInterval(osuSchedulerLoop, 25);
+
+      setTimeout(() => {
+        if (isOsuRunning) finishOsuGame(true);
+      }, 32000);
+
+      cancelAnimationFrame(osuAnimFrame);
+      function frame() {
+        if (!isOsuRunning) return;
+        updateOsuPhysics();
+        drawOsuCanvas();
+        osuAnimFrame = requestAnimationFrame(frame);
+      }
+      osuAnimFrame = requestAnimationFrame(frame);
+    }
+
+    function stopOsuGame() {
+      isOsuRunning = false;
+      clearInterval(osuAudioTimer);
+      cancelAnimationFrame(osuAnimFrame);
+      modalRhythmGame.classList.add('hidden');
+    }
+
+    function updateOsuPhysics() {
+      if (!osuAudioCtx) return;
+      const curTime = osuAudioCtx.currentTime;
+      const d = OSU_DIFFICULTIES[selectedDiff];
+
+      for (let i = osuCircles.length - 1; i >= 0; i--) {
+        const c = osuCircles[i];
+        if (!c.hit && curTime > c.targetTime + d.window50) {
+          registerOsuHit(null, c);
+          osuCircles.splice(i, 1);
+        }
+      }
+
+      for (let i = osuHitFeedbacks.length - 1; i >= 0; i--) {
+        const fb = osuHitFeedbacks[i];
+        fb.alpha -= 0.035;
+        fb.y -= 0.8;
+        if (fb.alpha <= 0) osuHitFeedbacks.splice(i, 1);
+      }
+
+      osuHp = Math.max(0, osuHp - 0.03);
+      if (osuHp <= 0) finishOsuGame(false);
+    }
+
+    function registerOsuHit(grade, circleObj) {
+      const d = OSU_DIFFICULTIES[selectedDiff];
+
+      if (grade === 300) {
+        osuScore += Math.round(300 * (1 + osuCombo * 0.05) * d.multiplier);
+        osuCombo++;
+        osuHp = Math.min(100, osuHp + 5);
+        osuHitsCount[300]++;
+        sound.pop();
+        triggerHaptic();
+        addHitFeedback("300", circleObj.x, circleObj.y, "#fde047");
+      } else if (grade === 100) {
+        osuScore += Math.round(100 * (1 + osuCombo * 0.03) * d.multiplier);
+        osuCombo++;
+        osuHp = Math.min(100, osuHp + 2);
+        osuHitsCount[100]++;
+        sound.pop();
+        triggerHaptic();
+        addHitFeedback("100", circleObj.x, circleObj.y, "#34d399");
+      } else if (grade === 50) {
+        osuScore += Math.round(50 * d.multiplier);
+        osuCombo++;
+        osuHitsCount[50]++;
+        sound.pop();
+        addHitFeedback("50", circleObj.x, circleObj.y, "#60a5fa");
+      } else {
+        osuCombo = 0;
+        osuHp = Math.max(0, osuHp - d.hpDrain);
+        osuHitsCount.miss++;
+        addHitFeedback("MISS", circleObj.x, circleObj.y, "#f43f5e");
+      }
+
+      if (osuCombo > osuMaxCombo) osuMaxCombo = osuCombo;
+      const totalHits = osuHitsCount[300] + osuHitsCount[100] + osuHitsCount[50] + osuHitsCount.miss;
+      const acc = totalHits > 0 
+        ? ((osuHitsCount[300] * 300 + osuHitsCount[100] * 100 + osuHitsCount[50] * 50) / (totalHits * 300)) * 100 
+        : 100;
+
+      osuScoreText.innerText = osuScore.toLocaleString();
+      osuAccuracyText.innerText = `${acc.toFixed(1)}%`;
+      osuComboText.innerText = `Комбо: ${osuCombo}x`;
+    }
+
+    function addHitFeedback(text, x, y, color) {
+      osuHitFeedbacks.push({ text, x, y, color, alpha: 1.0 });
+    }
+
+    osuCanvas.addEventListener('pointerdown', (e) => {
+      if (!isOsuRunning || !osuAudioCtx) return;
+      const rect = osuCanvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left) * (osuCanvas.width / rect.width);
+      const clickY = (e.clientY - rect.top) * (osuCanvas.height / rect.height);
+      const curTime = osuAudioCtx.currentTime;
+      const d = OSU_DIFFICULTIES[selectedDiff];
+
+      for (let i = 0; i < osuCircles.length; i++) {
+        const c = osuCircles[i];
+        if (c.hit) continue;
+        const dist = Math.hypot(clickX - c.x, clickY - c.y);
+        if (dist <= c.radius * 1.35) {
+          const diff = Math.abs(curTime - c.targetTime);
+          if (diff <= d.window300) {
+            c.hit = true; registerOsuHit(300, c); osuCircles.splice(i, 1); return;
+          } else if (diff <= d.window100) {
+            c.hit = true; registerOsuHit(100, c); osuCircles.splice(i, 1); return;
+          } else if (diff <= d.window50) {
+            c.hit = true; registerOsuHit(50, c); osuCircles.splice(i, 1); return;
+          }
+        }
+      }
     });
+
+    function drawOsuCanvas() {
+      if (!oCtx) return;
+      const w = osuCanvas.width, h = osuCanvas.height;
+      const curTime = osuAudioCtx ? osuAudioCtx.currentTime : 0;
+      const d = OSU_DIFFICULTIES[selectedDiff];
+
+      oCtx.clearRect(0, 0, w, h);
+
+      oCtx.fillStyle = '#1e1b4b';
+      oCtx.fillRect(10, 8, w - 20, 6);
+      const hpColor = osuHp > 50 ? '#34d399' : osuHp > 25 ? '#fbbf24' : '#f43f5e';
+      oCtx.fillStyle = hpColor;
+      oCtx.fillRect(10, 8, (w - 20) * (osuHp / 100), 6);
+
+      osuCircles.forEach(c => {
+        const timeUntilHit = c.targetTime - curTime;
+        if (timeUntilHit > d.approachTime) return;
+
+        const progress = Math.max(0, timeUntilHit / d.approachTime);
+        const approachRadius = c.radius + (c.radius * 2.2 * progress);
+
+        oCtx.save();
+        oCtx.beginPath();
+        oCtx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+        oCtx.fillStyle = '#181825';
+        oCtx.fill();
+        oCtx.lineWidth = 4;
+        oCtx.strokeStyle = c.color;
+        oCtx.shadowColor = c.color;
+        oCtx.shadowBlur = 10;
+        oCtx.stroke();
+
+        oCtx.fillStyle = '#ffffff';
+        oCtx.font = `bold ${Math.round(c.radius * 0.85)}px 'Comfortaa', sans-serif`;
+        oCtx.textAlign = 'center';
+        oCtx.textBaseline = 'middle';
+        oCtx.fillText(c.id, c.x, c.y + 1);
+        oCtx.restore();
+
+        if (progress > 0) {
+          oCtx.save();
+          oCtx.beginPath();
+          oCtx.arc(c.x, c.y, approachRadius, 0, Math.PI * 2);
+          oCtx.lineWidth = 2.5;
+          oCtx.strokeStyle = c.color;
+          oCtx.globalAlpha = Math.min(1.0, 1.2 - progress * 0.5);
+          oCtx.stroke();
+          oCtx.restore();
+        }
+      });
+
+      osuHitFeedbacks.forEach(fb => {
+        oCtx.save();
+        oCtx.globalAlpha = Math.max(0, fb.alpha);
+        oCtx.fillStyle = fb.color;
+        oCtx.shadowColor = fb.color;
+        oCtx.shadowBlur = 8;
+        oCtx.font = "bold 20px 'Comfortaa', sans-serif";
+        oCtx.textAlign = 'center';
+        oCtx.fillText(fb.text, fb.x, fb.y);
+        oCtx.restore();
+      });
+    }
+
+    function finishOsuGame(isVictory) {
+      isOsuRunning = false;
+      clearInterval(osuAudioTimer);
+      cancelAnimationFrame(osuAnimFrame);
+
+      const d = OSU_DIFFICULTIES[selectedDiff];
+      let earned = 0;
+      if (isVictory) {
+        sound.win();
+        confetti({ particleCount: 50, spread: 75 });
+        earned = Math.min(40, Math.max(12, Math.round((osuScore / 350) * d.multiplier)));
+        pet.coins += earned;
+        pet.energy = Math.max(5, pet.energy - 14);
+        addXP(earned);
+        logAuditEvent(`Osu! Cat: ${OSU_GENRES[selectedGenre].name} (+${earned} 🪙)`, '🎧');
+        checkRareWishDrop(ACTIVE_WISH_CHANCES.rhythm || 0.35, "Ритм-игра Osu! Cat");
+      } else {
+        sound.pop();
+        earned = 4;
+        pet.coins += earned;
+        logAuditEvent(`Osu! Cat: Прервано (HP 0%)`, '💔');
+      }
+
+      updatePetUI();
+
+      rhythmStartOverlay.classList.remove('hidden');
+      rhythmStartOverlay.innerHTML = `
+        <div class="my-auto flex flex-col items-center gap-2">
+          <span class="text-5xl animate-bounce">${isVictory ? '🏆' : '😿'}</span>
+          <h4 class="cute-font text-purple-300 font-black text-lg">${isVictory ? 'ТРЕК ПРОЙДЕН!' : 'ЛАПКИ УСТАЛИ!'}</h4>
+          <div class="bg-[#18192a] border border-[#2e304f] rounded-2xl p-3 w-64 text-xs flex flex-col gap-1 my-1">
+            <div class="flex justify-between"><span>Счет:</span><b class="text-amber-300">${osuScore.toLocaleString()}</b></div>
+            <div class="flex justify-between"><span>Макс. комбо:</span><b class="text-pink-400">${osuMaxCombo}x</b></div>
+            <div class="flex justify-between pt-1 border-t border-[#2e304f]"><span>Награда:</span><b class="text-amber-300 text-sm">+${earned} 🪙</b></div>
+          </div>
+          <button class="cute-font bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black py-2.5 px-7 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-2" onclick="location.reload()">
+            В МЕНЮ ТРЕКОВ 🎙️
+          </button>
+        </div>
+      `;
+    }
 
     // =========================================================
     // ДЗЕН-КЛИКЕР
@@ -2086,7 +2781,7 @@
       ctx.fillText("💖", cx, cy + 2);
     }
 
-    btnSpinWheel = document.getElementById('btnSpinWheel');
+    const btnSpinWheel = document.getElementById('btnSpinWheel');
     btnSpinWheel.addEventListener('click', () => {
       if (isSpinning || wheelItems.length < 2) return;
       isSpinning = true;
@@ -2142,7 +2837,8 @@
       if (wheelItems.length <= 2) { alert("Оставь минимум 2 варианта!"); return; }
       wheelItems.splice(idx, 1);
       localStorage.setItem('katya_master_wheel_items', JSON.stringify(wheelItems));
-      renderWheelSettingsList(); drawWheel();
+      renderWheelSettingsList();
+      drawWheel();
     };
 
     document.getElementById('btnAddWheelItem').addEventListener('click', () => {
@@ -2151,7 +2847,8 @@
         wheelItems.push(val);
         localStorage.setItem('katya_master_wheel_items', JSON.stringify(wheelItems));
         document.getElementById('inputNewItem').value = '';
-        renderWheelSettingsList(); drawWheel();
+        renderWheelSettingsList();
+        drawWheel();
       }
     });
 
