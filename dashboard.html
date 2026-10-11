@@ -82,6 +82,9 @@
         <button id="btnRefresh" class="px-3.5 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] hover:border-pink-500 text-xs font-bold text-gray-200 transition active:scale-95 flex items-center gap-1.5">
           <span>🔄</span> Обновить
         </button>
+        <button id="btnResetCloudTelemetry" class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/60 text-xs font-bold text-rose-300 transition active:scale-95">
+          🗑️ Очистить телеметрию
+        </button>
         <button id="btnLogout" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition active:scale-95">
           Выйти ✕
         </button>
@@ -226,36 +229,81 @@
       }
     }
 
-    function verifyPin() {
-      const val = pinInput.value.trim();
-      if (val === DASHBOARD_PIN) {
-        sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
-        pinError.style.opacity = '0';
-        authOverlay.classList.add('hidden');
-        dashboardContent.classList.remove('hidden');
-        renderDashboard();
-      } else {
-        pinError.style.opacity = '1';
-        authCard.classList.remove('animate-shake');
-        void authCard.offsetWidth;
-        authCard.classList.add('animate-shake');
-        pinInput.value = '';
-        pinInput.focus();
-      }
+  document.getElementById('btnResetCloudTelemetry').addEventListener('click', async () => {
+    const profileName = selectedDashboardUser === 'katya' ? 'Кати' : 'Алексея';
+    if (!confirm(`Точно очистить всю телеметрию и логи для профиля ${profileName}? Котик и уровень сохранятся, но счетчики и логи обнулятся.`)) {
+      return;
     }
 
-    btnSubmitPin.addEventListener('click', verifyPin);
-    pinInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') verifyPin();
-    });
+    try {
+      // 1. Получаем текущий JSON из облака
+      const getRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { "X-Master-Key": JSONBIN_API_KEY }
+      });
+      const cloudData = await getRes.json();
+      const rootRecord = cloudData.record || {};
 
-    btnLogout.addEventListener('click', () => {
-      sessionStorage.removeItem(SESSION_AUTH_KEY);
-      pinInput.value = '';
-      checkAuth();
-    });
+      // 2. Сбрасываем только логи и счетчики, оставляя котика
+      if (rootRecord[selectedDashboardUser]) {
+        rootRecord[selectedDashboardUser].analytics = {
+          sessionsCount: 0,
+          totalSecondsPlayed: 0,
+          spentCoins: 0,
+          casesOpened: 0
+        };
+        rootRecord[selectedDashboardUser].wishes = [];
+        rootRecord[selectedDashboardUser].caseHistory = [];
+        rootRecord[selectedDashboardUser].audit = [];
+        rootRecord[selectedDashboardUser].lastActive = "Очищено";
+      }
 
-    let selectedDashboardUser = "katya"; // По умолчанию Катя!
+      // 3. Отправляем чистый слепок обратно в JSONBin
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_API_KEY
+        },
+        body: JSON.stringify(rootRecord)
+      });
+
+      alert("Телеметрия успешно очищена!");
+      renderDashboard();
+    } catch (err) {
+      alert("Ошибка при очистке: " + err);
+    }
+  });
+
+      function verifyPin() {
+        const val = pinInput.value.trim();
+        if (val === DASHBOARD_PIN) {
+          sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
+          pinError.style.opacity = '0';
+          authOverlay.classList.add('hidden');
+          dashboardContent.classList.remove('hidden');
+          renderDashboard();
+        } else {
+          pinError.style.opacity = '1';
+          authCard.classList.remove('animate-shake');
+          void authCard.offsetWidth;
+          authCard.classList.add('animate-shake');
+          pinInput.value = '';
+          pinInput.focus();
+        }
+      }
+
+      btnSubmitPin.addEventListener('click', verifyPin);
+      pinInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') verifyPin();
+      });
+
+      btnLogout.addEventListener('click', () => {
+        sessionStorage.removeItem(SESSION_AUTH_KEY);
+        pinInput.value = '';
+        checkAuth();
+      });
+
+      let selectedDashboardUser = "katya"; // По умолчанию Катя!
 
     async function renderDashboard() {
       const refreshBtn = document.getElementById('btnRefresh');
