@@ -111,7 +111,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2 self-end lg:self-auto no-print">
-        <!-- СЕЛЕКТОР ПРОФИЛЕЙ (КАТЯ / ДРУГИЕ ИГРОКИ) -->
+        <!-- СЕЛЕКТОР ПРОФИЛЕЙ -->
         <div class="flex items-center gap-1.5 bg-[#0b0c16] border border-[#2a2d4a] px-3 py-1.5 rounded-xl">
           <span class="text-xs">👤</span>
           <select id="targetPlayerSelect" class="bg-transparent text-xs text-pink-300 font-bold outline-none cursor-pointer">
@@ -137,7 +137,7 @@
       </div>
     </header>
 
-    <!-- ДЕТЕКТОР РИСКА ОТТОКА И ПРЕДУПРЕЖДЕНИЯ (CHURN ANALYZER) -->
+    <!-- ДЕТЕКТОР РИСКА ОТТОКА И ПРЕДУПРЕЖДЕНИЯ -->
     <section id="churnWarningCard" class="bg-[#18182d] border-2 border-rose-500/50 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <span class="text-4xl" id="churnRiskEmoji">🚨</span>
@@ -181,7 +181,7 @@
       </div>
     </div>
 
-    <!-- РЕДАКТОР ПАРАМЕТРОВ КОТИКА (LIVE CONTROL) -->
+    <!-- РЕДАКТОР ПАРАМЕТРОВ КОТИКА -->
     <section class="bg-[#111222] border-2 border-pink-500/30 rounded-3xl p-5 shadow-xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
         <div>
@@ -231,7 +231,7 @@
       </div>
     </section>
 
-    <!-- ПОЛНЫЙ РУЧНОЙ РЕДАКТОР ЭКОНОМИКИ, ЦЕН И ЗАРАБОТКОВ -->
+    <!-- ПОЛНЫЙ РУЧНОЙ РЕДАКТОР ЭКОНОМИКИ -->
     <section class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
       <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
         <div>
@@ -522,6 +522,48 @@
     document.getElementById('tabEcoCases').addEventListener('click', () => switchEcoTab(document.getElementById('tabEcoCases'), document.getElementById('ecoCasesContainer')));
 
     // ==========================================
+    // СЛУШАТЕЛИ МОДАЛКИ СОВЕТНИКА ИИ
+    // ==========================================
+    document.getElementById('btnOpenAiAdvisorModal')?.addEventListener('click', () => {
+      document.getElementById('modalAdvisor')?.classList.remove('hidden');
+    });
+
+    document.getElementById('btnTriggerAdvisorAction')?.addEventListener('click', () => {
+      document.getElementById('modalAdvisor')?.classList.remove('hidden');
+    });
+
+    document.getElementById('btnApplyAdvisorPackage')?.addEventListener('click', async () => {
+      if (!currentCloudData.economyConfig) currentCloudData.economyConfig = DEFAULT_ECONOMY;
+      
+      generatedAdvisorEdits.forEach((item, idx) => {
+        const inputEl = document.getElementById(`advInput_${idx}`);
+        if (!inputEl) return;
+        const val = parseInt(inputEl.value, 10);
+        if (isNaN(val)) return;
+
+        if (item.key === 'blackCase') currentCloudData.economyConfig.caseCostBlack = val;
+        if (item.key === 'runner') currentCloudData.economyConfig.maxRunner = val;
+        if (item.key === 'dailyBonus') currentCloudData.economyConfig.dailyBonus = val;
+        if (item.key === 'tetris') currentCloudData.economyConfig.maxTetris = val;
+      });
+
+      const sel = document.getElementById('targetPlayerSelect')?.value || 'katya';
+      if (!currentCloudData[sel]) currentCloudData[sel] = {};
+      if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+      
+      currentCloudData[sel].audit.push({ 
+        text: `[AI ADVISOR: Алексей] Применил пакет экономических правок`, 
+        icon: '🧠', 
+        time: new Date().toLocaleTimeString("ru-RU") 
+      });
+
+      await saveCloud(); 
+      alert("✅ Пакет изменений успешно применен в игру!"); 
+      document.getElementById('modalAdvisor')?.classList.add('hidden'); 
+      renderDashboard();
+    });
+
+    // ==========================================
     // РЕНДЕР ДАШБОРДА
     // ==========================================
     async function renderDashboard() {
@@ -532,7 +574,6 @@
         const cloud = await response.json();
         currentCloudData = cloud.record || {};
         
-        // Автоматическое заполнение списка пользователей
         const sel = document.getElementById('targetPlayerSelect');
         const currentUser = sel.value;
         sel.innerHTML = '';
@@ -577,7 +618,6 @@
         document.getElementById('editPetEnergy').value = pet.energy || 0;
         document.getElementById('editPetClean').value = pet.clean || 0;
 
-        // Редакторы экономики и шансов
         renderFullEconomyEditor();
         renderCaseSettings(currentCloudData.caseSettings || DEFAULT_CASE_SETTINGS);
         calculateChurnAndGenerateAdvisor(pet, analytics, audit);
@@ -684,9 +724,6 @@
       } catch (err) { console.error(err); }
     }
 
-    // ==========================================
-    // ЛОГИКА ИИ И АНАЛИТИКИ ОТТОКА
-    // ==========================================
     let generatedAdvisorEdits = [];
     function calculateChurnAndGenerateAdvisor(pet, analytics, audit) {
       const coins = pet.coins || 0, spent = analytics.spentCoins || 0;
@@ -718,7 +755,7 @@
         if (t.includes('Subway') || t.includes('Раннер')) gameCounts.runner++;
         if (t.includes('Тетрис')) gameCounts.tetris++;
         if (t.includes('курьер') || t.includes('Курьер')) gameCounts.catcher++;
-        if (t.includes('стрим') || t.includes('Стрим')) gameCounts.rhythm++;
+        if (t.includes('стрим') || t.includes('Стрим') || t.includes('Osu')) gameCounts.rhythm++;
         if (t.includes('Дзен')) gameCounts.zen++;
         if (a.time) {
           const h = parseInt(a.time.split(':')[0], 10);
@@ -738,7 +775,7 @@
       [{ name: "Subway Cat", icon: "🏃", count: gameCounts.runner, color: "bg-pink-500" },
        { name: "Кэт-Тетрис", icon: "🧱", count: gameCounts.tetris, color: "bg-purple-500" },
        { name: "Курьер", icon: "🛵", count: gameCounts.catcher, color: "bg-amber-500" },
-       { name: "Кошачий стример", icon: "🐾", count: gameCounts.rhythm, color: "bg-emerald-500" },
+       { name: "Osu! Cat Streamer", icon: "🐾", count: gameCounts.rhythm, color: "bg-emerald-500" },
        { name: "Дзен (ASMR)", icon: "✨", count: gameCounts.zen, color: "bg-cyan-500" }
       ].sort((a, b) => b.count - a.count).forEach(g => {
         const percent = totalGames > 0 ? Math.round((g.count / totalGames) * 100) : 0;
@@ -774,25 +811,6 @@
       }
     }
 
-    document.getElementById('btnApplyAdvisorPackage').addEventListener('click', async () => {
-      if (!currentCloudData.economyConfig) currentCloudData.economyConfig = DEFAULT_ECONOMY;
-      generatedAdvisorEdits.forEach((item, idx) => {
-        const val = parseInt(document.getElementById(`advInput_${idx}`).value, 10);
-        if (item.key === 'blackCase' && val) currentCloudData.economyConfig.caseCostBlack = val;
-        if (item.key === 'runner' && val) currentCloudData.economyConfig.maxRunner = val;
-      });
-      const sel = document.getElementById('targetPlayerSelect').value;
-      if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
-      currentCloudData[sel].audit.push({ text: `[AI ADVISOR] Применил пакет правок`, icon: '🧠', time: new Date().toLocaleTimeString("ru-RU") });
-      await saveCloud(); 
-      alert("Пакет изменений успешно применен в глобальные настройки!"); 
-      document.getElementById('modalAdvisor').classList.add('hidden'); 
-      renderDashboard();
-    });
-
-    // ==========================================
-    // РЕДАКТОРЫ ЦЕН И ШАНСОВ
-    // ==========================================
     function renderFullEconomyEditor() {
       const food = currentCloudData.customFood || { sushi: 18, pizza: 16, kfc: 16, bento: 15, earl_grey: 8, puer: 10, cheese: 12, chips: 9 };
       ecoFoodContainer.innerHTML = '';
