@@ -1,0 +1,641 @@
+/* =========================================================================
+ * LEX LABS ENTERPRISE: MISSION CONTROL DASHBOARD ENGINE
+ * Файл: dashboard.js
+ * ========================================================================= */
+
+const DASHBOARD_PIN = "1703";
+const SESSION_AUTH_KEY = "lex_dashboard_auth_token";
+const SESSION_OPERATOR_KEY = "lex_dashboard_operator";
+
+const JSONBIN_BIN_ID = "6acb3d30ac6210605a272eb6";
+const JSONBIN_API_KEY = "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
+
+let currentCloudData = {};
+let countdownSec = 60;
+let currentMainTab = "overview";
+let currentOddsTab = "case_std";
+let currentEcoShopSlot = "body";
+
+// Дефолтные ставки и цены
+const DEFAULT_ECONOMY = {
+  caseCostStandard: 80,
+  caseCostPremium: 160,
+  caseCostBlack: 320,
+  caseCostHalloween: 130,
+  betCrash: 25,
+  betDice: 15,
+  betSlots: 20,
+  scratchTrio: 30,
+  scratchFish: 75,
+  scratchVip: 150,
+  dailyBonus: 15,
+  maxRunner: 25,
+  maxTetris: 25,
+  maxFishing: 40,
+  maxMemory: 30,
+  catcher: 16
+};
+
+// 1. АВТОРИЗАЦИЯ
+const authOverlay = document.getElementById("authOverlay");
+const authCard = document.getElementById("authCard");
+const pinInput = document.getElementById("pinInput");
+const pinError = document.getElementById("pinError");
+const employeeSelect = document.getElementById("employeeSelect");
+const dashboardContent = document.getElementById("dashboardContent");
+const currentOperatorLabel = document.getElementById("currentOperatorLabel");
+
+function checkAuth() {
+  if (sessionStorage.getItem(SESSION_AUTH_KEY) === "authorized") {
+    authOverlay?.classList.add("hidden");
+    dashboardContent?.classList.remove("hidden");
+    if (currentOperatorLabel) currentOperatorLabel.innerText = sessionStorage.getItem(SESSION_OPERATOR_KEY) || "Алексей";
+    renderDashboard();
+  } else {
+    authOverlay?.classList.remove("hidden");
+    dashboardContent?.classList.add("hidden");
+    setTimeout(() => pinInput?.focus(), 150);
+  }
+}
+
+document.getElementById("btnSubmitPin")?.addEventListener("click", () => {
+  if (pinInput?.value.trim() === DASHBOARD_PIN) {
+    sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
+    const opName = employeeSelect.options[employeeSelect.selectedIndex].text.split(" ")[0];
+    sessionStorage.setItem(SESSION_OPERATOR_KEY, opName);
+    if (pinError) pinError.style.opacity = "0";
+    checkAuth();
+  } else {
+    if (pinError) pinError.style.opacity = "1";
+    authCard?.classList.add("animate-shake");
+    setTimeout(() => authCard?.classList.remove("animate-shake"), 400);
+  }
+});
+
+pinInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("btnSubmitPin")?.click();
+});
+
+document.getElementById("btnLogout")?.addEventListener("click", () => {
+  sessionStorage.removeItem(SESSION_AUTH_KEY);
+  if (pinInput) pinInput.value = "";
+  checkAuth();
+});
+
+document.getElementById("btnPrintReport")?.addEventListener("click", () => window.print());
+document.getElementById("targetPlayerSelect")?.addEventListener("change", () => renderDashboard());
+
+setInterval(() => {
+  countdownSec--;
+  const cd = document.getElementById("autoRefreshCountdown");
+  if (cd) cd.innerText = `${countdownSec}с`;
+  if (countdownSec <= 0) {
+    countdownSec = 60;
+    renderDashboard();
+  }
+}, 1000);
+
+document.getElementById("btnRefresh")?.addEventListener("click", () => {
+  countdownSec = 60;
+  renderDashboard();
+});
+
+// 2. ПЕРЕКЛЮЧЕНИЕ ГЛАВНЫХ ВКЛАДОК ДАШБОРДА
+window.switchMainTab = function (tabId) {
+  currentMainTab = tabId;
+  document.querySelectorAll(".dashboard-pane").forEach((pane) => {
+    pane.classList.add("hidden");
+  });
+  document.getElementById(`pane_${tabId}`)?.classList.remove("hidden");
+
+  document.querySelectorAll(".main-tab-btn").forEach((btn) => {
+    btn.className = "main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition";
+  });
+
+  const activeBtn = document.getElementById(`mainTab_${tabId}`);
+  if (activeBtn) {
+    activeBtn.className = "main-tab-btn flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black whitespace-nowrap shadow transition";
+  }
+};
+
+// 3. ПОДВКЛАДКИ ЭКОНОМИКИ
+window.switchEcoSubTab = function (subId) {
+  ["food", "shop", "cases", "rewards"].forEach((k) => {
+    document.getElementById(`ecoContainer_${k}`)?.classList.add("hidden");
+    document.getElementById(`ecoContainer_${k}`)?.classList.remove("grid", "flex");
+    const b = document.getElementById(`ecoSub_${k}`);
+    if (b) b.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap";
+  });
+
+  const targetBox = document.getElementById(`ecoContainer_${subId}`);
+  if (targetBox) {
+    targetBox.classList.remove("hidden");
+    targetBox.classList.add(subId === "shop" ? "flex" : "grid");
+  }
+
+  const actBtn = document.getElementById(`ecoSub_${subId}`);
+  if (actBtn) actBtn.className = "px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap";
+};
+
+// 4. СБОР И РЕНДЕР ДАННЫХ
+async function renderDashboard() {
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    });
+    const cloud = await res.json();
+    currentCloudData = cloud.record || {};
+
+    const sel = document.getElementById("targetPlayerSelect");
+    const currentUser = sel ? sel.value : "katya";
+    if (sel) {
+      sel.innerHTML = "";
+      const skip = ["economyConfig", "customFood", "customShop", "customRewards", "customCases", "wishChances", "caseSettings", "allChances"];
+      Object.keys(currentCloudData).forEach((k) => {
+        if (!skip.includes(k)) {
+          const opt = document.createElement("option");
+          opt.value = k;
+          opt.innerText = k === "katya" ? "Катя (Таганрог)" : `Игрок: ${k}`;
+          if (k === currentUser) opt.selected = true;
+          sel.appendChild(opt);
+        }
+      });
+      if (!sel.value && currentCloudData.katya) sel.value = "katya";
+    }
+
+    const activeUser = sel ? sel.value : "katya";
+    const record = currentCloudData[activeUser] || {};
+    const pet = record.pet || {};
+    const analytics = record.analytics || {};
+    const wishes = record.wishes || [];
+    const caseDrops = record.caseHistory || [];
+    const rouletteHistory = record.rouletteHistory || [];
+    const audit = record.audit || [];
+
+    // KPI & Заголовок
+    document.getElementById("dashLastSyncTime").innerText = record.lastActive || "Еще нет данных";
+    document.getElementById("kpiTotalTime").innerText = `${Math.round((analytics.totalSecondsPlayed || 0) / 60)} м`;
+    document.getElementById("kpiSessions").innerText = analytics.sessionsCount || 0;
+    document.getElementById("kpiSpentCoins").innerText = `${analytics.spentCoins || 0} 🪙`;
+    document.getElementById("kpiCasesOpened").innerText = analytics.casesOpened || 0;
+
+    // Питомец
+    document.getElementById("editPetName").value = pet.name || "";
+    document.getElementById("editPetCoins").value = pet.coins || 0;
+    document.getElementById("editPetLevel").value = pet.level || 1;
+    document.getElementById("editPetXp").value = pet.xp || 0;
+    document.getElementById("editPetHunger").value = pet.hunger || 0;
+    document.getElementById("editPetHappy").value = pet.happy || 0;
+    document.getElementById("editPetEnergy").value = pet.energy || 0;
+    document.getElementById("editPetClean").value = pet.clean || 0;
+
+    // Рендер разделов
+    renderEconomyInputs();
+    switchOddsMode(currentOddsTab);
+    renderWishesGrid(wishes);
+    renderCaseDrops(caseDrops);
+    renderRouletteHistory(rouletteHistory);
+    renderAudit(audit);
+    calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes);
+  } catch (e) {
+    console.error("Dashboard error:", e);
+  }
+}
+
+// 5. РЕНДЕР ЭКОНОМИКИ
+function renderEconomyInputs() {
+  const food = currentCloudData.customFood || { sushi: 18, pizza: 16, kfc: 16, bento: 15, earl_grey: 8, puer: 10, cheese: 12, chips: 9 };
+  const foodBox = document.getElementById("ecoContainer_food");
+  if (foodBox) {
+    foodBox.innerHTML = "";
+    Object.keys(food).forEach((k) => {
+      foodBox.innerHTML += `<div><label class="text-gray-400 block mb-1 font-bold">${k}:</label><input type="number" id="ecoFood_${k}" value="${food[k]}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>`;
+    });
+  }
+
+  // Кейсы и Казино
+  const rew = Object.assign({}, DEFAULT_ECONOMY, currentCloudData.economyConfig || {});
+  const casesBox = document.getElementById("ecoContainer_cases");
+  if (casesBox) {
+    casesBox.innerHTML = `
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-blue-500/40"><label class="text-blue-300 font-bold block mb-1">📦 Стандартный Кейс:</label><input type="number" id="ecoCase_standard" value="${rew.caseCostStandard}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-purple-500/40"><label class="text-purple-300 font-bold block mb-1">💜 Премиум Кейс:</label><input type="number" id="ecoCase_premium" value="${rew.caseCostPremium}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-amber-500/50"><label class="text-amber-300 font-bold block mb-1">👑 ★ Black Box ★:</label><input type="number" id="ecoCase_black" value="${rew.caseCostBlack}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-orange-500/60"><label class="text-orange-300 font-bold block mb-1">🎃 Хеллоуин Склеп:</label><input type="number" id="ecoCase_halloween" value="${rew.caseCostHalloween}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-rose-500/40"><label class="text-rose-300 font-bold block mb-1">🚀 Ставка «Мур-Краш»:</label><input type="number" id="ecoBet_crash" value="${rew.betCrash}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-blue-500/40"><label class="text-blue-300 font-bold block mb-1">🎲 Ставка «Кости»:</label><input type="number" id="ecoBet_dice" value="${rew.betDice}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-purple-500/40"><label class="text-purple-300 font-bold block mb-1">🍒 Спин «Слоты 777»:</label><input type="number" id="ecoBet_slots" value="${rew.betSlots}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-pink-500/40"><label class="text-pink-300 font-bold block mb-1">🎟️ Билет «Мур-Трио»:</label><input type="number" id="ecoScratch_trio" value="${rew.scratchTrio}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-emerald-500/40"><label class="text-emerald-300 font-bold block mb-1">🐟 Билет «Золотая рыбка»:</label><input type="number" id="ecoScratch_fish" value="${rew.scratchFish}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+      <div class="bg-[#0b0c16] p-3 rounded-2xl border border-amber-400/40"><label class="text-amber-200 font-bold block mb-1">⭐ Билет «Таганрог VIP»:</label><input type="number" id="ecoScratch_vip" value="${rew.scratchVip}" class="w-full bg-[#181825] border border-[#313244] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+    `;
+  }
+
+  // Награды игр
+  const rewBox = document.getElementById("ecoContainer_rewards");
+  if (rewBox) {
+    rewBox.innerHTML = `
+      <div><label class="text-gray-400 block mb-1 font-bold">Subway Cat (макс):</label><input type="number" id="ecoRew_runner" value="${rew.maxRunner}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+      <div><label class="text-gray-400 block mb-1 font-bold">Тетрис (макс):</label><input type="number" id="ecoRew_tetris" value="${rew.maxTetris}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+      <div><label class="text-gray-400 block mb-1 font-bold">Рыбалка (макс):</label><input type="number" id="ecoRew_fishing" value="${rew.maxFishing}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-blue-300 font-bold outline-none"></div>
+      <div><label class="text-gray-400 block mb-1 font-bold">Мур-Память (макс):</label><input type="number" id="ecoRew_memory" value="${rew.maxMemory}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-purple-300 font-bold outline-none"></div>
+      <div><label class="text-gray-400 block mb-1 font-bold">Курьер (макс):</label><input type="number" id="ecoRew_catcher" value="${rew.catcher}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-gray-200 font-bold outline-none"></div>
+      <div><label class="text-gray-400 block mb-1 font-bold">Daily Бонус:</label><input type="number" id="ecoRew_dailyBonus" value="${rew.dailyBonus}" class="w-full bg-[#0b0c16] border border-[#2a2d4a] rounded-xl px-2.5 py-1.5 text-amber-300 font-bold outline-none"></div>
+    `;
+  }
+
+  filterShopInputs(currentEcoShopSlot);
+}
+
+window.filterShopInputs = function (slot) {
+  currentEcoShopSlot = slot;
+  const grid = document.getElementById("shopInputsGrid");
+  if (!grid || !window.GAME_ITEMS_DB?.[slot]) return;
+  grid.innerHTML = "";
+
+  const savedShop = currentCloudData.customShop || {};
+  window.GAME_ITEMS_DB[slot].forEach((it) => {
+    if (it.id === "none") return;
+    const price = savedShop[it.id] !== undefined ? savedShop[it.id] : it.cost;
+    grid.innerHTML += `
+      <div class="bg-[#0b0c16] p-2.5 rounded-xl border border-[#22243d] flex items-center justify-between gap-2">
+        <span class="text-xl">${it.icon}</span>
+        <div class="truncate flex-1">
+          <div class="font-bold text-gray-300 truncate">${it.name}</div>
+          <div class="text-[9px] text-gray-500">${it.source === "case" ? "📦 Из кейса" : "Магазин"}</div>
+        </div>
+        <input type="number" data-shop-id="${it.id}" value="${price}" class="shop-price-input w-16 bg-[#181825] border border-[#313244] rounded px-1.5 py-1 text-center font-bold text-pink-300 outline-none">
+      </div>
+    `;
+  });
+};
+
+// Сохранение всей экономики
+document.getElementById("btnSaveFullEconomy")?.addEventListener("click", async () => {
+  const foodKeys = ["sushi", "pizza", "kfc", "bento", "earl_grey", "puer", "cheese", "chips"];
+  const newFood = {};
+  foodKeys.forEach((k) => (newFood[k] = parseInt(document.getElementById(`ecoFood_${k}`)?.value, 10) || 10));
+
+  const newShop = Object.assign({}, currentCloudData.customShop || {});
+  document.querySelectorAll(".shop-price-input").forEach((inp) => {
+    newShop[inp.dataset.shopId] = parseInt(inp.value, 10) || 0;
+  });
+
+  currentCloudData.customFood = newFood;
+  currentCloudData.customShop = newShop;
+  currentCloudData.economyConfig = {
+    caseCostStandard: parseInt(document.getElementById("ecoCase_standard")?.value, 10) || 80,
+    caseCostPremium: parseInt(document.getElementById("ecoCase_premium")?.value, 10) || 160,
+    caseCostBlack: parseInt(document.getElementById("ecoCase_black")?.value, 10) || 320,
+    caseCostHalloween: parseInt(document.getElementById("ecoCase_halloween")?.value, 10) || 130,
+    betCrash: parseInt(document.getElementById("ecoBet_crash")?.value, 10) || 25,
+    betDice: parseInt(document.getElementById("ecoBet_dice")?.value, 10) || 15,
+    betSlots: parseInt(document.getElementById("ecoBet_slots")?.value, 10) || 20,
+    scratchTrio: parseInt(document.getElementById("ecoScratch_trio")?.value, 10) || 30,
+    scratchFish: parseInt(document.getElementById("ecoScratch_fish")?.value, 10) || 75,
+    scratchVip: parseInt(document.getElementById("ecoScratch_vip")?.value, 10) || 150,
+    maxRunner: parseInt(document.getElementById("ecoRew_runner")?.value, 10) || 25,
+    maxTetris: parseInt(document.getElementById("ecoRew_tetris")?.value, 10) || 25,
+    maxFishing: parseInt(document.getElementById("ecoRew_fishing")?.value, 10) || 40,
+    maxMemory: parseInt(document.getElementById("ecoRew_memory")?.value, 10) || 30,
+    catcher: parseInt(document.getElementById("ecoRew_catcher")?.value, 10) || 16,
+    dailyBonus: parseInt(document.getElementById("ecoRew_dailyBonus")?.value, 10) || 15
+  };
+
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!currentCloudData[sel]) currentCloudData[sel] = {};
+  if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+  currentCloudData[sel].audit.push({ text: `[ADMIN] Обновил все цены и ставки в экономике`, icon: "🪙", time: new Date().toLocaleTimeString("ru-RU") });
+
+  await saveCloud();
+  alert("Вся экономика успешно сохранена в облако!");
+  renderDashboard();
+});
+
+// 6. НАСТРОЙКА ШАНСОВ ДРОПА
+window.switchOddsMode = function (modeKey) {
+  currentOddsTab = modeKey;
+  document.querySelectorAll(".odds-tab-btn").forEach((b) => {
+    b.className = b.dataset.tab === modeKey
+      ? "odds-tab-btn px-3 py-1.5 rounded-xl bg-amber-500 text-black font-black whitespace-nowrap transition"
+      : "odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition";
+  });
+
+  const box = document.getElementById("oddsItemsContainer");
+  if (!box) return;
+  box.innerHTML = "";
+
+  // Получаем шансы из облака или дефолтные
+  let items = [];
+  if (currentCloudData.allChances?.[modeKey]) {
+    items = currentCloudData.allChances[modeKey];
+  } else if (modeKey === "case_hw") {
+    items = window.HALLOWEEN_CASE_CONFIG?.drops || [];
+  } else {
+    items = window.DEFAULT_ODDS_DATABASE?.[modeKey] || [];
+  }
+
+  items.forEach((it) => {
+    box.innerHTML += `
+      <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+          <span class="text-2xl">${it.icon}</span>
+          <div class="truncate">
+            <div class="font-bold text-gray-200 truncate">${it.name}</div>
+            <div class="mono-font text-[10px] text-gray-500">ID: ${it.id}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <input type="number" step="0.5" min="0" max="100" value="${it.chance}" data-odds-id="${it.id}" class="odds-chance-input w-20 bg-[#181825] border border-[#313244] rounded-lg px-2.5 py-1 text-center font-mono font-bold text-amber-300 outline-none">
+          <span class="text-gray-400 font-bold">%</span>
+        </div>
+      </div>
+    `;
+  });
+
+  calcOddsSum();
+  document.querySelectorAll(".odds-chance-input").forEach((inp) => inp.addEventListener("input", calcOddsSum));
+};
+
+function calcOddsSum() {
+  let sum = 0;
+  document.querySelectorAll(".odds-chance-input").forEach((i) => (sum += parseFloat(i.value) || 0));
+  const sumEl = document.getElementById("oddsSumVal");
+  if (sumEl) {
+    sumEl.innerText = `${sum.toFixed(1)}%`;
+    sumEl.style.color = Math.abs(sum - 100) < 0.2 ? "#34d399" : "#fbbf24";
+  }
+}
+
+document.getElementById("btnSaveAllChances")?.addEventListener("click", async () => {
+  if (!currentCloudData.allChances) currentCloudData.allChances = {};
+  const updated = [];
+  document.querySelectorAll(".odds-chance-input").forEach((inp) => {
+    updated.push({ id: inp.dataset.oddsId, chance: parseFloat(inp.value) || 0 });
+  });
+
+  currentCloudData.allChances[currentOddsTab] = updated;
+
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!currentCloudData[sel]) currentCloudData[sel] = {};
+  if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+  currentCloudData[sel].audit.push({ text: `[ADMIN] Обновил шансы для «${currentOddsTab}»`, icon: "🎲", time: new Date().toLocaleTimeString("ru-RU") });
+
+  await saveCloud();
+  alert("Шансы успешно сохранены!");
+  renderDashboard();
+});
+
+// 7. СОХРАНЕНИЕ ПИТОМЦА И ВЫДАЧА КУПОНОВ
+document.getElementById("btnSavePetEdits")?.addEventListener("click", async () => {
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!currentCloudData[sel]) currentCloudData[sel] = {};
+  if (!currentCloudData[sel].pet) currentCloudData[sel].pet = {};
+
+  const p = currentCloudData[sel].pet;
+  p.name = document.getElementById("editPetName").value.trim();
+  p.coins = parseInt(document.getElementById("editPetCoins").value, 10) || 0;
+  p.level = parseInt(document.getElementById("editPetLevel").value, 10) || 1;
+  p.xp = parseInt(document.getElementById("editPetXp").value, 10) || 0;
+  p.hunger = parseInt(document.getElementById("editPetHunger").value, 10) || 0;
+  p.happy = parseInt(document.getElementById("editPetHappy").value, 10) || 0;
+  p.energy = parseInt(document.getElementById("editPetEnergy").value, 10) || 0;
+  p.clean = parseInt(document.getElementById("editPetClean").value, 10) || 0;
+
+  if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+  currentCloudData[sel].audit.push({ text: `[ADMIN] Скорректировал параметры котика`, icon: "⚙️", time: new Date().toLocaleTimeString("ru-RU") });
+
+  await saveCloud();
+  alert("Параметры котика сохранены!");
+  renderDashboard();
+});
+
+// Ручная выдача купона
+document.getElementById("btnGrantCustomWish")?.addEventListener("click", async () => {
+  const wishTitle = prompt("Введи название или повод для желания:", "Особое желание от Алексея");
+  if (!wishTitle) return;
+
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!currentCloudData[sel]) currentCloudData[sel] = {};
+  if (!currentCloudData[sel].wishes) currentCloudData[sel].wishes = [];
+
+  const code = "#WISH-" + Math.floor(10000 + Math.random() * 90000);
+  const expDate = new Date();
+  expDate.setMonth(expDate.getMonth() + 3);
+
+  currentCloudData[sel].wishes.push({
+    code: code,
+    source: wishTitle,
+    date: new Date().toLocaleDateString("ru-RU"),
+    expiry: expDate.toLocaleDateString("ru-RU"),
+    status: "active"
+  });
+
+  if (!currentCloudData[sel].audit) currentCloudData[sel].audit = [];
+  currentCloudData[sel].audit.push({ text: `[ADMIN] Вручную подарил купон [${code}]: «${wishTitle}»`, icon: "💌", time: new Date().toLocaleTimeString("ru-RU") });
+
+  await saveCloud();
+  alert(`Купон [${code}] успешно выдан игроку!`);
+  renderDashboard();
+});
+
+// Рендер купонов
+function renderWishesGrid(wishes) {
+  const box = document.getElementById("wishesGrid");
+  const count = document.getElementById("badgeWishCount");
+  if (count) count.innerText = `${wishes.length} шт`;
+  if (!box) return;
+  box.innerHTML = "";
+
+  if (wishes.length === 0) {
+    box.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-6">Купоны еще не выбиты ✨</div>`;
+    return;
+  }
+
+  wishes.slice().reverse().forEach((w, idx) => {
+    const isUsed = w.status === "used";
+    box.innerHTML += `
+      <div class="bg-[#0a0b14] border ${isUsed ? "border-gray-700 opacity-60" : "border-amber-500/40"} rounded-2xl p-4 flex flex-col justify-between gap-2 shadow-lg">
+        <div class="flex justify-between items-start">
+          <span class="text-2xl">${isUsed ? "✅" : "💌"}</span>
+          <span class="mono-font text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-bold">${w.code}</span>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-gray-200">Купон на желание</div>
+          <div class="text-[11px] text-gray-400 mt-1">Откуда: <b class="text-pink-300">${w.source || "Игра"}</b></div>
+          <div class="text-[10px] text-emerald-400 mt-0.5">Срок: до ${w.expiry}</div>
+        </div>
+        <div class="text-[10px] text-gray-500 pt-2 border-t border-[#1f2138] flex justify-between items-center">
+          <span>Выбит: ${w.date}</span>
+          ${isUsed ? '<span class="text-emerald-400 font-bold">Использован ✓</span>' : `<button onclick="toggleWishStatus(${wishes.length - 1 - idx})" class="px-2.5 py-1 rounded-lg bg-pink-500/80 hover:bg-pink-500 text-white font-bold transition">Отметить исп.</button>`}
+        </div>
+      </div>
+    `;
+  });
+}
+
+window.toggleWishStatus = async function (idx) {
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (currentCloudData[sel]?.wishes?.[idx]) {
+    currentCloudData[sel].wishes[idx].status = "used";
+    await saveCloud();
+    renderDashboard();
+  }
+};
+
+// 8. ДРОПЫ, РУЛЕТКА И АУДИТ
+function renderCaseDrops(drops) {
+  const box = document.getElementById("caseDropsList");
+  const count = document.getElementById("badgeCaseCount");
+  if (count) count.innerText = `${drops.length} шт`;
+  if (!box) return;
+  box.innerHTML = "";
+
+  if (drops.length === 0) {
+    box.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Кейсы еще не открывались</div>`;
+    return;
+  }
+
+  drops.slice().reverse().forEach((d) => {
+    box.innerHTML += `
+      <div class="bg-[#0a0b14] border border-[#22243d] p-3 rounded-2xl flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2.5"><span class="text-2xl">${d.icon}</span><span class="font-bold text-gray-200">${d.name}</span></div>
+        <span class="mono-font text-[10px] text-gray-500">${d.time}</span>
+      </div>
+    `;
+  });
+}
+
+function renderRouletteHistory(history) {
+  const box = document.getElementById("rouletteHistoryList");
+  const count = document.getElementById("badgeRouletteCount");
+  if (count) count.innerText = `${history.length} шт`;
+  if (!box) return;
+  box.innerHTML = "";
+
+  if (history.length === 0) {
+    box.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Рулетка еще не запускалась</div>`;
+    return;
+  }
+
+  history.slice().reverse().forEach((h) => {
+    box.innerHTML += `
+      <div class="bg-[#0a0b14] border border-[#22243d] p-2.5 rounded-xl flex items-center justify-between text-xs">
+        <span class="font-bold text-gray-200">${h.item}</span>
+        <span class="mono-font text-[10px] text-gray-500">${h.time}</span>
+      </div>
+    `;
+  });
+}
+
+function renderAudit(audit) {
+  const box = document.getElementById("auditLogContainer");
+  if (!box) return;
+  box.innerHTML = "";
+
+  audit.slice().reverse().slice(0, 100).forEach((a) => {
+    box.innerHTML += `
+      <div class="bg-[#0a0b14]/70 px-3 py-1.5 rounded-lg border border-[#191b30] flex items-center justify-between text-gray-300">
+        <span class="flex items-center gap-2"><span>${a.icon || "📌"}</span><span>${a.text}</span></span>
+        <span class="text-[10px] text-gray-500">${a.time}</span>
+      </div>
+    `;
+  });
+}
+
+// 9. ИИ-СОВЕТНИК (RTP РАСЧЕТ БЕЗ ЗАЦИКЛИВАНИЯ)
+let generatedAdvisorEdits = [];
+
+function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
+  const coins = pet.coins || 0;
+  const eco = Object.assign({}, DEFAULT_ECONOMY, currentCloudData.economyConfig || {});
+  const chances = currentCloudData.allChances || {};
+
+  let risk = 10;
+  let reasons = [];
+  generatedAdvisorEdits = [];
+
+  // Слоты RTP
+  const slotBet = eco.betSlots || 20;
+  const slotsOdds = chances.slots || [];
+  const pStar = slotsOdds.find((x) => x.id === "slot_star")?.chance || 1;
+  const pCrown = slotsOdds.find((x) => x.id === "slot_crown")?.chance || 3;
+  const pCoins = slotsOdds.find((x) => x.id === "slot_coins")?.chance || 6;
+  const pSushi = slotsOdds.find((x) => x.id === "slot_sushi")?.chance || 10;
+
+  const evSlots = (pStar * 300 + pCrown * 150 + pCoins * 80 + pSushi * 50) / 100;
+  const rtpSlots = Math.round((evSlots / slotBet) * 100);
+
+  if (rtpSlots > 100) {
+    risk += 25;
+    reasons.push(`Эксплойт в Слотах 777 (RTP = ${rtpSlots}% > 100%). Казино в минусе.`);
+    const targetSlotBet = Math.ceil(evSlots / 0.88 / 5) * 5;
+    generatedAdvisorEdits.push({
+      type: "economy",
+      key: "betSlots",
+      title: `🎰 Сбалансировать ставку Слотов 777 (RTP: ${rtpSlots}%)`,
+      desc: `Поднимите ставку с ${slotBet} до ${targetSlotBet} 🪙 для возврата RTP к 88%.`,
+      oldVal: slotBet,
+      newVal: targetSlotBet,
+      unit: "🪙"
+    });
+  }
+
+  // Фильтр от повторов
+  generatedAdvisorEdits = generatedAdvisorEdits.filter((it) => Math.abs(Number(it.oldVal) - Number(it.newVal)) > 0.05);
+
+  if (generatedAdvisorEdits.length === 0) {
+    reasons = [];
+    risk = 10;
+  }
+
+  // Обновление плашки
+  const pBadge = document.getElementById("churnRiskPercentBadge");
+  if (pBadge) {
+    pBadge.innerText = `${risk}% (${risk > 50 ? "ВЫСОКИЙ РИСК" : risk > 25 ? "Умеренный" : "Оптимально"})`;
+    pBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-mono font-black ${risk > 50 ? "bg-rose-500/30 text-rose-300 border border-rose-500" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"}`;
+  }
+  const emEl = document.getElementById("churnRiskEmoji");
+  if (emEl) emEl.innerText = risk > 50 ? "🚨" : "✅";
+  const detEl = document.getElementById("churnRiskDetails");
+  if (detEl) detEl.innerHTML = reasons.length > 0 ? reasons.join("<br>") : `RTP сбалансирован: Слоты <b>${rtpSlots}%</b>. Баланс стабилен.`;
+
+  // Отрисовка рекомендаций на вкладке
+  const container = document.getElementById("advisorFormList");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (generatedAdvisorEdits.length === 0) {
+    container.innerHTML = `<div class="text-center text-gray-400 py-8 font-bold text-emerald-400">✨ Экономика казино идеально сбалансирована! Правки не требуются.</div>`;
+  } else {
+    generatedAdvisorEdits.forEach((it, idx) => {
+      container.innerHTML += `
+        <div class="bg-[#0b0c16] border border-[#2a2d4a] p-3 rounded-2xl flex items-center justify-between gap-3">
+          <div><div class="font-bold text-gray-200">${it.title}</div><div class="text-[10px] text-gray-400">${it.desc}</div></div>
+          <input type="number" id="advInput_${idx}" value="${it.newVal}" class="w-20 bg-[#181825] border border-indigo-500/50 rounded-xl px-2.5 py-1 text-center font-bold text-amber-300 outline-none">
+        </div>
+      `;
+    });
+  }
+}
+
+document.getElementById("btnApplyAdvisorPackage")?.addEventListener("click", async () => {
+  if (!currentCloudData.economyConfig) currentCloudData.economyConfig = Object.assign({}, DEFAULT_ECONOMY);
+  generatedAdvisorEdits.forEach((it, idx) => {
+    const inp = document.getElementById(`advInput_${idx}`);
+    if (inp) currentCloudData.economyConfig[it.key] = parseFloat(inp.value) || it.newVal;
+  });
+  await saveCloud();
+  alert("Пакет ИИ успешно применен в облако!");
+  renderDashboard();
+});
+
+async function saveCloud() {
+  await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_API_KEY },
+    body: JSON.stringify(currentCloudData)
+  });
+}
+
+checkAuth();
