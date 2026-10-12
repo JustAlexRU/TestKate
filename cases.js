@@ -3,17 +3,60 @@
  * Файл: cases.js
  * ========================================================================= */
 
+// 1. БАЗА ДАННЫХ СТАНДАРТНЫХ КЕЙСОВ КАЗИНО
+window.CASES_DATA = {
+  standard: {
+    id: "case_standard",
+    title: "Стандартный Лутбокс",
+    costKey: "caseCostStandard",
+    defaultCost: 80,
+    oddsCategory: "case_std",
+    items: [
+      { id: "std_coins_20", name: "20 🪙 в копилку", icon: "🪙", color: "#60a5fa", chance: 45, desc: "Частичный возврат монет", type: "coins", amount: 20 },
+      { id: "std_food", name: "Сытный кошачий обед", icon: "🍱", color: "#60a5fa", chance: 35, desc: "+50% к сытости котика", type: "food", hunger: 50 },
+      { id: "std_scarf", name: "Теплый синий шарф", icon: "🧣", color: "#c084fc", chance: 15, desc: "Одежда на шею", type: "item", slot: "body" },
+      { id: "std_gold", name: "Мешочек 60 🪙", icon: "💰", color: "#fbbf24", chance: 5, desc: "Золотой возврат", type: "coins", amount: 60 }
+    ]
+  },
+  premium: {
+    id: "case_premium",
+    title: "Премиум Кейс Таганрога",
+    costKey: "caseCostPremium",
+    defaultCost: 160,
+    oddsCategory: "case_prem",
+    items: [
+      { id: "prem_coffee", name: "Сладкий кофе в Таганрог", icon: "☕", color: "#ef4444", chance: 12, desc: "Доставка стаканчика кофе Кате", type: "service" },
+      { id: "prem_hoodie", name: "Розовое оверсайз-худи", icon: "👗", color: "#f472b6", chance: 25, desc: "Уютный наряд для котика", type: "item", slot: "body" },
+      { id: "prem_cinema", name: "Уютный Киновечер онлайн", icon: "🎬", color: "#f472b6", chance: 20, desc: "Выбор фильма и совместный просмотр", type: "service" },
+      { id: "prem_song", name: "Кавер/Трек от Алексея", icon: "🎵", color: "#c084fc", chance: 23, desc: "Персональное аудиосообщение", type: "service" },
+      { id: "prem_coins", name: "Мешок золота: 80 🪙", icon: "💰", color: "#c084fc", chance: 20, desc: "Возврат монет", type: "coins", amount: 80 }
+    ]
+  },
+  black: {
+    id: "case_black",
+    title: "★ CLASSIFIED BLACK BOX ★",
+    costKey: "caseCostBlack",
+    defaultCost: 320,
+    oddsCategory: "case_blk",
+    isClassified: true,
+    items: [
+      { id: "blk_super_box", name: "★ СЕКРЕТНЫЙ БОКС В ТАГАНРОГ ★", icon: "⭐", color: "#fbbf24", chance: 5, desc: "Золотой суперприз: посылка в ПВЗ!", isEpic: true, type: "service" },
+      { id: "blk_wish_coupon", name: "💌 СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ", icon: "💌", color: "#fbbf24", chance: 10, desc: "Любое желание Кати!", isEpic: true, type: "wish" },
+      { id: "blk_argument", name: "Иммунитет в споре (Правота)", icon: "🛡️", color: "#f472b6", chance: 30, desc: "Безоговорочная победа в споре", type: "service" },
+      { id: "blk_coffee_dessert", name: "Кофе + Бенто-торт в Таганрог", icon: "🍰", color: "#ef4444", chance: 25, desc: "Сладкая доставка", type: "service" },
+      { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", color: "#c084fc", chance: 30, desc: "Возврат половины стоимости кейса", type: "coins", amount: 150 }
+    ]
+  }
+};
+
 (function () {
-  // Внутреннее состояние движка кейсов
   let isSpinningStandard = false;
   let isSpinningHalloween = false;
   let activeStandardCaseKey = "standard";
 
   /* -------------------------------------------------------------------------
-   * 1. ДИНАМИЧЕСКИЙ РАСЧЕТ СТОИМОСТИ И ШАНСОВ (СВЯЗЬ С ДАШБОРДОМ)
+   * 2. ДИНАМИЧЕСКИЙ РАСЧЕТ СТОИМОСТИ И ШАНСОВ
    * ------------------------------------------------------------------------- */
-  
-  // Получение актуальной цены кейса с учетом правок из Дашборда
   function getCaseCost(caseKey) {
     const eco = window.currentCloudData?.economyConfig || window.ACTIVE_ECONOMY || {};
 
@@ -25,9 +68,7 @@
     return 100;
   }
 
-  // Получение пула призов и актуальных шансов из облака или локальной базы
   function getCaseDrops(caseKey) {
-    // Проверка правок шансов из Дашборда (allChances или caseSettings)
     const cloudAllChances = window.currentCloudData?.allChances;
     const cloudCaseSettings = window.currentCloudData?.caseSettings;
 
@@ -38,7 +79,6 @@
       return window.HALLOWEEN_CASE_CONFIG?.drops || [];
     }
 
-    // Для стандартных кейсов
     const mapKey = { standard: "case_std", premium: "case_prem", black: "case_blk" }[caseKey];
     if (cloudAllChances?.[mapKey] && Array.isArray(cloudAllChances[mapKey])) {
       return cloudAllChances[mapKey];
@@ -50,7 +90,6 @@
     return window.CASES_DATA?.[caseKey]?.items || [];
   }
 
-  // Взвешенный рандомайзер по процентам
   function pickWinningItem(items) {
     if (!items || items.length === 0) return null;
     let rand = Math.random() * 100;
@@ -67,16 +106,14 @@
   }
 
   /* -------------------------------------------------------------------------
-   * 2. ЛОГИКА СТАНДАРТНЫХ КЕЙСОВ (CS:GO РУЛЕТКА)
+   * 3. ЛОГИКА СТАНДАРТНЫХ КЕЙСОВ (CS:GO РУЛЕТКА)
    * ------------------------------------------------------------------------- */
-
-  // Запуск окна и генерация первичной ленты
   window.launchCaseRoulette = function (caseKey) {
     activeStandardCaseKey = caseKey;
     const cData = window.CASES_DATA?.[caseKey];
     if (!cData) return;
 
-    // Закрываем главное окно казино
+    // Закрываем хаб казино
     document.getElementById("modalCasinoHub")?.classList.add("hidden");
 
     const cost = getCaseCost(caseKey);
@@ -93,14 +130,12 @@
     const track = document.getElementById("caseRouletteTrack");
     if (!track) return;
 
-    // Мгновенный сброс ленты
     track.style.transition = "none";
     track.style.transform = "translateX(0px)";
     track.innerHTML = "";
 
     const items = getCaseDrops(caseKey);
 
-    // Заполнение ленты 55 случайными карточками
     for (let i = 0; i < 55; i++) {
       const item = items[Math.floor(Math.random() * items.length)] || { name: "Приз", icon: "🎁", color: "#60a5fa" };
       const card = document.createElement("div");
@@ -116,20 +151,17 @@
     document.getElementById("modalCsgoCase")?.classList.remove("hidden");
   };
 
-  // Клик по кнопке «ОТКРЫТЬ КЕЙС»
   document.getElementById("btnOpenCase")?.addEventListener("click", () => {
     if (isSpinningStandard) return;
 
     const cost = getCaseCost(activeStandardCaseKey);
     const cData = window.CASES_DATA?.[activeStandardCaseKey];
 
-    // Проверка баланса
-    if (window.pet.coins < cost) {
+    if ((window.pet?.coins || 0) < cost) {
       alert(`Нужно ${cost} 🪙 для открытия кейса! Поиграй в мини-игры 🎮`);
       return;
     }
 
-    // Списание средств
     window.pet.coins -= cost;
     if (window.analytics) {
       window.analytics.spentCoins = (window.analytics.spentCoins || 0) + cost;
@@ -147,16 +179,13 @@
     const track = document.getElementById("caseRouletteTrack");
     if (!track) return;
 
-    // Сброс дорожки и принудительный reflow браузера
     track.style.transition = "none";
     track.style.transform = "translateX(0px)";
     void track.offsetWidth;
 
-    // Расчет победителя
     const drops = getCaseDrops(activeStandardCaseKey);
     const winningItem = pickWinningItem(drops);
 
-    // Подстановка на финишную позицию (карточка #42)
     const cards = track.children;
     if (cards[42]) {
       cards[42].style.borderColor = winningItem.color || "#fbbf24";
@@ -166,11 +195,9 @@
       `;
     }
 
-    // Запуск прокрутки (5 секунд)
     track.style.transition = "transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)";
     track.style.transform = `translateX(-${42 * 88 - 150 + 44}px)`;
 
-    // Тиканье рулетки
     let tickInterval = setInterval(() => {
       if (window.sound && typeof window.sound.tick === "function") window.sound.tick();
     }, 140);
@@ -182,13 +209,11 @@
       }, 300);
     }, 3000);
 
-    // Финал открытия
     setTimeout(() => {
       clearInterval(tickInterval);
       isSpinningStandard = false;
       if (btnOpen) btnOpen.disabled = false;
 
-      // Отрисовка баннера
       const wonTitle = document.getElementById("caseWonTitle");
       const wonDesc = document.getElementById("caseWonDesc");
       if (wonTitle) {
@@ -198,7 +223,6 @@
       if (wonDesc) wonDesc.innerText = winningItem.desc || "Получено из кейса";
       document.getElementById("caseWonBanner")?.classList.remove("hidden");
 
-      // Звуки и эффекты
       if (winningItem.isEpic) {
         if (window.sound?.epicWin) window.sound.epicWin();
         document.getElementById("caseRouletteCard")?.classList.add("animate-epic-glow");
@@ -208,29 +232,24 @@
         if (typeof confetti === "function") confetti({ particleCount: 40, spread: 60 });
       }
 
-      // Выдача награды в инвентарь/гардероб
       applyItemReward(winningItem);
-
-      // Логирование и аналитика
       logCaseDrop(cData?.title || "Кейс", winningItem);
       if (typeof window.updatePetUI === "function") window.updatePetUI();
     }, 5200);
   });
 
-  // Быстрые слушатели кнопок вызова стандартных кейсов
+  // Слушатели кнопок вызова кейсов из меню казино
   document.getElementById("btnLaunchCaseStandard")?.addEventListener("click", () => window.launchCaseRoulette("standard"));
   document.getElementById("btnLaunchCasePremium")?.addEventListener("click",  () => window.launchCaseRoulette("premium"));
   document.getElementById("btnLaunchCaseBlack")?.addEventListener("click",    () => window.launchCaseRoulette("black"));
 
   /* -------------------------------------------------------------------------
-   * 3. ЛОГИКА СЕЗОННОГО ХЕЛЛОУИНСКОГО СКЛЕПА (БАНДЛЫ И СЕТЫ)
+   * 4. ЛОГИКА ХЕЛЛОУИНСКОГО СКЛЕПА
    * ------------------------------------------------------------------------- */
-  
   const hwModal = document.getElementById("modalHalloweenCase");
   const hwTrack = document.getElementById("hwRouletteTrack");
   const hwOpenBtn = document.getElementById("btnOpenHalloweenCase");
 
-  // Открытие окна ивента
   document.getElementById("btnLaunchHalloweenModal")?.addEventListener("click", () => {
     hwModal?.classList.remove("hidden");
     initHalloweenTrack();
@@ -258,12 +277,11 @@
     }
   }
 
-  // Клик по кнопке «ОТКРЫТЬ СКЛЕП»
   hwOpenBtn?.addEventListener("click", () => {
     if (isSpinningHalloween) return;
     const cost = getCaseCost("halloween");
 
-    if (window.pet.coins < cost) {
+    if ((window.pet?.coins || 0) < cost) {
       alert(`Нужно ${cost} 🪙 для открытия склепа!`);
       return;
     }
@@ -280,12 +298,10 @@
 
     document.getElementById("hwWonBanner")?.classList.add("hidden");
 
-    // Сброс и reflow ленты
     hwTrack.style.transition = "none";
     hwTrack.style.transform = "translateX(0px)";
     void hwTrack.offsetWidth;
 
-    // Выбор приза (одиночный предмет или готовый бандл)
     const drops = getCaseDrops("halloween");
     const winningDrop = pickWinningItem(drops);
 
@@ -323,9 +339,7 @@
       if (descEl) descEl.innerText = winningDrop.desc || "Хеллоуинский артефакт";
       document.getElementById("hwWonBanner")?.classList.remove("hidden");
 
-      // ВЫДАЧА НАГРАДЫ: БАНДЛ ЦЕЛИКОМ ИЛИ ОДИНОЧНЫЙ ЭЛЕМЕНТ
       if (winningDrop.isBundle && Array.isArray(winningDrop.itemsIncluded)) {
-        // ДЖЕКПОТ: Распаковка полного костюма
         if (window.sound?.epicWin) window.sound.epicWin();
         if (typeof confetti === "function") confetti({ particleCount: 180, spread: 110 });
 
@@ -333,9 +347,8 @@
           unlockCosmeticItem(itemId);
         });
 
-        alert(`🎃 ДЖЕКПОТ ИВЕНТА!\nВы выбили ${winningDrop.name}!\nВсе элементы костюма и локация добавлены в инвентарь и надеты!`);
+        alert(`🎃 ДЖЕКПОТ ИВЕНТА!\nВы выбили ${winningDrop.name}!\nВсе элементы костюма и локация добавлены в инвентарь!`);
       } else {
-        // Одиночный предмет
         if (window.sound?.win) window.sound.win();
         if (typeof confetti === "function") confetti({ particleCount: 50, spread: 60 });
         unlockCosmeticItem(winningDrop.id, winningDrop.slot);
@@ -347,15 +360,13 @@
   });
 
   /* -------------------------------------------------------------------------
-   * 4. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ВЫДАЧИ И РАСПАКОВКИ
+   * 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ВЫДАЧИ
    * ------------------------------------------------------------------------- */
-  
-  // Разблокировка и экипировка конкретного ID предмета
   function unlockCosmeticItem(itemId, slotHint = null) {
     if (!itemId) return;
 
-    // Проверка, является ли предмет комнатой
     if (itemId.includes("room_") || slotHint === "room") {
+      if (!window.ownedRooms) window.ownedRooms = ["neon"];
       if (!window.ownedRooms.includes(itemId)) {
         window.ownedRooms.push(itemId);
         localStorage.setItem("katya_master_rooms", JSON.stringify(window.ownedRooms));
@@ -364,10 +375,10 @@
       return;
     }
 
-    // Проверка, является ли предмет окрасом шерстки
     if (itemId.startsWith("color_")) {
       const cId = itemId.replace("color_", "");
       window.pet.color = cId;
+      if (!window.ownedItems) window.ownedItems = [];
       if (!window.ownedItems.includes(itemId)) {
         window.ownedItems.push(itemId);
         localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
@@ -375,13 +386,12 @@
       return;
     }
 
-    // Обычные элементы одежды (голова, глаза, тело, лапки)
+    if (!window.ownedItems) window.ownedItems = [];
     if (!window.ownedItems.includes(itemId)) {
       window.ownedItems.push(itemId);
       localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
     }
 
-    // Автоматическая экипировка по ключевым словам или переданному слоту
     if (slotHint === "head" || itemId.includes("hat") || itemId.includes("helm") || itemId.includes("ears") || itemId.includes("horns")) {
       window.activeEquipment.head = itemId;
     } else if (slotHint === "eyes" || itemId.includes("eyes") || itemId.includes("web") || itemId.includes("glasses")) {
@@ -395,30 +405,61 @@
     localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
   }
 
-  // Применение стандартных наград (монеты, еда, одежда)
   function applyItemReward(item) {
     if (!item) return;
 
-    // Если это возврат монет
-    if (item.id.includes("coins") || item.id.includes("gold")) {
+    // Возврат монет
+    if (item.type === "coins" || item.id.includes("coins") || item.id.includes("gold")) {
       const match = item.name.match(/\d+/);
-      const amount = match ? parseInt(match[0], 10) : 50;
+      const amount = match ? parseInt(match[0], 10) : (item.amount || 50);
       window.pet.coins += amount;
       return;
     }
 
-    // Если это кошачий сытный обед
-    if (item.id.includes("food")) {
+    // Сытный обед
+    if (item.type === "food" || item.id.includes("food")) {
       window.pet.hunger = Math.min(100, (window.pet.hunger || 0) + 50);
       window.pet.happy = Math.min(100, (window.pet.happy || 0) + 20);
       return;
     }
 
-    // Если это одежда/аксессуар
-    unlockCosmeticItem(item.id, item.type);
+    // Секретный купон на желание Кати
+    if (item.type === "wish" || item.id === "blk_wish_coupon") {
+      createSecretCoupon("Black Box");
+      return;
+    }
+
+    // Предмет гардероба
+    unlockCosmeticItem(item.id, item.slot || item.type);
   }
 
-  // Логирование открытия кейса в историю и аудит
+  function createSecretCoupon(sourceName) {
+    const code = "#WISH-" + Math.floor(10000 + Math.random() * 90000);
+    const expDate = new Date();
+    expDate.setMonth(expDate.getMonth() + 3);
+    const expStr = expDate.toLocaleDateString("ru-RU");
+
+    const newCoupon = {
+      code: code,
+      source: sourceName,
+      date: new Date().toLocaleDateString("ru-RU"),
+      expiry: expStr,
+      status: "active"
+    };
+
+    let vault = JSON.parse(localStorage.getItem("katya_master_wishes_vault")) || window.wishesVault || [];
+    vault.push(newCoupon);
+    window.wishesVault = vault;
+    localStorage.setItem("katya_master_wishes_vault", JSON.stringify(vault));
+
+    const modalWish = document.getElementById("modalSecretWish");
+    const numEl = document.getElementById("wishCouponNumber");
+    const expEl = document.getElementById("wishCouponExpiry");
+    if (numEl) numEl.innerText = code;
+    if (expEl) expEl.innerText = `Действителен до: ${expStr}`;
+    if (modalWish) modalWish.classList.remove("hidden");
+  }
+
   function logCaseDrop(caseTitle, item) {
     if (!item) return;
 
@@ -446,9 +487,6 @@
     }
   }
 
-  /* -------------------------------------------------------------------------
-   * 5. ЭКСПОРТ ДВИЖКА ДЛЯ ВНЕШНЕГО УПРАВЛЕНИЯ
-   * ------------------------------------------------------------------------- */
   window.CasesEngine = {
     getCaseCost,
     getCaseDrops,

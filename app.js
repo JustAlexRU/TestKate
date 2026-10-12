@@ -170,7 +170,9 @@ const defaultPetState = {
   clean: 90,
   isSleeping: false,
   activeRoom: "neon",
-  color: "pink"
+  color: "pink",
+  sleepStartedAt: 0,
+  lastWokeUpAt: 0
 };
 
 window.pet = safeHydrate("katya_master_pet_state", defaultPetState);
@@ -331,7 +333,6 @@ function applyCatColor(colorKey) {
 }
 window.applyCatColor = applyCatColor;
 
-// РЕНДЕР ДЕКОРАЦИЙ ЛОКАЦИИ (СВЯЗЬ С renderMap.js + ПОДДЕРЖКА НОЧНОГО РЕЖИМА)
 function applyRoomTheme(themeId) {
   const card = document.getElementById("petRoomCard");
   const sceneryLayer = document.getElementById("roomSceneryLayer");
@@ -339,17 +340,14 @@ function applyRoomTheme(themeId) {
 
   const validTheme = themeId || "neon";
 
-  // 1. Вставляем полноценную векторную сцену из renderMap.js
   if (sceneryLayer && window.ROOM_SCENERY_TEMPLATES) {
     sceneryLayer.innerHTML = window.ROOM_SCENERY_TEMPLATES[validTheme] || window.ROOM_SCENERY_TEMPLATES.neon;
   }
 
-  // 2. Ночной режим: затемнение и приглушение насыщенности комнаты во время сна
   if (sceneryLayer) {
     sceneryLayer.style.filter = window.pet.isSleeping ? "brightness(0.35) saturate(0.55)" : "brightness(1) saturate(1)";
   }
 
-  // 3. Рамка и свечение карточки под стиль выбранной комнаты
   const themeBorderColors = {
     neon: "border-[#818cf8]/40 shadow-[0_0_25px_rgba(99,102,241,0.25)]",
     sunny_balcony: "border-amber-400/50 shadow-[0_0_25px_rgba(251,191,36,0.25)]",
@@ -378,27 +376,23 @@ function applyRoomTheme(themeId) {
 }
 window.applyRoomTheme = applyRoomTheme;
 
-// РЕНДЕР ВСЕХ ПРЕДМЕТОВ НА КОТИКЕ (ЧЕРЕЗ КАРТУ renderMap.js)
 function updatePetLayers() {
   const headId = window.activeEquipment?.head || "none";
   const eyesId = window.activeEquipment?.eyes || "none";
   const bodyId = window.activeEquipment?.body || "none";
   const legsId = window.activeEquipment?.legs || "none";
 
-  // Скрываем обычные розовые ушки котика, если надет головной убор, закрывающий уши
   const isCoveringEars = [
     "hw_bat_ears", "hw_witch_hat", "hw_pumpkin_helm",
     "astronaut_helm", "beanie", "detective_hat"
   ].includes(headId);
   document.getElementById("defaultCatEars")?.classList.toggle("hidden", isCoveringEars);
 
-  // Крылья ангела рендерятся за спиной котика
   const backSlot = document.getElementById("svgSlotBack");
   if (backSlot) {
     backSlot.innerHTML = (bodyId === "wings_angel") ? (window.ITEM_SVG_TEMPLATES?.wings_angel || "") : "";
   }
 
-  // Отрисовываем слоты экипировки
   renderSvgSlot("svgSlotHead", headId, "head");
   renderSvgSlot("svgSlotEyes", eyesId, "eyes");
   renderSvgSlot("svgSlotBody", bodyId, "body");
@@ -414,13 +408,11 @@ function renderSvgSlot(slotElementId, itemId, category) {
     return;
   }
 
-  // 1. Проверяем векторную карту из renderMap.js (там прописаны все 100% предметов)
   if (window.ITEM_SVG_TEMPLATES && window.ITEM_SVG_TEMPLATES[itemId]) {
     slotEl.innerHTML = window.ITEM_SVG_TEMPLATES[itemId];
     return;
   }
 
-  // 2. Резервный векторный фоллбэк для будущих кастомных предметов
   let item = null;
   if (window.GAME_ITEMS_DB?.[category]) {
     item = window.GAME_ITEMS_DB[category].find((x) => x.id === itemId);
@@ -488,7 +480,6 @@ function updatePetUI() {
   const catSvg = document.getElementById("catSvg");
   const bubble = document.getElementById("catSpeechBubble");
 
-  // Управление сном и ночным освещением
   if (window.pet.isSleeping) {
     if (sleepOverlay) sleepOverlay.style.opacity = "1";
     if (zzzContainer) zzzContainer.classList.remove("hidden");
@@ -539,7 +530,10 @@ function applyOfflineDecay() {
 
     if (window.pet.isSleeping) {
       window.pet.energy = Math.min(100, Math.round(window.pet.energy + hours * 25));
-      if (window.pet.energy >= 100) window.pet.isSleeping = false;
+      if (window.pet.energy >= 100) {
+        window.pet.isSleeping = false;
+        window.pet.lastWokeUpAt = now;
+      }
     } else {
       window.pet.energy = Math.max(5, Math.round(window.pet.energy - hours * 8));
     }
@@ -646,16 +640,49 @@ document.getElementById("catTapZone")?.addEventListener("click", (e) => {
 
 // Уложить спать / разбудить
 document.getElementById("btnActionSleep")?.addEventListener("click", () => {
-  if (window.sound?.playTone) window.sound.playTone(320, "sine", 0.2);
-  triggerHaptic();
-  window.pet.isSleeping = !window.pet.isSleeping;
+  const now = Date.now();
+
   if (window.pet.isSleeping) {
-    window.pet.energy = Math.min(100, window.pet.energy + 15);
-    addXP(4);
-    logAuditEvent("Уложила котика спать", "🌙");
-  } else {
-    logAuditEvent("Разбудила котика", "☀️");
+    const sleepDurationSec = Math.floor((now - (window.pet.sleepStartedAt || now)) / 1000);
+    window.pet.isSleeping = false;
+    window.pet.lastWokeUpAt = now;
+
+    if (window.sound?.playTone) window.sound.playTone(320, "sine", 0.2);
+    triggerHaptic();
+
+    if (sleepDurationSec >= 60) {
+      const earnedXP = Math.min(15, Math.max(2, Math.floor(sleepDurationSec / 120)));
+      addXP(earnedXP);
+      spawnFloatingText(`+${earnedXP} XP ★`, 100, 70);
+      logAuditEvent(`Котик проснулся (отдыхал ${Math.floor(sleepDurationSec / 60)} мин, +${earnedXP} XP)`, "☀️");
+    } else {
+      logAuditEvent("Котика разбудили слишком быстро", "☀️");
+    }
+
+    updatePetUI();
+    return;
   }
+
+  if (window.pet.energy >= 85) {
+    if (window.sound?.pop) window.sound.pop();
+    alert(`«${window.pet.name} полон сил (${window.pet.energy}%) и совсем не хочет спать! ⚡ Поиграйте в мини-игры!»`);
+    return;
+  }
+
+  const awakeSec = Math.floor((now - (window.pet.lastWokeUpAt || 0)) / 1000);
+  if (awakeSec < 180 && window.pet.lastWokeUpAt > 0) {
+    if (window.sound?.pop) window.sound.pop();
+    const waitSec = 180 - awakeSec;
+    alert(`«${window.pet.name} только недавно проснулся! Котик сможет уснуть снова через ${waitSec} сек 🐾»`);
+    return;
+  }
+
+  window.pet.isSleeping = true;
+  window.pet.sleepStartedAt = now;
+
+  if (window.sound?.playTone) window.sound.playTone(280, "sine", 0.2);
+  triggerHaptic();
+  logAuditEvent("Уложила котика спать", "🌙");
   updatePetUI();
 });
 
@@ -1009,7 +1036,6 @@ function renderInventoryGrid() {
   ["head", "eyes", "body", "legs", "room"].forEach((slot) => {
     const list = window.GAME_ITEMS_DB?.[slot] || [];
     list.forEach((item) => {
-      // Исключаем системные заглушки
       if (!item || item.id === "none") return;
 
       const isBase = item.id === "neon";
@@ -1021,7 +1047,6 @@ function renderInventoryGrid() {
     });
   });
 
-  // Фильтрация по категориям
   let filtered = allOwned;
   if (currentInvTab !== "all") {
     filtered = (currentInvTab === "halloween")
@@ -1183,7 +1208,6 @@ document.getElementById("btnSpinWheel")?.addEventListener("click", () => {
   requestAnimationFrame(anim);
 });
 
-// Настройки рулетки (добавление/удаление блюд)
 document.getElementById("btnOpenWheelSettings")?.addEventListener("click", () => {
   renderWheelSettingsList();
   document.getElementById("modalWheelSettings")?.classList.remove("hidden");
@@ -1269,7 +1293,6 @@ document.getElementById("btnDailyBonus")?.addEventListener("click", () => {
   updatePetUI();
 });
 
-// Навигация нижних табов (Котик / Рулетка)
 document.getElementById("navTabPet")?.addEventListener("click", () => {
   document.getElementById("tabPet")?.classList.remove("hidden");
   document.getElementById("tabRoulette")?.classList.add("hidden");
@@ -1286,7 +1309,6 @@ document.getElementById("navTabRoulette")?.addEventListener("click", () => {
   drawWheel();
 });
 
-// Звуковой переключатель
 document.getElementById("soundToggleBtn")?.addEventListener("click", () => {
   window.sound.enabled = !window.sound.enabled;
   const btn = document.getElementById("soundToggleBtn");
@@ -1296,7 +1318,6 @@ document.getElementById("soundToggleBtn")?.addEventListener("click", () => {
   }
 });
 
-// Секретный вход в Дашборд (3 клика на уровень)
 let secretClicks = 0;
 document.getElementById("headerLevel")?.addEventListener("click", () => {
   secretClicks++;
@@ -1306,7 +1327,6 @@ document.getElementById("headerLevel")?.addEventListener("click", () => {
   setTimeout(() => (secretClicks = 0), 1500);
 });
 
-// Закрытие всех модальных окон
 document.querySelectorAll(".closeModalBtn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(`
@@ -1325,7 +1345,15 @@ document.getElementById("btnCloseWishModal")?.addEventListener("click", () => {
 // Периодическое уменьшение характеристик
 setInterval(() => {
   if (window.pet.isSleeping) {
-    window.pet.energy = Math.min(100, window.pet.energy + 2);
+    window.pet.energy = Math.min(100, window.pet.energy + 3);
+    
+    // Если котик полностью восстановил силы — просыпается сам
+    if (window.pet.energy >= 100) {
+      window.pet.isSleeping = false;
+      window.pet.lastWokeUpAt = Date.now();
+      addXP(6);
+      logAuditEvent("Котик полностью выспался и проснулся сам! ☀️", "⭐");
+    }
   } else {
     window.pet.hunger = Math.max(5, window.pet.hunger - 1);
     window.pet.happy = Math.max(5, window.pet.happy - 1);

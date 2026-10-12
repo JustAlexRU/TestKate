@@ -5,15 +5,12 @@
 
 (function () {
   /* -------------------------------------------------------------------------
-   * 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ДИНАМИЧЕСКИЕ НАСТРОЙКИ
+   * 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И НАСТРОЙКИ
    * ------------------------------------------------------------------------- */
-  
-  // Получение актуального значения ставки из облака/дашборда
   function getBet(key, fallback) {
     return window.currentCloudData?.economyConfig?.[key] || window.ACTIVE_ECONOMY?.[key] || fallback;
   }
 
-  // Получение пула шансов для конкретной азартной игры
   function getOdds(category, fallbackKey) {
     if (window.currentCloudData?.allChances?.[category] && Array.isArray(window.currentCloudData.allChances[category])) {
       return window.currentCloudData.allChances[category];
@@ -24,7 +21,6 @@
     return [];
   }
 
-  // Безопасное обновление баланса и интерфейса
   function syncBalance() {
     if (typeof window.updatePetUI === "function") {
       window.updatePetUI();
@@ -35,11 +31,10 @@
     }
   }
 
-  // Проверка и вызов выпадения купона желаний
   function triggerWishWin(sourceTitle) {
     const code = "#WISH-" + Math.floor(10000 + Math.random() * 90000);
     const expDate = new Date();
-    expDate.setMonth(expDate.getMonth() + 3); // Действует 3 месяца
+    expDate.setMonth(expDate.getMonth() + 3);
     const expStr = expDate.toLocaleDateString("ru-RU");
 
     const newCoupon = {
@@ -50,22 +45,18 @@
       status: "active"
     };
 
-    // 1. Добавляем в глобальное хранилище желаний
     let vault = JSON.parse(localStorage.getItem("katya_master_wishes_vault")) || window.wishesVault || [];
     vault.push(newCoupon);
     window.wishesVault = vault;
     localStorage.setItem("katya_master_wishes_vault", JSON.stringify(vault));
 
-    // 2. Логируем в аудит
     if (typeof window.logAuditEvent === "function") {
       window.logAuditEvent(`Выбила секретный купон на желание [${code}] в «${sourceTitle}»!`, "💌");
     }
 
-    // 3. Отправляем алерт и фейерверк
     if (window.sound?.epicWin) window.sound.epicWin();
     if (typeof confetti === "function") confetti({ particleCount: 150, spread: 100 });
 
-    // 4. Показываем красивую модалку купона
     const modalWish = document.getElementById("modalSecretWish");
     const numEl = document.getElementById("wishCouponNumber");
     const expEl = document.getElementById("wishCouponExpiry");
@@ -80,7 +71,7 @@
    * 2. НАВИГАЦИЯ ПО ВКЛАДКАМ КАЗИНО ХАБА
    * ------------------------------------------------------------------------- */
   const modalHub = document.getElementById("modalCasinoHub");
-  
+
   document.getElementById("btnCasinoHub")?.addEventListener("click", () => {
     syncBalance();
     modalHub?.classList.remove("hidden");
@@ -89,49 +80,34 @@
     }
   });
 
-  function resetCasinoTabs() {
+  const tabActiveCls = "flex-1 py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-black text-[10px] whitespace-nowrap shadow-md transition";
+  const tabInactiveCls = "flex-1 py-1.5 px-2 rounded-xl text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition";
+
+  function switchCasinoTab(activeTabId, activeSectionId) {
     ["tabCasinoCases", "tabCasinoScratch", "tabCasinoSlots", "tabCasinoCrash", "tabCasinoDice"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.className = "flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition";
+      if (el) el.className = (id === activeTabId) ? tabActiveCls : tabInactiveCls;
     });
+
     ["casinoSectionCases", "casinoSectionScratch", "casinoSectionSlots", "casinoSectionCrash", "casinoSectionDice"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) { el.classList.add("hidden"); el.classList.remove("flex"); }
+      if (el) {
+        if (id === activeSectionId) {
+          el.classList.remove("hidden");
+          el.classList.add("flex");
+        } else {
+          el.classList.add("hidden");
+          el.classList.remove("flex");
+        }
+      }
     });
   }
 
-  document.getElementById("tabCasinoCases")?.addEventListener("click", () => {
-    resetCasinoTabs();
-    document.getElementById("tabCasinoCases").className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
-    document.getElementById("casinoSectionCases")?.classList.remove("hidden");
-  });
-
-  document.getElementById("tabCasinoScratch")?.addEventListener("click", () => {
-    resetCasinoTabs();
-    document.getElementById("tabCasinoScratch").className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
-    document.getElementById("casinoSectionScratch")?.classList.remove("hidden");
-  });
-
-  document.getElementById("tabCasinoSlots")?.addEventListener("click", () => {
-    resetCasinoTabs();
-    document.getElementById("tabCasinoSlots").className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
-    const sec = document.getElementById("casinoSectionSlots");
-    if (sec) { sec.classList.remove("hidden"); sec.classList.add("flex"); }
-  });
-
-  document.getElementById("tabCasinoCrash")?.addEventListener("click", () => {
-    resetCasinoTabs();
-    document.getElementById("tabCasinoCrash").className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
-    const sec = document.getElementById("casinoSectionCrash");
-    if (sec) { sec.classList.remove("hidden"); sec.classList.add("flex"); }
-  });
-
-  document.getElementById("tabCasinoDice")?.addEventListener("click", () => {
-    resetCasinoTabs();
-    document.getElementById("tabCasinoDice").className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
-    const sec = document.getElementById("casinoSectionDice");
-    if (sec) { sec.classList.remove("hidden"); sec.classList.add("flex"); }
-  });
+  document.getElementById("tabCasinoCases")?.addEventListener("click", () => switchCasinoTab("tabCasinoCases", "casinoSectionCases"));
+  document.getElementById("tabCasinoScratch")?.addEventListener("click", () => switchCasinoTab("tabCasinoScratch", "casinoSectionScratch"));
+  document.getElementById("tabCasinoSlots")?.addEventListener("click", () => switchCasinoTab("tabCasinoSlots", "casinoSectionSlots"));
+  document.getElementById("tabCasinoCrash")?.addEventListener("click", () => switchCasinoTab("tabCasinoCrash", "casinoSectionCrash"));
+  document.getElementById("tabCasinoDice")?.addEventListener("click", () => switchCasinoTab("tabCasinoDice", "casinoSectionDice"));
 
   /* -------------------------------------------------------------------------
    * 3. СЛОТЫ «777 ЛАПКИ» (SLOTS 777)
@@ -143,12 +119,11 @@
     if (isSlotSpinning) return;
 
     const betCost = getBet("betSlots", 20);
-    if (window.pet.coins < betCost) {
+    if ((window.pet?.coins || 0) < betCost) {
       alert(`Нужно ${betCost} 🪙 для спина! Заработай в играх 🎮`);
       return;
     }
 
-    // Списание ставки
     window.pet.coins -= betCost;
     if (window.analytics) window.analytics.spentCoins = (window.analytics.spentCoins || 0) + betCost;
     syncBalance();
@@ -160,7 +135,6 @@
     const statusText = document.getElementById("slotStatusText");
     if (statusText) statusText.innerText = "Барабаны крутятся... 🎰";
 
-    // Считывание настроек шансов из дашборда
     const odds = getOdds("slots");
     const pWish  = odds.find(x => x.id === "slot_wish")?.chance  || 1;
     const pStar  = odds.find(x => x.id === "slot_star")?.chance  || 2;
@@ -182,9 +156,8 @@
         isSlotSpinning = false;
         if (spinBtn) spinBtn.disabled = false;
 
-        // Расчёт выпадения по математической модели
         const roll = Math.random() * 100;
-        let r1 = "🐱", r2 = "🍣", r3 = "⭐", wonAmount = 0;
+        let r1, r2, r3, wonAmount = 0;
         let cumulative = 0;
 
         if (roll < (cumulative += pWish)) {
@@ -202,6 +175,13 @@
         } else if (roll < (cumulative += pSushi)) {
           r1 = r2 = r3 = "🍣";
           wonAmount = 20;
+        } else {
+          // Реалистичный случайный набор несовпадающих символов
+          do {
+            r1 = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+            r2 = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+            r3 = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+          } while (r1 === r2 && r2 === r3);
         }
 
         document.getElementById("slotReel1").innerText = r1;
@@ -242,7 +222,7 @@
     if (isCrashRunning) return;
 
     const crashBet = getBet("betCrash", 25);
-    if (window.pet.coins < crashBet) {
+    if ((window.pet?.coins || 0) < crashBet) {
       alert(`Нужно ${crashBet} 🪙 для запуска ракеты!`);
       return;
     }
@@ -254,7 +234,6 @@
     isCrashRunning = true;
     crashMultiplier = 1.00;
 
-    // Считывание шансов краша из дашборда
     const odds = getOdds("crash");
     const crEarly = odds.find(x => x.id === "cr_early")?.chance || 15;
     const crMid   = odds.find(x => x.id === "cr_mid")?.chance   || 50;
@@ -262,22 +241,22 @@
 
     const roll = Math.random() * 100;
     if (roll < crEarly) {
-      crashCrashPoint = 1.05 + Math.random() * 0.20; // Ранний взрыв
+      crashCrashPoint = 1.05 + Math.random() * 0.20;
     } else if (roll < (crEarly + crMid)) {
-      crashCrashPoint = 1.30 + Math.random() * 1.50; // Средний взлет (до 2.8х)
+      crashCrashPoint = 1.30 + Math.random() * 1.50;
     } else if (roll < (crEarly + crMid + crHigh)) {
-      crashCrashPoint = 2.80 + Math.random() * 2.70; // Высокий взлет (до 5.5х)
+      crashCrashPoint = 2.80 + Math.random() * 2.70;
     } else {
-      crashCrashPoint = 6.00 + Math.random() * 6.00; // Мега-памп (до 12х)
+      crashCrashPoint = 6.00 + Math.random() * 6.00;
     }
 
     if (btnCrashStart) {
       btnCrashStart.disabled = true;
-      btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
+      btnCrashStart.className = "flex-1 py-3.5 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
     }
     if (btnCrashCashout) {
       btnCrashCashout.disabled = false;
-      btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-rose-500 text-white font-black text-xs active:scale-95 shadow-lg animate-pulse";
+      btnCrashCashout.className = "flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-rose-500 text-white font-black text-xs active:scale-95 shadow-lg animate-pulse cursor-pointer";
     }
 
     if (multText) multText.className = "mono-font text-4xl font-black text-amber-300";
@@ -295,7 +274,6 @@
       if (window.sound?.tick) window.sound.tick();
 
       if (crashMultiplier >= crashCrashPoint) {
-        // РАКЕТА ВЗОРВАЛАСЬ
         clearInterval(crashTimer);
         isCrashRunning = false;
 
@@ -311,17 +289,16 @@
 
         if (btnCrashCashout) {
           btnCrashCashout.disabled = true;
-          btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gray-600 text-gray-400 font-black text-xs cursor-not-allowed";
+          btnCrashCashout.className = "flex-1 py-3.5 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
         }
         if (btnCrashStart) {
           btnCrashStart.disabled = false;
-          btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+          btnCrashStart.className = "flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg cursor-pointer";
         }
       }
     }, 100);
   });
 
-  // Забрать выигрыш в Краше
   btnCrashCashout?.addEventListener("click", () => {
     if (!isCrashRunning) return;
     clearInterval(crashTimer);
@@ -342,9 +319,9 @@
     }
 
     btnCrashCashout.disabled = true;
-    btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gray-600 text-gray-400 font-black text-xs cursor-not-allowed";
+    btnCrashCashout.className = "flex-1 py-3.5 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
     btnCrashStart.disabled = false;
-    btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+    btnCrashStart.className = "flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg cursor-pointer";
 
     syncBalance();
   });
@@ -354,7 +331,7 @@
    * ------------------------------------------------------------------------- */
   window.playDiceGame = function (choice) {
     const diceBet = getBet("betDice", 15);
-    if (window.pet.coins < diceBet) {
+    if ((window.pet?.coins || 0) < diceBet) {
       alert(`Нужно ${diceBet} 🪙 для броска костей!`);
       return;
     }
@@ -375,7 +352,6 @@
 
     if (val1) val1.innerText = diceEmojis[d1 - 1];
     if (val2) val2.innerText = diceEmojis[d2 - 1];
-    if (sumText) sumText.innerText = `Сумма: ${sum}`;
 
     let won = 0;
     if (choice === "lo" && sum < 7) won = Math.round(diceBet * 2);
@@ -383,14 +359,15 @@
     else if (choice === "seven" && sum === 7) won = Math.round(diceBet * 5);
 
     if (won > 0) {
+      if (sumText) sumText.innerHTML = `Сумма: <b class="text-emerald-400">${sum}</b> (Выигрыш +${won} 🪙!)`;
       if (window.sound?.win) window.sound.win();
       if (typeof confetti === "function") confetti({ particleCount: 35 });
       window.pet.coins += won;
       if (typeof window.logAuditEvent === "function") {
         window.logAuditEvent(`Кости: победа на «${choice}» (сумма ${sum}, +${won} 🪙)`, "🎲");
       }
-      alert(`🎉 ТОЧНО В ЦЕЛЬ!\nВыпало ${sum}. Твой выигрыш: +${won} 🪙!`);
     } else {
+      if (sumText) sumText.innerHTML = `Сумма: <b class="text-rose-400">${sum}</b> (Мимо 🐾)`;
       if (window.sound?.pop) window.sound.pop();
     }
     syncBalance();
@@ -405,6 +382,11 @@
   const underlay = document.getElementById("scratchPrizeUnderlay");
   const progressVal = document.getElementById("scratchProgressVal");
 
+  // Блокировка нативного свайпа страницы на мобилках
+  if (scratchCanvas) {
+    scratchCanvas.style.touchAction = "none";
+  }
+
   let isScratching = false;
   let isScratchClaimed = false;
   let scratchPrizeData = null;
@@ -417,7 +399,7 @@
     };
     const cost = costs[type] || 30;
 
-    if (window.pet.coins < cost) {
+    if ((window.pet?.coins || 0) < cost) {
       alert(`Нужно ${cost} 🪙 для покупки билета!`);
       return;
     }
@@ -453,7 +435,7 @@
       const isWinner = (Math.random() * 100) < pFishWin;
 
       scratchPrizeData = { won: isWinner, amount: 200, type: "fish" };
-      let items = isWinner ? ["🐟", "🐚", "🐚", "🐚"] : ["🐚", "🐚", "🐚", "🐚"];
+      let items = isWinner ? ["🐟", "🐚", "🦀", "🌿"] : ["🐚", "👢", "🌿", "🦀"];
       items.sort(() => Math.random() - 0.5);
 
       items.forEach(it => {
@@ -476,7 +458,8 @@
       let symbols = winSym ? [winSym, winSym, winSym] : ["🍣", "🍕", "🍰", "🍣", "🍕", "🍰"];
       if (winSym) {
         const pool = ["🍣", "🍕", "🍰", "⭐", "🐾"].filter(s => s !== winSym);
-        while (symbols.length < 6) symbols.push(pool[Math.floor(Math.random() * pool.length)]);
+        pool.sort(() => Math.random() - 0.5);
+        symbols.push(pool[0], pool[1], pool[2]);
       }
       symbols.sort(() => Math.random() - 0.5);
 
@@ -610,26 +593,25 @@
     syncBalance();
   }
 
-  // Слушатели рисования на скретч-холсте
+  function handleScratchPointer(e) {
+    if (!isScratching || !scratchCanvas) return;
+    e.preventDefault();
+    const r = scratchCanvas.getBoundingClientRect();
+    scratchBrush(
+      (e.clientX - r.left) * (scratchCanvas.width / r.width),
+      (e.clientY - r.top) * (scratchCanvas.height / r.height)
+    );
+  }
+
   scratchCanvas?.addEventListener("pointerdown", (e) => {
     isScratching = true;
-    const r = scratchCanvas.getBoundingClientRect();
-    scratchBrush(
-      (e.clientX - r.left) * (scratchCanvas.width / r.width),
-      (e.clientY - r.top) * (scratchCanvas.height / r.height)
-    );
+    handleScratchPointer(e);
   });
 
-  scratchCanvas?.addEventListener("pointermove", (e) => {
-    if (!isScratching) return;
-    const r = scratchCanvas.getBoundingClientRect();
-    scratchBrush(
-      (e.clientX - r.left) * (scratchCanvas.width / r.width),
-      (e.clientY - r.top) * (scratchCanvas.height / r.height)
-    );
-  });
-
+  scratchCanvas?.addEventListener("pointermove", handleScratchPointer);
   window.addEventListener("pointerup", () => { isScratching = false; });
+  window.addEventListener("pointercancel", () => { isScratching = false; });
+
   document.getElementById("btnScratchAutoReveal")?.addEventListener("click", claimScratchAward);
   document.getElementById("closeScratchBtn")?.addEventListener("click", () => modalScratch?.classList.add("hidden"));
 
