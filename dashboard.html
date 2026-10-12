@@ -371,12 +371,12 @@
         { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", chance: 30 }
       ],
       slots: [
-        { id: "slot_wish", name: "💌 3 Купона (Джекпот желаний)", icon: "💌", chance: 2 },
-        { id: "slot_star", name: "⭐ 3 Звезды (+300 🪙)", icon: "⭐", chance: 6 },
-        { id: "slot_crown", name: "👑 3 Короны (+150 🪙)", icon: "👑", chance: 12 },
-        { id: "slot_coins", name: "🪙 3 Монеты (+80 🪙)", icon: "🪙", chance: 20 },
-        { id: "slot_sushi", name: "🍣 3 Ролла (+50 🪙)", icon: "🍣", chance: 25 },
-        { id: "slot_miss", name: "🐾 Проигрыш (Мимо)", icon: "❌", chance: 35 }
+        { id: "slot_wish", name: "💌 3 Купона (Джекпот желаний)", icon: "💌", chance: 1 },
+        { id: "slot_star", name: "⭐ 3 Звезды (+300 🪙)", icon: "⭐", chance: 1 },
+        { id: "slot_crown", name: "👑 3 Короны (+150 🪙)", icon: "👑", chance: 3 },
+        { id: "slot_coins", name: "🪙 3 Монеты (+80 🪙)", icon: "🪙", chance: 6 },
+        { id: "slot_sushi", name: "🍣 3 Ролла (+50 🪙)", icon: "🍣", chance: 10 },
+        { id: "slot_miss", name: "🐾 Проигрыш (Мимо)", icon: "❌", chance: 79 }
       ],
       scratch: [
         { id: "scr_fish_win", name: "🐟 «Золотая Рыбка»: Шанс победы", icon: "🐟", chance: 35 },
@@ -988,71 +988,106 @@
     // =========================================================================
     // МАТЕМАТИЧЕСКИЙ АЛГОРИТМ ИИ-СОВЕТНИКА КАЗИНО И ЭКОНОМИКИ
     // =========================================================================
-    let generatedAdvisorEdits = [];
+let generatedAdvisorEdits = [];
 
-    // Принимаем wishes четвертым параметром
     function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
       const coins = pet.coins || 0;
       const spent = analytics.spentCoins || 0;
       const eco = Object.assign({}, DEFAULT_ECONOMY, currentCloudData.economyConfig || {});
       const chances = Object.assign({}, DEFAULT_ODDS_DATABASE, currentCloudData.allChances || {});
 
-      let risk = 12;
+      let risk = 10;
       let reasons = [];
       generatedAdvisorEdits = [];
 
-      // 1. МАТЕМАТИЧЕСКИЙ АНАЛИЗ СЛОТОВ «777 ЛАПКИ» (RTP & HOUSE EDGE)
+      // 1. АНАЛИЗ СЛОТОВ «777 ЛАПКИ» (RTP & HOUSE EDGE)
       const slotSpinCost = eco.betSlots || 20;
       const slotsChances = chances.slots || DEFAULT_ODDS_DATABASE.slots;
-      const pStar = slotsChances.find(x => x.id === 'slot_star')?.chance || 6;
-      const pCrown = slotsChances.find(x => x.id === 'slot_crown')?.chance || 12;
-      const pCoins = slotsChances.find(x => x.id === 'slot_coins')?.chance || 20;
-      const pSushi = slotsChances.find(x => x.id === 'slot_sushi')?.chance || 25;
+      const pStar = slotsChances.find(x => x.id === 'slot_star')?.chance || 1;
+      const pCrown = slotsChances.find(x => x.id === 'slot_crown')?.chance || 3;
+      const pCoins = slotsChances.find(x => x.id === 'slot_coins')?.chance || 6;
+      const pSushi = slotsChances.find(x => x.id === 'slot_sushi')?.chance || 10;
       
+      // Матожидание выигрыша в монетах за спин:
       const evSlotsCoins = (pStar * 300 + pCrown * 150 + pCoins * 80 + pSushi * 50) / 100;
       const rtpSlots = Math.round((evSlotsCoins / slotSpinCost) * 100);
 
-      if (rtpSlots > 105) {
-        risk += 15;
-        reasons.push(`Эксплойт в Слотах 777 (RTP = ${rtpSlots}% > 100%). Казино уходит в минус.`);
-        generatedAdvisorEdits.push({
-          type: "economy",
-          key: "betSlots",
-          title: `🎰 Сбалансировать RTP Слотов 777 (Текущий: ${rtpSlots}%)`,
-          desc: `Казино работает в убыток. Поднимите цену спина до 25 🪙 для возврата RTP к 85–90%.`,
-          oldVal: slotSpinCost,
-          newVal: 25,
-          unit: "🪙/спин"
-        });
+      // Проверка RTP слотов: коридор нормы 75% - 95%
+      if (rtpSlots > 100) {
+        risk += 25;
+        reasons.push(`Эксплойт в Слотах 777 (RTP = ${rtpSlots}% > 100%). Казино отдаёт больше, чем забирает.`);
+        
+        // Вариант А: снизить завышенные шансы джекпотов под текущую ставку
+        if (pStar > 1) {
+          generatedAdvisorEdits.push({
+            type: "odds",
+            category: "slots",
+            itemId: "slot_star",
+            title: `⭐ Снизить шанс 3-х Звёзд в Слотах`,
+            desc: `Шанс ${pStar}% при выплате 300 🪙 ломает баланс. Снизьте до 1%.`,
+            oldVal: pStar,
+            newVal: 1,
+            unit: "%"
+          });
+        }
+        if (pCrown > 3) {
+          generatedAdvisorEdits.push({
+            type: "odds",
+            category: "slots",
+            itemId: "slot_crown",
+            title: `👑 Снизить шанс 3-х Корон в Слотах`,
+            desc: `Шанс ${pCrown}% при выплате 150 🪙 создаёт перекос. Снизьте до 3%.`,
+            oldVal: pCrown,
+            newVal: 3,
+            unit: "%"
+          });
+        }
+
+        // Вариант Б: математически точная ставка под текущее матожидание (на 88% RTP)
+        const mathTargetBet = Math.ceil((evSlotsCoins / 0.88) / 5) * 5;
+        if (slotSpinCost < mathTargetBet && pStar <= 1 && pCrown <= 3) {
+          generatedAdvisorEdits.push({
+            type: "economy",
+            key: "betSlots",
+            title: `🎰 Сбалансировать ставку слотов (RTP: ${rtpSlots}%)`,
+            desc: `Выплаты дают в среднем ${evSlotsCoins.toFixed(1)} 🪙 за спин. Поднимите ставку с ${slotSpinCost} до ${mathTargetBet} 🪙 для RTP 88%.`,
+            oldVal: slotSpinCost,
+            newVal: mathTargetBet,
+            unit: "🪙/спин"
+          });
+        }
       } else if (rtpSlots < 65) {
-        risk += 30;
-        reasons.push(`Слоты 777 слишком «жадные» (RTP = ${rtpSlots}%). Игрок быстро банкротится.`);
-        generatedAdvisorEdits.push({
-          type: "odds",
-          category: "slots",
-          itemId: "slot_coins",
-          title: `🍒 Поднять выплаты в Слотах 777 (RTP всего ${rtpSlots}%)`,
-          desc: `Повысьте шанс выпадения монет с ${pCoins}% до 28% для удержания игрока.`,
-          oldVal: pCoins,
-          newVal: 28,
-          unit: "%"
-        });
+        risk += 20;
+        reasons.push(`Слоты 777 слишком «жадные» (RTP = ${rtpSlots}%). Игрок быстро потеряет интерес.`);
+        if (pCoins < 10) {
+          generatedAdvisorEdits.push({
+            type: "odds",
+            category: "slots",
+            itemId: "slot_coins",
+            title: `🍒 Поднять выплаты монет в Слотах (RTP ${rtpSlots}%)`,
+            desc: `Повысьте шанс выпадения 3-х монет с ${pCoins}% до 10%.`,
+            oldVal: pCoins,
+            newVal: 10,
+            unit: "%"
+          });
+        }
       }
 
-      // 2. АНАЛИЗ СКРЕТЧ-КАРТ
+      // 2. АНАЛИЗ СКРЕТЧ-КАРТ («Золотая Рыбка»)
       const fishCost = eco.scratchFish || 75;
       const scrChances = chances.scratch || DEFAULT_ODDS_DATABASE.scratch;
-      const pFishWin = scrChances.find(x => x.id === 'scr_fish_win')?.chance || 35;
+      const pFishWin = scrChances.find(x => x.id === 'scr_fish_win')?.chance || 32;
       const rtpFish = Math.round(((pFishWin * 200 / 100) / fishCost) * 100);
 
-      if (rtpFish > 100) {
+      if (rtpFish > 100 && pFishWin > 32) {
+        risk += 15;
         reasons.push(`Лотерея «Золотая Рыбка» убыточна (RTP = ${rtpFish}%).`);
         generatedAdvisorEdits.push({
           type: "odds",
           category: "scratch",
           itemId: "scr_fish_win",
-          title: `🐟 Снизить перекос в «Золотой Рыбке» (RTP ${rtpFish}%)`,
-          desc: `При призе 200 🪙 шанс ${pFishWin}% даёт гарантированный фарм. Снизьте до 32%.`,
+          title: `🐟 Сбалансировать «Золотую Рыбку» (RTP ${rtpFish}%)`,
+          desc: `При призе 200 🪙 шанс ${pFishWin}% даёт гарантированный плюс. Снизьте шанс до 32%.`,
           oldVal: pFishWin,
           newVal: 32,
           unit: "%"
@@ -1062,25 +1097,25 @@
       // 3. АНАЛИЗ МУР-КРАША
       const crashChances = chances.crash || DEFAULT_ODDS_DATABASE.crash;
       const crEarly = crashChances.find(x => x.id === 'cr_early')?.chance || 15;
-      if (crEarly > 22) {
-        risk += 20;
+      if (crEarly > 20) {
+        risk += 15;
         reasons.push("Мур-Краш взрывается слишком часто на старте.");
         generatedAdvisorEdits.push({
           type: "odds",
           category: "crash",
           itemId: "cr_early",
           title: `🚀 Снизить вероятность раннего краша ракеты`,
-          desc: `Уменьшите шанс раннего взрыва (< 1.25x) с ${crEarly}% до 12%.`,
+          desc: `Уменьшите шанс раннего взрыва (< 1.25x) с ${crEarly}% до 15%.`,
           oldVal: crEarly,
-          newVal: 12,
+          newVal: 15,
           unit: "%"
         });
       }
 
       // 4. ДОСТУПНОСТЬ BLACK BOX
       const blackCost = eco.caseCostBlack || 320;
-      if (coins < blackCost * 0.4 && analytics.casesOpened > 2) {
-        risk += 25;
+      if (blackCost > 260 && coins < blackCost * 0.4 && (analytics.casesOpened || 0) > 2) {
+        risk += 20;
         reasons.push(`Элитный Black Box (${blackCost} 🪙) недостижим при балансе ${coins} 🪙.`);
         generatedAdvisorEdits.push({
           type: "economy",
@@ -1093,12 +1128,12 @@
         });
       }
 
-      // 5. ДЕФИЦИТ СЕКРЕТНЫХ КУПОНОВ (безопасная проверка с wishes)
+      // 5. ДЕФИЦИТ КУПОНОВ ЖЕЛАНИЙ
       const wishOdds = chances.wishes || DEFAULT_ODDS_DATABASE.wishes;
       const wSubway = wishOdds.find(x => x.id === 'w_subway')?.chance || 40;
 
-      if ((!wishes || wishes.length === 0) && (analytics.sessionsCount || 0) > 4) {
-        risk += 25;
+      if (wSubway < 55 && (!wishes || wishes.length === 0) && (analytics.sessionsCount || 0) > 4) {
+        risk += 20;
         reasons.push("Игрок провёл несколько сессий, но ни разу не получил секретный купон.");
         generatedAdvisorEdits.push({
           type: "odds",
@@ -1113,8 +1148,8 @@
       }
 
       // 6. БАНКРОТСТВО ИГРОКА
-      if (coins < 20 && spent > 100) {
-        risk += 35;
+      if (eco.dailyBonus < 30 && coins < 20 && spent > 100) {
+        risk += 30;
         reasons.push("Критический дефицит монет после лудки. Игроку не на что играть.");
         generatedAdvisorEdits.push({
           type: "economy",
@@ -1127,7 +1162,16 @@
         });
       }
 
-      // ОБНОВЛЕНИЕ ЦВЕТА ПЛАШКИ (чтобы не горела красным при 15% риска)
+      // СТРОГИЙ ФИЛЬТР: исключаем любые рекомендации, где значение уже выставлено
+      generatedAdvisorEdits = generatedAdvisorEdits.filter(it => Math.abs(it.oldVal - it.newVal) > 0.05);
+
+      // Если после фильтрации предложений не осталось — сбрасываем тревогу
+      if (generatedAdvisorEdits.length === 0) {
+        reasons = [];
+        risk = 10;
+      }
+
+      // ОБНОВЛЕНИЕ ПЛАШКИ НА ЭКРАНЕ
       risk = Math.min(95, risk);
       const churnCard = document.getElementById('churnWarningCard');
       if (churnCard) {
@@ -1135,7 +1179,7 @@
           risk > 50 ? 'border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.3)]' 
           : risk > 25 ? 'border-amber-500/50' 
           : 'border-emerald-500/40'
-        } rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors`;
+        } rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-all`;
       }
 
       const pBadge = document.getElementById('churnRiskPercentBadge');
@@ -1158,7 +1202,7 @@
           : `Математика сбалансирована. RTP Слотов: <b>${rtpSlots}%</b>, Лотереи: <b>${rtpFish}%</b>. Баланс стабилен.`;
       }
 
-      // ОТРИСОВКА СПИСКА В МОДАЛКЕ
+      // ОТРИСОВКА В МОДАЛЬНОМ ОКНЕ
       const container = document.getElementById('advisorFormList');
       if (!container) return;
       container.innerHTML = '';
@@ -1169,7 +1213,7 @@
             <span class="text-4xl">🎰✨</span>
             <div class="font-bold text-emerald-400 text-sm">Экономика казино идеально сбалансирована!</div>
             <div class="text-[11px] text-gray-400 max-w-sm">
-              RTP Слотов держится в районе <b>${rtpSlots}%</b>, лотерея — <b>${rtpFish}%</b>. Вмешательство алгоритмов сейчас не требуется.
+              Все рекомендации выполнены. RTP Слотов держится в районе <b>${rtpSlots}%</b>. Активных эксплойтов не обнаружено.
             </div>
           </div>
         `;
