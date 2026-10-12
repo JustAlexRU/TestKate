@@ -81,7 +81,7 @@
 </head>
 <body class="bg-[#11111b] text-[#cdd6f4] min-h-screen flex flex-col items-center justify-between pb-24 selection:bg-pink-500 selection:text-white">
 
-  <!-- Индикатор песочницы для локального запуска -->
+  <!-- Indikador ti Sandbox Mode -->
   <div id="localSandboxWarning" class="hidden w-full bg-rose-500/90 text-white text-[10px] font-bold text-center py-1 z-50">
     🚀 ЛОКАЛЬНЫЙ РЕЖИМ (ПЕСОЧНИЦА): Синхронизация с боевым облаком отключена
   </div>
@@ -98,7 +98,7 @@
               <h1 id="headerPetName" class="cute-font text-sm font-bold text-pink-300">Зефирка</h1>
               <button id="btnRenamePet" class="text-xs text-gray-400 hover:text-pink-300 active:scale-90 transition">✏️</button>
             </div>
-            <!-- Секретный вход в дашборд: тройной клик по уровню -->
+            <!-- Secret Level Click: 3 a pidot manglukat iti dashboard -->
             <p class="text-[11px] text-gray-400">Уровень <span id="headerLevel" class="text-amber-300 font-bold cursor-pointer select-none">1</span></p>
           </div>
         </div>
@@ -114,10 +114,10 @@
         </div>
       </header>
 
-      <!-- Комната котика -->
+      <!-- Kuarto ti Pusa -->
       <div id="petRoomCard" class="relative bg-theme-neon border border-[#313244] rounded-3xl p-4 flex flex-col items-center shadow-2xl transition-all duration-700 overflow-hidden min-h-[300px]">
         
-        <!-- Красивый ночной оверлей сна -->
+        <!-- Sleep Overlay -->
         <div id="sleepOverlay" class="absolute inset-0 bg-gradient-to-b from-[#090a18]/90 via-[#101228]/50 to-[#090a18]/90 backdrop-blur-[1px] opacity-0 pointer-events-none transition-opacity duration-700 z-30 flex flex-col items-center justify-start pt-3">
           <div class="flex items-center gap-2 bg-[#191b34]/95 border border-indigo-400/50 px-4 py-1.5 rounded-full shadow-lg">
             <span class="text-sm animate-pulse">🌙</span>
@@ -147,14 +147,13 @@
             <span class="absolute font-bold text-purple-300 text-xs animate-zzz" style="animation-delay: 1.4s;">z</span>
           </div>
 
-          <!-- SVG Котик -->
+          <!-- SVG Cat -->
           <svg id="catSvg" viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl animate-breathe pointer-events-none transition-all duration-500">
             <ellipse cx="100" cy="182" rx="60" ry="12" fill="#0b0b12" opacity="0.6"/>
             <path id="catTail" class="animate-tail" d="M 45 150 C 15 145, 10 115, 25 105 C 32 100, 42 115, 42 135" fill="none" stroke="#f2cdcd" stroke-width="14" stroke-linecap="round"/>
             <ellipse id="catBody" cx="100" cy="142" rx="55" ry="42" fill="#f5e0dc"/>
             <ellipse cx="100" cy="146" rx="36" ry="28" fill="#ffffff" opacity="0.85"/>
 
-            <!-- СЛОЙ ТЕЛА: ХУДИ -->
             <g id="accLayerHoodie" class="hidden">
               <path d="M 52 132 C 55 110, 145 110, 148 132 C 148 165, 52 165, 52 132 Z" fill="#ec4899" stroke="#db2777" stroke-width="2"/>
               <polygon points="90,118 100,128 110,118" fill="#fbcfe8"/>
@@ -192,39 +191,31 @@
             <line x1="148" y1="96" x2="132" y2="98" stroke="#bac2de" stroke-width="2" stroke-linecap="round"/>
             <line x1="150" y1="104" x2="133" y2="103" stroke="#bac2de" stroke-width="2" stroke-linecap="round"/>
 
-            <!-- СЛОЙ ТЕЛА: БАНТИК -->
             <g id="accLayerBow" class="hidden">
               <polygon points="90,135 100,140 90,145" fill="#f38ba8"/>
               <polygon points="110,135 100,140 110,145" fill="#f38ba8"/>
               <circle cx="100" cy="140" r="3.5" fill="#fab387"/>
             </g>
-            <!-- СЛОЙ ТЕЛА: ШАРФ -->
             <g id="accLayerScarf" class="hidden">
               <rect x="75" y="128" width="50" height="12" rx="6" fill="#38bdf8"/>
               <rect x="110" y="132" width="12" height="25" rx="4" fill="#0284c7"/>
             </g>
-
-            <!-- СЛОЙ ГЛАЗ: ОЧКИ -->
             <g id="accLayerGlasses" class="hidden">
               <rect x="68" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
               <rect x="107" y="82" width="25" height="15" rx="3" fill="#11111b" opacity="0.95"/>
               <line x1="93" y1="89" x2="107" y2="89" stroke="#fab387" stroke-width="2.5"/>
             </g>
-
-            <!-- СЛОЙ ГОЛОВЫ: КОРОНА -->
             <g id="accLayerCrown" class="hidden">
               <polygon points="80,48 88,30 100,43 112,30 120,48" fill="#f9e2af" stroke="#fab387" stroke-width="1.5"/>
               <circle cx="88" cy="30" r="2.5" fill="#f38ba8"/>
               <circle cx="100" cy="43" r="2.5" fill="#89b4fa"/>
               <circle cx="112" cy="30" r="2.5" fill="#a6e3a1"/>
             </g>
-            <!-- СЛОЙ ГОЛОВЫ: КОЛПАК -->
             <g id="accLayerWizard" class="hidden">
               <polygon points="68,52 100,10 132,52" fill="#7287fd"/>
               <ellipse cx="100" cy="52" rx="34" ry="6" fill="#8839ef"/>
               <polygon points="98,28 102,28 100,24" fill="#f9e2af"/>
             </g>
-            <!-- СЛОЙ ГОЛОВЫ: ЦВЕТОК -->
             <g id="accLayerFlower" class="hidden">
               <circle cx="68" cy="46" r="5" fill="#f38ba8"/>
               <circle cx="62" cy="50" r="5" fill="#f38ba8"/>
@@ -241,7 +232,7 @@
         </div>
       </div>
 
-      <!-- Шкалы жизненных параметров -->
+      <!-- Stats -->
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-[#1e1e2e] border border-[#313244] p-2 rounded-2xl flex flex-col gap-1">
           <div class="flex justify-between items-center text-xs">
@@ -284,7 +275,7 @@
         </div>
       </div>
 
-      <!-- Основные действия -->
+      <!-- Actions -->
       <div class="grid grid-cols-4 gap-2">
         <button id="btnActionFeed" class="bg-[#1e1e2e] hover:bg-[#313244] border border-[#313244] rounded-2xl p-2 flex flex-col items-center gap-0.5 active:scale-95 transition shadow">
           <span class="text-2xl">🍱</span>
@@ -304,13 +295,14 @@
         </button>
       </div>
 
-      <!-- Интерактивная панель -->
+      <!-- Panel -->
       <div class="grid grid-cols-4 gap-1.5">
         <button id="btnWardrobe" class="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-pink-700/50 rounded-2xl py-2 px-1 flex items-center justify-center gap-0.5 text-[11px] font-bold text-pink-200 active:scale-95 transition">
           <span>🛍️ Наряды</span>
         </button>
-        <button id="btnCasesHub" class="bg-gradient-to-r from-amber-900/60 via-purple-900/60 to-yellow-900/60 border border-amber-500/70 rounded-2xl py-2 px-1 text-[11px] font-bold text-amber-300 flex items-center justify-center gap-0.5 active:scale-95 transition animate-pulse">
-          <span>📦 3 Кейса</span>
+        <!-- CASINO BUTTON -->
+        <button id="btnCasinoHub" class="bg-gradient-to-r from-amber-600/80 via-purple-600/80 to-rose-600/80 border border-amber-400 rounded-2xl py-2 px-1 text-[11px] font-black text-amber-200 flex items-center justify-center gap-0.5 active:scale-95 transition animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.4)]">
+          <span>🎰 Казино</span>
         </button>
         <button id="btnZenClicker" class="bg-gradient-to-r from-pink-900/40 to-rose-900/40 border border-rose-500/50 rounded-2xl py-2 px-1 text-[11px] font-bold text-rose-300 active:scale-95 transition">
           <span>✨ Дзен</span>
@@ -321,7 +313,7 @@
       </div>
     </section>
 
-    <!-- TAB 2: РУЛЕТКА -->
+    <!-- TAB 2: РУЛЕТКА ВКУСНОСТЕЙ (NAPASAYAT NGA ROULETTE) -->
     <section id="tabRoulette" class="hidden flex-col gap-3 w-full items-center justify-center my-auto">
       <div class="w-full text-center py-1">
         <h2 class="cute-font text-base font-extrabold text-pink-300">🎰 Рулетка вкусностей</h2>
@@ -329,6 +321,7 @@
       </div>
 
       <div class="relative w-[300px] h-[300px] flex items-center justify-center mx-auto my-1">
+        <!-- Nalabbaga a pana iti ngato[cite: 6] -->
         <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
           <div class="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[28px] border-t-pink-500"></div>
         </div>
@@ -356,7 +349,7 @@
 
   </main>
 
-  <!-- НАВИГАЦИЯ -->
+  <!-- NAVIGATION -->
   <nav class="fixed bottom-0 w-full max-w-md bg-[#181825]/95 backdrop-blur-md border-t border-[#313244] px-6 py-2 flex justify-around items-center z-40">
     <button id="navTabPet" class="flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition">
       <span class="text-2xl">🐱</span>
@@ -369,55 +362,138 @@
     </button>
   </nav>
 
-  <!-- МОДАЛКА: ВЫБОР ИЗ 3 КЕЙСОВ -->
-  <div id="modalCasesHub" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
-    <div class="bg-[#181825] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
-      <div class="flex justify-between items-center">
+  <!-- ========================================================= -->
+  <!-- MODAL: CASINO HUB (CASES, SCRATCH, SLOTS, CRASH, DICE)    -->
+  <!-- ========================================================= -->
+  <div id="modalCasinoHub" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 select-none">
+    <div class="bg-[#181828] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-[0_0_35px_rgba(245,158,11,0.3)]">
+      <div class="flex justify-between items-center border-b border-[#2e304f] pb-2">
         <div>
-          <h3 class="cute-font font-black text-amber-300 text-sm">Кейсы Удачи CS:GO Style 📦</h3>
-          <p class="text-[10px] text-gray-400">Баланс: <b id="casesHubCoins" class="text-amber-300">0</b> 🪙</p>
+          <h3 class="cute-font font-black text-amber-300 text-sm flex items-center gap-1.5">
+            <span>🎰</span> Казино «У Зефирки»
+          </h3>
+          <p class="text-[10px] text-gray-400">Баланс: <b id="casinoHubCoins" class="text-amber-300 font-bold">25</b> 🪙</p>
         </div>
         <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
       </div>
 
-      <div class="flex flex-col gap-2 mt-1">
-        <button id="btnLaunchCaseStandard" class="bg-[#11111b] border border-blue-500/50 hover:border-blue-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
-          <div class="flex items-center gap-2.5">
-            <span class="text-3xl">📦</span>
-            <div>
-              <div class="font-bold text-blue-300 text-xs">Стандартный Лутбокс</div>
-              <div class="text-[10px] text-gray-400">Монетки, пир, шарфик</div>
-            </div>
-          </div>
+      <!-- Casino Tabs -->
+      <div class="flex bg-[#10111e] p-1 rounded-xl border border-[#2e304f] text-xs font-bold gap-1 overflow-x-auto">
+        <button id="tabCasinoCases" class="flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition">📦 Кейсы</button>
+        <button id="tabCasinoScratch" class="flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition">🎟️ Билеты</button>
+        <button id="tabCasinoSlots" class="flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition">🍒 777</button>
+        <button id="tabCasinoCrash" class="flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition">🚀 Краш</button>
+        <button id="tabCasinoDice" class="flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition">🎲 Кости</button>
+      </div>
+
+      <!-- 1. CS:GO Cases -->
+      <div id="casinoSectionCases" class="flex flex-col gap-2">
+        <button id="btnLaunchCaseStandard" class="bg-[#11111b] border border-blue-500/50 hover:border-blue-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">📦</span><div><div class="font-bold text-blue-300 text-xs">Стандартный Лутбокс</div><div class="text-[10px] text-gray-400">Монетки, пир, шарфик</div></div></div>
           <span class="font-black text-amber-300 text-xs" id="labelCaseStandardCost">80 🪙</span>
         </button>
-
-        <button id="btnLaunchCasePremium" class="bg-[#11111b] border border-purple-500/50 hover:border-purple-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
-          <div class="flex items-center gap-2.5">
-            <span class="text-3xl">💜</span>
-            <div>
-              <div class="font-bold text-purple-300 text-xs">Премиум Кейс Таганрога</div>
-              <div class="text-[10px] text-gray-400">Кофе, кино, худи</div>
-            </div>
-          </div>
+        <button id="btnLaunchCasePremium" class="bg-[#11111b] border border-purple-500/50 hover:border-purple-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">💜</span><div><div class="font-bold text-purple-300 text-xs">Премиум Кейс Таганрога</div><div class="text-[10px] text-gray-400">Кофе, кино, худи</div></div></div>
           <span class="font-black text-amber-300 text-xs" id="labelCasePremiumCost">160 🪙</span>
         </button>
-
-        <button id="btnLaunchCaseBlack" class="bg-gradient-to-r from-[#1f1604] to-[#12081f] border-2 border-amber-400 p-3 rounded-2xl flex items-center justify-between active:scale-95 transition text-left animate-epic-glow">
-          <div class="flex items-center gap-2.5">
-            <span class="text-3xl">👑</span>
-            <div>
-              <div class="font-black text-amber-300 text-xs">★ CLASSIFIED BLACK BOX ★</div>
-              <div class="text-[10px] text-amber-200/80 font-bold">Награды: ??? (Засекречено)</div>
-            </div>
-          </div>
+        <button id="btnLaunchCaseBlack" class="bg-gradient-to-r from-[#1f1604] to-[#12081f] border-2 border-amber-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left animate-epic-glow">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">👑</span><div><div class="font-black text-amber-300 text-xs">★ CLASSIFIED BLACK BOX ★</div><div class="text-[10px] text-amber-200/80 font-bold">Награды: ??? (Засекречено)</div></div></div>
           <span class="font-black text-amber-300 text-xs" id="labelCaseBlackCost">320 🪙</span>
         </button>
+      </div>
+
+      <!-- 2. Scratch Cards -->
+      <div id="casinoSectionScratch" class="hidden flex-col gap-2">
+        <button onclick="openScratchCard('trio')" class="bg-[#11111b] border border-pink-500/60 hover:border-pink-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">🎟️</span><div><div class="font-bold text-pink-300 text-xs">Лотерея «Мур-Трио»</div><div class="text-[10px] text-gray-400">Сотри 6 ячеек: найди 3 одинаковых!</div></div></div>
+          <span class="font-black text-amber-300 text-xs">30 🪙</span>
+        </button>
+        <button onclick="openScratchCard('fish')" class="bg-[#11111b] border border-emerald-500/60 hover:border-emerald-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">🐟</span><div><div class="font-bold text-emerald-300 text-xs">«Золотая Рыбка»</div><div class="text-[10px] text-gray-400">Найди рыбку: Джекпот 200 🪙!</div></div></div>
+          <span class="font-black text-amber-300 text-xs">75 🪙</span>
+        </button>
+        <button onclick="openScratchCard('vip')" class="bg-gradient-to-r from-[#201505] to-[#181128] border-2 border-amber-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition text-left animate-pulse">
+          <div class="flex items-center gap-2.5"><span class="text-3xl">⭐</span><div><div class="font-black text-amber-300 text-xs">«Таганрог VIP Express»</div><div class="text-[10px] text-amber-200/80 font-bold">Золотой слой: Подарок или Купон!</div></div></div>
+          <span class="font-black text-amber-300 text-xs">150 🪙</span>
+        </button>
+      </div>
+
+      <!-- 3. Slots 777 -->
+      <div id="casinoSectionSlots" class="hidden flex-col items-center gap-2.5 py-1">
+        <div class="bg-[#0c0d16] border-2 border-purple-500/50 p-3 rounded-2xl w-full flex flex-col items-center gap-2 shadow-inner">
+          <div class="flex gap-2">
+            <div id="slotReel1" class="w-16 h-20 bg-[#18192a] border-2 border-pink-500/60 rounded-xl flex items-center justify-center text-4xl shadow-inner font-mono">🐱</div>
+            <div id="slotReel2" class="w-16 h-20 bg-[#18192a] border-2 border-pink-500/60 rounded-xl flex items-center justify-center text-4xl shadow-inner font-mono">🍣</div>
+            <div id="slotReel3" class="w-16 h-20 bg-[#18192a] border-2 border-pink-500/60 rounded-xl flex items-center justify-center text-4xl shadow-inner font-mono">👑</div>
+          </div>
+          <span id="slotStatusText" class="text-[11px] font-bold text-gray-300 text-center min-h-[16px]">Крути барабаны за 20 🪙!</span>
+        </div>
+        <button id="btnSpinSlots" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-rose-500 text-white font-black text-xs active:scale-95 transition shadow-lg">
+          ДЕРНУТЬ РЫЧАГ (20 🪙) 🎰
+        </button>
+      </div>
+
+      <!-- 4. CRASH GAME: Мур-Краш -->
+      <div id="casinoSectionCrash" class="hidden flex-col items-center gap-2.5 py-1">
+        <div class="bg-[#0c0d16] border-2 border-rose-500/50 p-4 rounded-2xl w-full flex flex-col items-center justify-center min-h-[120px] relative overflow-hidden">
+          <span id="crashMultiplierText" class="mono-font text-4xl font-black text-amber-300">1.00x</span>
+          <span id="crashRocketIcon" class="text-3xl mt-1 transition-transform">🚀</span>
+          <span id="crashStatusLabel" class="text-[10px] text-gray-400 mt-1">Сделай ставку и успей забрать!</span>
+        </div>
+        <div class="w-full flex gap-2">
+          <button id="btnCrashStart" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg">
+            СТАРТ (25 🪙) 🚀
+          </button>
+          <button id="btnCrashCashout" class="flex-1 py-3 rounded-2xl bg-gray-600 text-gray-400 font-black text-xs cursor-not-allowed transition shadow-lg" disabled>
+            ЗАБРАТЬ 💰
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. DICE GAME: Кошачьи Кости -->
+      <div id="casinoSectionDice" class="hidden flex-col items-center gap-2.5 py-1">
+        <div class="bg-[#0c0d16] border-2 border-blue-500/50 p-4 rounded-2xl w-full flex flex-col items-center justify-center gap-2 shadow-inner">
+          <div class="flex gap-4 text-5xl">
+            <span id="diceVal1">🎲</span>
+            <span id="diceVal2">🎲</span>
+          </div>
+          <span id="diceSumText" class="mono-font text-xs text-gray-300 font-bold">Сумма: ?</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 w-full">
+          <button onclick="playDiceGame('lo')" class="py-2.5 bg-[#18192a] border border-[#2e304f] rounded-xl text-[10px] font-bold text-blue-300 active:scale-95">🔻 2-6 (x2)</button>
+          <button onclick="playDiceGame('seven')" class="py-2.5 bg-[#18192a] border border-amber-400/60 rounded-xl text-[10px] font-black text-amber-300 active:scale-95">🎯 7 (x5)</button>
+          <button onclick="playDiceGame('hi')" class="py-2.5 bg-[#18192a] border border-[#2e304f] rounded-xl text-[10px] font-bold text-rose-300 active:scale-95">🔺 8-12 (x2)</button>
+        </div>
+        <span class="text-[10px] text-gray-400">Ставка: 15 🪙 за бросок</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: SCRATCH CARD -->
+  <div id="modalScratchCard" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 select-none">
+    <div class="bg-[#181828] border-2 border-amber-400 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center gap-3 shadow-2xl">
+      <div class="w-full flex justify-between items-center border-b border-[#2e304f] pb-2">
+        <div>
+          <h3 class="cute-font font-black text-amber-300 text-sm" id="scratchTicketTitle">Лотерейный Билет</h3>
+          <p class="text-[10px] text-gray-400">Сотри защитный слой пальцем или мышкой!</p>
+        </div>
+        <button id="closeScratchBtn" class="text-gray-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="relative w-[300px] h-[220px] rounded-2xl overflow-hidden border-2 border-amber-400/80 shadow-2xl bg-[#0e0f1a] flex items-center justify-center">
+        <div id="scratchPrizeUnderlay" class="absolute inset-0 p-3 grid items-center justify-items-center"></div>
+        <canvas id="scratchCanvas" width="300" height="220" class="absolute inset-0 cursor-pointer block"></canvas>
+      </div>
+
+      <div class="w-full flex justify-between items-center text-xs px-2">
+        <span class="text-gray-400">Стерто: <b id="scratchProgressVal" class="text-amber-300">0%</b></span>
+        <button id="btnScratchAutoReveal" class="text-[11px] text-pink-400 hover:underline font-bold">Стереть всё сразу ✨</button>
       </div>
     </div>
   </div>
 
-  <!-- МОДАЛКА: CS:GO РУЛЕТКА -->
+  <!-- MODAL: CS:GO CASE -->
   <div id="modalCsgoCase" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4">
     <div id="caseRouletteCard" class="bg-gradient-to-b from-[#1e1e2e] to-[#0f0f17] border-2 border-amber-500/80 rounded-3xl w-full max-w-sm p-4 flex flex-col items-center text-center gap-3 shadow-2xl">
       <div class="w-full flex justify-between items-center">
@@ -445,7 +521,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: МНОГОСЛОЙНЫЙ ГАРДЕРОБ -->
+  <!-- MODAL: WARDROBE -->
   <div id="modalWardrobe" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -474,7 +550,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: МЕНЮ ЕДЫ -->
+  <!-- MODAL: FEED -->
   <div id="modalFeed" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-2.5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -502,7 +578,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: ВЫБОР МИНИ-ИГР -->
+  <!-- MODAL: WORK (MINI GAMES) -->
   <div id="modalWork" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-4 flex flex-col gap-2.5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -533,6 +609,28 @@
           <span class="text-xs font-extrabold text-amber-300" id="badgeRunnerReward">+10-25 🪙</span>
         </button>
 
+        <button id="btnJobFishing" class="bg-[#181825] border border-blue-500/50 hover:border-blue-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
+          <div class="flex items-center gap-2.5 text-left">
+            <span class="text-3xl">🎣</span>
+            <div>
+              <div class="text-xs font-bold text-blue-300">Мур-Рыбалка</div>
+              <div class="text-[10px] text-gray-400">Подсекай рыбку вовремя!</div>
+            </div>
+          </div>
+          <span class="text-xs font-extrabold text-amber-300">+10-40 🪙</span>
+        </button>
+
+        <button id="btnJobMemory" class="bg-[#181825] border border-purple-500/50 hover:border-purple-400 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
+          <div class="flex items-center gap-2.5 text-left">
+            <span class="text-3xl">🧩</span>
+            <div>
+              <div class="text-xs font-bold text-purple-300">Мур-Память (Memory)</div>
+              <div class="text-[10px] text-gray-400">Найди пары вкусняшек на время</div>
+            </div>
+          </div>
+          <span class="text-xs font-extrabold text-amber-300">+15-30 🪙</span>
+        </button>
+
         <button id="btnJobCatcher" class="bg-[#181825] border border-[#313244] hover:border-pink-500/50 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition">
           <div class="flex items-center gap-2.5 text-left">
             <span class="text-3xl">🛵</span>
@@ -558,31 +656,64 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: ТЕТРИС -->
-  <div id="modalTetris" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3">
-    <div class="w-full max-w-xs flex justify-between items-center pt-1">
-      <div class="flex items-center gap-1.5">
-        <span class="text-lg">🧱</span>
-        <span class="cute-font text-pink-300 font-bold text-xs">Кэт-Тетрис</span>
-      </div>
+  <!-- MODAL: FISHING -->
+  <div id="modalFishing" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-4 select-none">
+    <div class="w-full max-w-sm flex justify-between items-center pt-1">
       <div class="flex items-center gap-2">
-        <span id="tetrisScoreText" class="font-bold text-amber-300 text-xs">Счет: 0</span>
-        <button id="closeTetrisBtn" class="text-gray-400 hover:text-white text-base">✕</button>
+        <span class="text-2xl">🎣</span>
+        <span class="cute-font text-blue-300 font-bold text-sm">Кошачья Рыбалка</span>
+      </div>
+      <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
+    </div>
+
+    <div class="relative w-full max-w-sm h-64 bg-gradient-to-b from-[#0a192f] via-[#0f3460] to-[#041527] border-2 border-blue-400/50 rounded-3xl overflow-hidden my-auto shadow-2xl flex flex-col items-center justify-between p-4">
+      <div id="fishingWaterLayer" class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-400/20 via-transparent to-transparent"></div>
+      <div id="fishingBobber" class="text-5xl transition-transform duration-300 mt-6 animate-bounce">🪝</div>
+      <div id="fishingAlert" class="cute-font text-sm font-black text-amber-300 opacity-0 transition-opacity">КЛЮЁТ! ПОДСЕКАЙ! 🎯</div>
+      <div id="fishingResult" class="text-xs font-bold text-gray-200 text-center min-h-[20px]">Закинь удочку в пруд!</div>
+    </div>
+
+    <button id="btnFishingAction" class="w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-xs active:scale-95 transition shadow-lg">
+      ЗАБРОСИТЬ УДОЧКУ 🎣
+    </button>
+  </div>
+
+  <!-- MODAL: MEMORY -->
+  <div id="modalMemory" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3 select-none">
+    <div class="w-full max-w-sm flex justify-between items-center pt-1">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🧩</span>
+        <span class="cute-font text-purple-300 font-bold text-sm">Мур-Память</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="memoryTimerText" class="bg-purple-950/60 border border-purple-500/50 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold text-purple-200">25с</span>
+        <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
       </div>
     </div>
 
+    <div class="w-full max-w-sm my-auto">
+      <div id="memoryCardsGrid" class="grid grid-cols-4 gap-2"></div>
+    </div>
+
+    <div class="w-full max-w-sm text-center text-xs text-gray-400 pb-1">
+      Найди все 6 пар одинаковых картинок!
+    </div>
+  </div>
+
+  <!-- MODAL: TETRIS -->
+  <div id="modalTetris" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3">
+    <div class="w-full max-w-xs flex justify-between items-center pt-1">
+      <div class="flex items-center gap-1.5"><span class="text-lg">🧱</span><span class="cute-font text-pink-300 font-bold text-xs">Кэт-Тетрис</span></div>
+      <div class="flex items-center gap-2"><span id="tetrisScoreText" class="font-bold text-amber-300 text-xs">Счет: 0</span><button id="closeTetrisBtn" class="text-gray-400 hover:text-white text-base">✕</button></div>
+    </div>
     <div class="relative bg-[#181825] border-2 border-[#313244] rounded-2xl overflow-hidden shadow-2xl my-auto">
       <canvas id="tetrisCanvas" width="200" height="360" class="block"></canvas>
       <div id="tetrisOverlay" class="absolute inset-0 bg-black/75 flex flex-col items-center justify-center p-3 text-center">
         <span class="text-4xl animate-bounce">🧱</span>
         <h4 class="cute-font text-pink-300 font-bold text-sm mt-1">Тетрис для Кати</h4>
-        <p class="text-[11px] text-gray-400 mt-1 mb-3">Собирай полные ряды, чтобы получать монетки!</p>
-        <button id="btnStartTetris" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-xl text-xs active:scale-95 transition">
-          СТАРТ ✨
-        </button>
+        <button id="btnStartTetris" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-xl text-xs active:scale-95 transition mt-3">СТАРТ ✨</button>
       </div>
     </div>
-
     <div class="w-full max-w-xs flex justify-between gap-1 pb-1">
       <button id="btnTetrisLeft" class="flex-1 py-3 bg-[#1e1e2e] border border-[#313244] rounded-xl text-lg active:scale-90 transition">⬅️</button>
       <button id="btnTetrisRotate" class="flex-1 py-3 bg-pink-500/80 rounded-xl text-lg font-bold active:scale-90 transition">🔄</button>
@@ -591,13 +722,10 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: МУР-РАННЕР (3D) -->
+  <!-- MODAL: RUNNER -->
   <div id="modalRunner" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3 select-none">
     <div class="w-full max-w-xs flex justify-between items-center pt-1">
-      <div class="flex items-center gap-1.5">
-        <span class="text-lg">🏃</span>
-        <span class="cute-font text-pink-300 font-bold text-xs">Subway Cat 🐾</span>
-      </div>
+      <div class="flex items-center gap-1.5"><span class="text-lg">🏃</span><span class="cute-font text-pink-300 font-bold text-xs">Subway Cat 🐾</span></div>
       <div class="flex items-center gap-3">
         <span id="runnerShieldIcon" class="hidden text-xs">🛹 Щит!</span>
         <span id="runnerMagnetIcon" class="hidden text-xs animate-bounce">🧲 Магнит!</span>
@@ -605,29 +733,15 @@
         <button id="closeRunnerBtn" class="text-gray-400 hover:text-white text-base">✕</button>
       </div>
     </div>
-
     <div class="relative bg-[#0d0d16] border-2 border-pink-500/40 rounded-3xl overflow-hidden shadow-2xl my-auto w-full max-w-xs h-[420px]">
       <canvas id="runnerCanvas" width="300" height="420" class="w-full h-full block"></canvas>
-
       <div id="runnerOverlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-4 text-center">
         <span class="text-5xl animate-bounce">🐱🛹</span>
-        <h4 class="cute-font text-pink-300 font-bold text-base mt-2">Мур-Раннер: Subway Cat</h4>
-        <p class="text-[11px] text-gray-300 mt-2 mb-4 leading-relaxed">
-          Беги по 3 путям метро!<br>
-          <b>Свайп ВВЕРХ (⬆️)</b> — Прыжок через барьеры<br>
-          <b>Свайп ВНИЗ (⬇️)</b> — Подкат под шлагбаумами<br>
-          <b>Влево / Вправо</b> — Смена полосы и уворот от поездов
-        </p>
-        <button id="btnStartRunner" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-3 px-8 rounded-2xl text-xs active:scale-95 transition shadow-[0_0_20px_#ec4899]">
-          ПОГНАЛИ! 🚀
-        </button>
+        <button id="btnStartRunner" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-3 px-8 rounded-2xl text-xs active:scale-95 transition mt-4">ПОГНАЛИ! 🚀</button>
       </div>
     </div>
-
     <div class="w-full max-w-xs flex flex-col gap-1.5 pb-1">
-      <div class="flex justify-center">
-        <button id="btnCtrlJump" class="w-24 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬆️ Прыжок</button>
-      </div>
+      <div class="flex justify-center"><button id="btnCtrlJump" class="w-24 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬆️ Прыжок</button></div>
       <div class="flex justify-between gap-2">
         <button id="btnCtrlLeft" class="flex-1 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬅️ Влево</button>
         <button id="btnCtrlSlide" class="flex-1 py-2.5 bg-[#1e1e2e] border border-[#313244] rounded-xl text-sm font-bold active:scale-90 transition">⬇️ Подкат</button>
@@ -636,64 +750,39 @@
     </div>
   </div>
 
-  <!-- МОДАЛКА: КУРЬЕР -->
+  <!-- MODAL: FOOD COURIER -->
   <div id="modalMiniGame" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-4">
     <div class="w-full max-w-sm flex justify-between items-center pt-2">
-      <div class="flex items-center gap-2">
-        <span class="text-xl">🎯</span>
-        <span class="cute-font text-pink-300 font-bold text-sm">Лови вкусняшки!</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <span id="gameScoreText" class="font-extrabold text-amber-300 text-sm">Счет: 0</span>
-        <span id="gameTimerText" class="bg-rose-900/60 border border-rose-600/50 px-2.5 py-0.5 rounded-full text-xs font-bold text-rose-200">15с</span>
-        <button id="closeMiniGameBtn" class="text-gray-400 hover:text-white text-base ml-1">✕</button>
-      </div>
+      <div class="flex items-center gap-2"><span class="text-xl">🎯</span><span class="cute-font text-pink-300 font-bold text-sm">Лови вкусняшки!</span></div>
+      <div class="flex items-center gap-3"><span id="gameScoreText" class="font-extrabold text-amber-300 text-sm">Счет: 0</span><span id="gameTimerText" class="bg-rose-900/60 border border-rose-600/50 px-2.5 py-0.5 rounded-full text-xs font-bold text-rose-200">15с</span><button id="closeMiniGameBtn" class="text-gray-400 hover:text-white text-base ml-1">✕</button></div>
     </div>
-
     <div id="miniGameCanvas" class="relative w-full max-w-sm h-[380px] bg-[#181825] border-2 border-[#313244] rounded-3xl overflow-hidden my-auto shadow-2xl flex items-center justify-center">
       <div id="gameStartOverlay" class="flex flex-col items-center gap-3 text-center p-4">
         <span class="text-5xl animate-bounce">🍣</span>
-        <h4 class="cute-font text-pink-300 font-bold text-base">Тапай по летающей еде!</h4>
-        <p class="text-xs text-gray-400">Собери как можно больше порций за 15 секунд!</p>
-        <button id="btnStartGame" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2.5 px-6 rounded-2xl text-xs active:scale-95 transition shadow-lg">
-          НАЧАТЬ РАБОТУ ✨
-        </button>
+        <button id="btnStartGame" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2.5 px-6 rounded-2xl text-xs active:scale-95 transition shadow-lg">НАЧАТЬ РАБОТУ ✨</button>
       </div>
     </div>
   </div>
 
-  <!-- МОДАЛКА: OSU! CAT STREAMER -->
+  <!-- MODAL: OSU! CAT STREAMER -->
   <div id="modalRhythmGame" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-3 select-none">
     <div class="w-full max-w-sm flex justify-between items-center pt-1">
       <div class="flex items-center gap-2">
         <span class="text-xl">🐾</span>
-        <div>
-          <span class="cute-font text-pink-300 font-bold text-xs block leading-none">Osu! Cat Live 🎧</span>
-          <span id="osuGenreBadge" class="text-[9px] text-gray-400 font-mono">Моцарт • Хвостик</span>
-        </div>
+        <div><span class="cute-font text-pink-300 font-bold text-xs block leading-none">Osu! Cat Live 🎧</span><span id="osuGenreBadge" class="text-[9px] text-gray-400 font-mono">Моцарт • Хвостик</span></div>
       </div>
       <div class="flex items-center gap-3">
-        <div class="text-right">
-          <span id="osuScoreText" class="font-black text-amber-300 text-xs block leading-none">0</span>
-          <span id="osuAccuracyText" class="text-[9px] text-emerald-400 font-mono">100.0%</span>
-        </div>
+        <div class="text-right"><span id="osuScoreText" class="font-black text-amber-300 text-xs block leading-none">0</span><span id="osuAccuracyText" class="text-[9px] text-emerald-400 font-mono">100.0%</span></div>
         <button id="closeRhythmBtn" class="text-gray-400 hover:text-white text-base ml-1">✕</button>
       </div>
     </div>
-
     <div class="relative w-full max-w-sm h-[400px] bg-[#0c0d18] border-2 border-purple-500/40 rounded-3xl overflow-hidden my-auto shadow-2xl flex items-center justify-center">
       <canvas id="osuCanvas" width="340" height="400" class="w-full h-full block cursor-crosshair"></canvas>
-
       <div id="rhythmStartOverlay" class="absolute inset-0 bg-[#0c0d18]/95 flex flex-col items-center justify-between p-4 text-center z-30">
-        <div>
-          <span class="text-4xl animate-bounce block">🎧</span>
-          <h4 class="cute-font text-purple-300 font-black text-base mt-1">Osu! Cat Streamer</h4>
-          <p class="text-[11px] text-gray-400 mt-0.5">Попадай лапкой в круги точно под ритм музыки!</p>
-        </div>
-
+        <div><span class="text-4xl animate-bounce block">🎧</span><h4 class="cute-font text-purple-300 font-black text-base mt-1">Osu! Cat Streamer</h4><p class="text-[11px] text-gray-400 mt-0.5">Попадай лапкой в круги точно под ритм!</p></div>
         <div class="w-full flex flex-col gap-1 text-left">
           <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">1. Жанр музыки:</span>
-          <div class="grid grid-cols-2 gap-1.5" id="osuGenrePicker">
+          <div class="grid grid-cols-2 gap-1.5">
             <button data-genre="mozart" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-purple-500/30 border-2 border-purple-500 text-[11px] font-bold text-purple-200 active:scale-95 transition">🎻 Вальс (Моцарт)</button>
             <button data-genre="storm" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">⚡ Вивальди «Шторм»</button>
             <button data-genre="moonlight" class="osu-genre-btn py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">🎹 Лунная соната</button>
@@ -701,101 +790,53 @@
             <button data-genre="phonk" class="osu-genre-btn col-span-2 py-1.5 px-2 rounded-xl bg-[#18192a] border border-[#2e304f] text-[11px] font-bold text-gray-300 active:scale-95 transition">🏎️ Drift Phonk</button>
           </div>
         </div>
-
         <div class="w-full flex flex-col gap-1 text-left">
           <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">2. Уровень сложности:</span>
-          <div class="grid grid-cols-4 gap-1" id="osuDiffPicker">
+          <div class="grid grid-cols-4 gap-1">
             <button data-diff="easy" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-emerald-400 active:scale-95 transition">Лапка</button>
             <button data-diff="normal" class="osu-diff-btn py-1.5 rounded-xl bg-pink-500/30 border-2 border-pink-500 text-[10px] font-bold text-pink-300 active:scale-95 transition">Хвостик</button>
             <button data-diff="hard" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-amber-400 active:scale-95 transition">Тыгыдык</button>
             <button data-diff="insane" class="osu-diff-btn py-1.5 rounded-xl bg-[#18192a] border border-[#2e304f] text-[10px] font-bold text-rose-400 active:scale-95 transition">Безумие</button>
           </div>
         </div>
-
-        <button id="btnStartOsuGame" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white font-black text-xs active:scale-95 transition shadow-[0_0_20px_rgba(236,72,153,0.5)]">
-          ВЫЙТИ В ЭФИР 🎙️
-        </button>
+        <button id="btnStartOsuGame" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white font-black text-xs active:scale-95 transition shadow-lg">ВЫЙТИ В ЭФИР 🎙️</button>
       </div>
     </div>
-
-    <div class="w-full max-w-sm flex justify-between items-center text-[10px] text-gray-500 px-2 pb-1">
-      <span>Жми, когда кольцо совпадет с кругом!</span>
-      <span id="osuComboText" class="font-bold text-pink-400 text-xs">Комбо: 0x</span>
-    </div>
+    <div class="w-full max-w-sm flex justify-between items-center text-[10px] text-gray-500 px-2 pb-1"><span>Жми, когда кольцо совпадет с кругом!</span><span id="osuComboText" class="font-bold text-pink-400 text-xs">Комбо: 0x</span></div>
   </div>
 
-  <!-- МОДАЛКА: ДЗЕН -->
+  <!-- MODAL: ZEN -->
   <div id="modalZen" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-4">
-    <div class="w-full max-w-sm flex justify-between items-center pt-2">
-      <div class="flex items-center gap-1.5">
-        <span class="text-xl">✨</span>
-        <span class="cute-font text-pink-300 font-bold text-sm">Кошачий Дзен (ASMR)</span>
-      </div>
-      <button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button>
-    </div>
-
+    <div class="w-full max-w-sm flex justify-between items-center pt-2"><div class="flex items-center gap-1.5"><span class="text-xl">✨</span><span class="cute-font text-pink-300 font-bold text-sm">Кошачий Дзен (ASMR)</span></div><button class="closeModalBtn text-gray-400 hover:text-white text-base">✕</button></div>
     <div class="flex flex-col items-center my-auto w-full max-w-sm">
-      <div class="text-center mb-3">
-        <div class="text-[11px] text-gray-400">Почесано пузико: <span id="zenTotalClicks" class="text-pink-300 font-bold">0</span> раз</div>
-        <div id="zenComboText" class="text-xs text-amber-300 font-extrabold mt-0.5 min-h-[18px]">Комбо: x1</div>
-      </div>
-
-      <div id="zenTapArea" class="relative w-64 h-64 bg-[#1e1e2e] border-2 border-pink-500/40 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-[0_0_30px_rgba(244,114,182,0.3)]">
-        <span id="zenEmoji" class="text-8xl select-none transition-transform">😻</span>
-        <div id="zenParticlesLayer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-full"></div>
-      </div>
-
-      <p class="text-[11px] text-gray-400 text-center mt-5 px-6">
-        Бесконечно тапай и гладь котика! При активности есть шанс дропа секретного купона на желание 💌
-      </p>
+      <div class="text-center mb-3"><div class="text-[11px] text-gray-400">Почесано пузико: <span id="zenTotalClicks" class="text-pink-300 font-bold">0</span> раз</div><div id="zenComboText" class="text-xs text-amber-300 font-extrabold mt-0.5 min-h-[18px]">Комбо: x1</div></div>
+      <div id="zenTapArea" class="relative w-64 h-64 bg-[#1e1e2e] border-2 border-pink-500/40 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform"><span id="zenEmoji" class="text-8xl select-none transition-transform">😻</span><div id="zenParticlesLayer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-full"></div></div>
     </div>
-
-    <div class="pb-3 text-[10px] text-gray-500">Релакс-режим без таймеров и ограничений</div>
+    <div class="pb-3 text-[10px] text-gray-500">Релакс-режим без ограничений</div>
   </div>
 
-  <!-- МОДАЛКА: СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ -->
+  <!-- MODAL: SECRET WISH -->
   <div id="modalSecretWish" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
     <div class="relative bg-gradient-to-b from-[#2d1b4e] to-[#181825] border-2 border-amber-400 rounded-3xl w-full max-w-sm p-5 flex flex-col items-center text-center gap-3 shadow-[0_0_40px_rgba(251,191,36,0.6)] animate-glow">
-      <span class="text-5xl animate-bounce">💌</span>
-      
-      <h3 class="cute-font font-extrabold text-amber-300 text-lg">СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ!</h3>
-      <p class="text-xs text-pink-200">
-        Ура, Катя! Тебе выпал редчайший легендарный купон! Ты можешь загадать Алексею абсолютно <b>любое желание</b>! ✨
-      </p>
-
-      <div class="w-full bg-[#11111b]/80 border border-dashed border-amber-400/80 rounded-2xl p-3 flex flex-col gap-1.5 my-1">
-        <div class="text-[11px] text-gray-400">Уникальный номер купона:</div>
-        <div id="wishCouponNumber" class="cute-font text-base font-black text-amber-300 tracking-wider">#WISH-00000</div>
+      <span class="text-5xl animate-bounce">💌</span><h3 class="cute-font font-extrabold text-amber-300 text-lg">СЕКРЕТНЫЙ КУПОН!</h3>
+      <div class="w-full bg-[#11111b]/80 border border-dashed border-amber-400/80 rounded-2xl p-3 my-1">
+        <div class="text-[11px] text-gray-400">Уникальный номер:</div><div id="wishCouponNumber" class="cute-font text-base font-black text-amber-300 tracking-wider">#WISH-00000</div>
         <div class="text-[10px] text-emerald-400 font-bold" id="wishCouponExpiry">Действителен до: 30.12.2026</div>
       </div>
-
-      <p class="text-[10px] text-gray-400">
-        Копия купона с защитным кодом уже отправлена Алексею на почту и в Telegram-бот 🚀
-      </p>
-
-      <button id="btnCloseWishModal" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-pink-500 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg mt-1">
-        СОХРАНИТЬ В СЕРДЕЧКЕ 💖
-      </button>
+      <button id="btnCloseWishModal" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-pink-500 text-[#11111b] font-black text-xs active:scale-95 mt-1">СОХРАНИТЬ В СЕРДЕЧКЕ 💖</button>
     </div>
   </div>
 
-  <!-- МОДАЛКА: НАСТРОЙКИ РУЛЕТКИ -->
+  <!-- MODAL: WHEEL SETTINGS -->
   <div id="modalWheelSettings" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-[#1e1e2e] border border-[#313244] rounded-3xl w-full max-w-sm p-5 flex flex-col gap-3 shadow-2xl">
-      <div class="flex justify-between items-center">
-        <h3 class="cute-font font-bold text-pink-300 text-base">Варианты в рулетке 🎰</h3>
-        <button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button>
-      </div>
+      <div class="flex justify-between items-center"><h3 class="cute-font font-bold text-pink-300 text-base">Варианты в рулетке 🎰</h3><button class="closeModalBtn text-gray-400 hover:text-white text-lg">✕</button></div>
       <div id="settingsWheelList" class="max-h-44 overflow-y-auto flex flex-col gap-1.5 pr-1"></div>
       <div class="flex gap-2 mt-1">
         <input type="text" id="inputNewItem" placeholder="Новое блюдо..." class="flex-1 bg-[#181825] border border-[#313244] rounded-xl px-3 py-2 text-xs text-gray-200 outline-none focus:border-pink-400">
-        <button id="btnAddWheelItem" class="bg-pink-500 hover:bg-pink-400 text-white font-bold text-xs px-3.5 rounded-xl active:scale-95 transition">
-          +
-        </button>
+        <button id="btnAddWheelItem" class="bg-pink-500 hover:bg-pink-400 text-white font-bold text-xs px-3.5 rounded-xl active:scale-95 transition">+</button>
       </div>
-      <button class="closeModalBtn w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#11111b] font-bold text-xs mt-1 active:scale-95 transition">
-        Готово ✓
-      </button>
+      <button class="closeModalBtn w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#11111b] font-bold text-xs mt-1 active:scale-95 transition">Готово ✓</button>
     </div>
   </div>
 
@@ -858,7 +899,6 @@
     const isLocalExecution = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (isLocalExecution) {
       document.getElementById('localSandboxWarning').classList.remove('hidden');
-      console.log("Включен локальный режим: Синхронизация с боевым облаком отключена.");
     }
 
     let currentUser = localStorage.getItem('active_player_profile');
@@ -1124,7 +1164,37 @@
       }, 1200);
     }
 
+    // Динамическая загрузка цен и экономики из админки
     async function pullCloudSettings() {
+
+      if (root.casinoChances) {
+        window.CASINO_CHANCES = Object.assign({
+          scratchFishWinRate: 35,
+          slots: { wish: 2, star: 6, crown: 12, coins: 20, sushi: 25 },
+          crash: { early: 15, mid: 45, high: 30, mega: 10 }
+        }, root.casinoChances);
+      }
+
+      if (root.fishingChances) {
+        window.FISHING_CHANCES = Object.assign({
+          gold: 8, sturgeon: 17, trout: 30, carp: 45
+        }, root.fishingChances);
+      }
+
+      if (root.caseSettings && typeof root.caseSettings === 'object') {
+        // Если структура разделена по кейсам: standard, premium, black
+        ['standard', 'premium', 'black'].forEach(cKey => {
+          if (root.caseSettings[cKey] && Array.isArray(root.caseSettings[cKey])) {
+            CASES_DATA[cKey].items.forEach(item => {
+              const remoteItem = root.caseSettings[cKey].find(r => r.id === item.id);
+              if (remoteItem && remoteItem.chance !== undefined) {
+                item.chance = remoteItem.chance;
+              }
+            });
+          }
+        });
+      }
+
       if (isLocalExecution) return;
       try {
         const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -1137,18 +1207,35 @@
         }
 
         if (root.economyConfig) {
-          ACTIVE_ECONOMY.caseCostStandard = root.economyConfig.caseCostStandard || 80;
-          ACTIVE_ECONOMY.caseCostPremium = root.economyConfig.caseCostPremium || 160;
-          ACTIVE_ECONOMY.caseCostBlack = root.economyConfig.caseCostBlack || 320;
-          ACTIVE_ECONOMY.dailyBonus = root.economyConfig.dailyBonus || 15;
-          ACTIVE_ECONOMY.maxRunner = root.economyConfig.maxRunner || 25;
-          ACTIVE_ECONOMY.maxTetris = root.economyConfig.maxTetris || 25;
+          ACTIVE_ECONOMY = Object.assign(ACTIVE_ECONOMY, root.economyConfig);
 
-          document.getElementById('labelCaseStandardCost').innerText = `${ACTIVE_ECONOMY.caseCostStandard} 🪙`;
-          document.getElementById('labelCasePremiumCost').innerText = `${ACTIVE_ECONOMY.caseCostPremium} 🪙`;
-          document.getElementById('labelCaseBlackCost').innerText = `${ACTIVE_ECONOMY.caseCostBlack} 🪙`;
-          document.getElementById('badgeRunnerReward').innerText = `+10-${ACTIVE_ECONOMY.maxRunner} 🪙`;
-          document.getElementById('badgeTetrisReward').innerText = `+12-${ACTIVE_ECONOMY.maxTetris} 🪙`;
+          const lblStd = document.getElementById('labelCaseStandardCost');
+          const lblPrem = document.getElementById('labelCasePremiumCost');
+          const lblBlk = document.getElementById('labelCaseBlackCost');
+          if (lblStd) lblStd.innerText = `${ACTIVE_ECONOMY.caseCostStandard || 80} 🪙`;
+          if (lblPrem) lblPrem.innerText = `${ACTIVE_ECONOMY.caseCostPremium || 160} 🪙`;
+          if (lblBlk) lblBlk.innerText = `${ACTIVE_ECONOMY.caseCostBlack || 320} 🪙`;
+          
+          const bRun = document.getElementById('badgeRunnerReward');
+          const bTet = document.getElementById('badgeTetrisReward');
+          if (bRun) bRun.innerText = `+10-${ACTIVE_ECONOMY.maxRunner || 25} 🪙`;
+          if (bTet) bTet.innerText = `+12-${ACTIVE_ECONOMY.maxTetris || 25} 🪙`;
+        }
+
+        if (root.customFood) {
+          Object.keys(root.customFood).forEach(fId => {
+            const fItem = FOOD_MENU.find(x => x.id === fId);
+            if (fItem) fItem.cost = root.customFood[fId];
+          });
+        }
+
+        if (root.customShop) {
+          Object.keys(root.customShop).forEach(sId => {
+            const oItem = SHOP_OUTFITS.find(x => x.id === sId);
+            if (oItem) oItem.cost = root.customShop[sId];
+            const aItem = SHOP_ACCS.find(x => x.id === sId);
+            if (aItem) aItem.cost = root.customShop[sId];
+          });
         }
 
         if (root.wishChances) {
@@ -1174,24 +1261,17 @@
     if (!isLocalExecution) setInterval(pullCloudSettings, 20000);
 
     /* =========================================================
-     * ФУНКЦИИ ВНЕШНЕГО ВИДА И ОФФЛАЙН-ЖИЗНИ (ГАРАНТИРОВАННО ОБЪЯВЛЕНЫ)
+     * ФУНКЦИИ ВНЕШНЕГО ВИДА И ОФФЛАЙН-ЖИЗНИ
      * ========================================================= */
     function applyCatColor(colorKey) {
       const pal = CAT_COLORS[colorKey] || CAT_COLORS.pink;
-      const head = document.getElementById('catHead');
-      const body = document.getElementById('catBody');
-      const earL = document.getElementById('catEarL');
-      const earR = document.getElementById('catEarR');
-      const footL = document.getElementById('catFootL');
-      const footR = document.getElementById('catFootR');
-      const tail = document.getElementById('catTail');
-      if (head) head.setAttribute('fill', pal.main);
-      if (body) body.setAttribute('fill', pal.main);
-      if (earL) earL.setAttribute('fill', pal.main);
-      if (earR) earR.setAttribute('fill', pal.main);
-      if (footL) footL.setAttribute('fill', pal.accent);
-      if (footR) footR.setAttribute('fill', pal.accent);
-      if (tail) tail.setAttribute('stroke', pal.accent);
+      document.getElementById('catHead')?.setAttribute('fill', pal.main);
+      document.getElementById('catBody')?.setAttribute('fill', pal.main);
+      document.getElementById('catEarL')?.setAttribute('fill', pal.main);
+      document.getElementById('catEarR')?.setAttribute('fill', pal.main);
+      document.getElementById('catFootL')?.setAttribute('fill', pal.accent);
+      document.getElementById('catFootR')?.setAttribute('fill', pal.accent);
+      document.getElementById('catTail')?.setAttribute('stroke', pal.accent);
     }
 
     function applyRoomTheme(themeId) {
@@ -1269,6 +1349,7 @@
 
     function renderPoops() {
       const pL = document.getElementById('poopLayer');
+      if (!pL) return;
       pL.innerHTML = '';
       poops.forEach((p, idx) => {
         const el = document.createElement('div');
@@ -1397,24 +1478,25 @@
     });
 
     function updatePetLayers() {
-      const elCrown = document.getElementById('accLayerCrown');
-      const elWizard = document.getElementById('accLayerWizard');
-      const elFlower = document.getElementById('accLayerFlower');
-      const elGlasses = document.getElementById('accLayerGlasses');
-      const elBow = document.getElementById('accLayerBow');
-      const elHoodie = document.getElementById('accLayerHoodie');
-      const elScarf = document.getElementById('accLayerScarf');
-
-      if (elCrown) elCrown.classList.toggle('hidden', activeEquipment.head !== 'crown');
-      if (elWizard) elWizard.classList.toggle('hidden', activeEquipment.head !== 'wizard');
-      if (elFlower) elFlower.classList.toggle('hidden', activeEquipment.head !== 'flower');
-      if (elGlasses) elGlasses.classList.toggle('hidden', activeEquipment.eyes !== 'glasses');
-      if (elBow) elBow.classList.toggle('hidden', activeEquipment.body !== 'bow');
-      if (elHoodie) elHoodie.classList.toggle('hidden', activeEquipment.body !== 'prem_hoodie');
-      if (elScarf) elScarf.classList.toggle('hidden', activeEquipment.body !== 'std_scarf');
+      document.getElementById('accLayerCrown')?.classList.toggle('hidden', activeEquipment.head !== 'crown');
+      document.getElementById('accLayerWizard')?.classList.toggle('hidden', activeEquipment.head !== 'wizard');
+      document.getElementById('accLayerFlower')?.classList.toggle('hidden', activeEquipment.head !== 'flower');
+      document.getElementById('accLayerGlasses')?.classList.toggle('hidden', activeEquipment.eyes !== 'glasses');
+      document.getElementById('accLayerBow')?.classList.toggle('hidden', activeEquipment.body !== 'bow');
+      document.getElementById('accLayerHoodie')?.classList.toggle('hidden', activeEquipment.body !== 'prem_hoodie');
+      document.getElementById('accLayerScarf')?.classList.toggle('hidden', activeEquipment.body !== 'std_scarf');
     }
 
     function updatePetUI() {
+      document.getElementById('headerPetName').innerText = pet.name;
+      document.getElementById('petNameLabel').innerText = pet.name;
+      document.getElementById('headerCoins').innerText = pet.coins;
+      document.getElementById('headerLevel').innerText = pet.level;
+
+      // Синхронизация баланса внутри открытого окна казино
+      const casinoCoins = document.getElementById('casinoHubCoins');
+      if (casinoCoins) casinoCoins.innerText = pet.coins;
+
       document.getElementById('headerPetName').innerText = pet.name;
       document.getElementById('petNameLabel').innerText = pet.name;
       document.getElementById('headerCoins').innerText = pet.coins;
@@ -1689,59 +1771,75 @@
       renderWardrobeAccs();
     });
 
-    document.getElementById('tabWardrobeOutfits').addEventListener('click', () => {
-      document.getElementById('wardrobeOutfitsSection').classList.remove('hidden');
-      document.getElementById('wardrobeAccSection').classList.add('hidden');
-      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
-      document.getElementById('wardrobeColorSection').classList.add('hidden');
-      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
-      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-    });
-    document.getElementById('tabWardrobeAccs').addEventListener('click', () => {
-      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
-      document.getElementById('wardrobeAccSection').classList.remove('hidden');
-      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
-      document.getElementById('wardrobeColorSection').classList.add('hidden');
-      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
-      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-    });
-    document.getElementById('tabWardrobeRooms').addEventListener('click', () => {
-      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
-      document.getElementById('wardrobeAccSection').classList.add('hidden');
-      document.getElementById('wardrobeRoomsSection').classList.remove('hidden');
-      document.getElementById('wardrobeColorSection').classList.add('hidden');
-      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
-      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-    });
-    document.getElementById('tabWardrobeColors').addEventListener('click', () => {
-      document.getElementById('wardrobeOutfitsSection').classList.add('hidden');
-      document.getElementById('wardrobeAccSection').classList.add('hidden');
-      document.getElementById('wardrobeRoomsSection').classList.add('hidden');
-      document.getElementById('wardrobeColorSection').classList.remove('hidden');
-      document.getElementById('tabWardrobeOutfits').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeAccs').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeRooms').className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white text-[11px]";
-      document.getElementById('tabWardrobeColors').className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white text-[11px]";
+    // =========================================================
+    // КАЗИНО ХАБ: ТАБЫ (КЕЙСЫ, СКРЕТЧ-КАРТЫ, СЛОТЫ, КРАШ, КОСТИ)
+    // =========================================================
+    const modalCasinoHub = document.getElementById('modalCasinoHub');
+    document.getElementById('btnCasinoHub')?.addEventListener('click', () => {
+      document.getElementById('casinoHubCoins').innerText = pet.coins;
+      modalCasinoHub.classList.remove('hidden');
+      logAuditEvent('Открыла Казино «У Зефирки»', '🎰');
     });
 
-    // =========================================================
-    // 3 КЕЙСА УДАЧИ С РУЛЕТКОЙ
-    // =========================================================
-    document.getElementById('btnCasesHub').addEventListener('click', () => {
-      document.getElementById('casesHubCoins').innerText = pet.coins;
-      document.getElementById('modalCasesHub').classList.remove('hidden');
+    const tabCasinoCases = document.getElementById('tabCasinoCases');
+    const tabCasinoScratch = document.getElementById('tabCasinoScratch');
+    const tabCasinoSlots = document.getElementById('tabCasinoSlots');
+    const tabCasinoCrash = document.getElementById('tabCasinoCrash');
+    const tabCasinoDice = document.getElementById('tabCasinoDice');
+
+    const casinoSectionCases = document.getElementById('casinoSectionCases');
+    const casinoSectionScratch = document.getElementById('casinoSectionScratch');
+    const casinoSectionSlots = document.getElementById('casinoSectionSlots');
+    const casinoSectionCrash = document.getElementById('casinoSectionCrash');
+    const casinoSectionDice = document.getElementById('casinoSectionDice');
+
+    function resetCasinoTabs() {
+      [tabCasinoCases, tabCasinoScratch, tabCasinoSlots, tabCasinoCrash, tabCasinoDice].forEach(t => {
+        if (t) t.className = "flex-1 py-1.5 px-2 rounded-lg text-gray-400 hover:text-white text-[10px] font-bold whitespace-nowrap transition";
+      });
+      [casinoSectionCases, casinoSectionScratch, casinoSectionSlots, casinoSectionCrash, casinoSectionDice].forEach(s => {
+        if (s) { s.classList.add('hidden'); s.classList.remove('flex'); }
+      });
+    }
+
+    tabCasinoCases?.addEventListener('click', () => {
+      resetCasinoTabs();
+      tabCasinoCases.className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
+      casinoSectionCases.classList.remove('hidden');
     });
 
+    tabCasinoScratch?.addEventListener('click', () => {
+      resetCasinoTabs();
+      tabCasinoScratch.className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
+      casinoSectionScratch.classList.remove('hidden');
+    });
+
+    tabCasinoSlots?.addEventListener('click', () => {
+      resetCasinoTabs();
+      tabCasinoSlots.className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
+      casinoSectionSlots.classList.remove('hidden');
+      casinoSectionSlots.classList.add('flex');
+    });
+
+    tabCasinoCrash?.addEventListener('click', () => {
+      resetCasinoTabs();
+      tabCasinoCrash.className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
+      casinoSectionCrash.classList.remove('hidden');
+      casinoSectionCrash.classList.add('flex');
+    });
+
+    tabCasinoDice?.addEventListener('click', () => {
+      resetCasinoTabs();
+      tabCasinoDice.className = "flex-1 py-1.5 px-2 rounded-lg bg-amber-500 text-black text-[10px] font-black whitespace-nowrap transition";
+      casinoSectionDice.classList.remove('hidden');
+      casinoSectionDice.classList.add('flex');
+    });
+
+    // 1. ОТКРЫТИЕ КЕЙСОВ CS:GO
     function launchCaseRoulette(caseKey) {
       selectedCaseKey = caseKey;
       const cData = CASES_DATA[caseKey];
-      document.getElementById('modalCasesHub').classList.add('hidden');
+      modalCasinoHub.classList.add('hidden');
       document.getElementById('activeCaseTitle').innerText = cData.title;
       document.getElementById('activeCaseCostLabel').innerText = `${cData.cost} 🪙`;
       document.getElementById('caseWonBanner').classList.add('hidden');
@@ -1757,48 +1855,66 @@
         const card = document.createElement('div');
         card.className = `flex-shrink-0 w-20 h-20 bg-[#1e1e2e] rounded-xl flex flex-col items-center justify-center p-1 border-b-4`;
         card.style.borderColor = item.color;
-        const displayName = cData.isClassified ? "???" : item.name;
-        const displayIcon = cData.isClassified ? "❓" : item.icon;
-        card.innerHTML = `<span class="text-2xl">${displayIcon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${displayName}</span>`;
+        card.innerHTML = `<span class="text-2xl">${cData.isClassified ? "❓" : item.icon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${cData.isClassified ? "???" : item.name}</span>`;
         tr.appendChild(card);
       }
 
       document.getElementById('modalCsgoCase').classList.remove('hidden');
     }
 
-    document.getElementById('btnLaunchCaseStandard').addEventListener('click', () => launchCaseRoulette('standard'));
-    document.getElementById('btnLaunchCasePremium').addEventListener('click', () => launchCaseRoulette('premium'));
-    document.getElementById('btnLaunchCaseBlack').addEventListener('click', () => launchCaseRoulette('black'));
+    document.getElementById('btnLaunchCaseStandard')?.addEventListener('click', () => launchCaseRoulette('standard'));
+    document.getElementById('btnLaunchCasePremium')?.addEventListener('click', () => launchCaseRoulette('premium'));
+    document.getElementById('btnLaunchCaseBlack')?.addEventListener('click', () => launchCaseRoulette('black'));
 
     let isSpinningCase = false;
-    document.getElementById('btnOpenCase').addEventListener('click', () => {
+    document.getElementById('btnOpenCase')?.addEventListener('click', () => {
       if (isSpinningCase) return;
       const cData = CASES_DATA[selectedCaseKey];
 
-      if (pet.coins < cData.cost) return alert(`Нужно ${cData.cost} 🪙.`);
-      pet.coins -= cData.cost;
-      analytics.spentCoins += cData.cost;
+      // Динамическая стоимость с учетом правок из дашборда
+      const actualCost = selectedCaseKey === 'standard' ? (ACTIVE_ECONOMY.caseCostStandard || cData.cost)
+                       : selectedCaseKey === 'premium'  ? (ACTIVE_ECONOMY.caseCostPremium || cData.cost)
+                       : (ACTIVE_ECONOMY.caseCostBlack || cData.cost);
+
+      if (pet.coins < actualCost) return alert(`Нужно ${actualCost} 🪙.`);
+      pet.coins -= actualCost;
+      analytics.spentCoins += actualCost;
       analytics.casesOpened++;
       updatePetUI();
 
       isSpinningCase = true;
       document.getElementById('btnOpenCase').disabled = true;
-      sound.tick();
 
+      // 1. Сброс состояния предыдущего выигрыша
+      document.getElementById('caseWonBanner').classList.add('hidden');
+      document.getElementById('caseRouletteCard').classList.remove('animate-epic-glow');
+
+      const tr = document.getElementById('caseRouletteTrack');
+
+      // 2. Мгновенный сброс ленты в начало без анимации
+      tr.style.transition = 'none';
+      tr.style.transform = 'translateX(0px)';
+      
+      // 3. Принудительный reflow, чтобы браузер зафиксировал сброс позиции
+      void tr.offsetWidth;
+
+      // 4. Определение выигрышного предмета по актуальным шансам
       let rand = Math.random() * 100, cumulative = 0, winningItem = cData.items[cData.items.length - 1];
       for (let it of cData.items) {
         cumulative += it.chance;
         if (rand <= cumulative) { winningItem = it; break; }
       }
 
-      const cards = document.getElementById('caseRouletteTrack').children;
+      // 5. Подстановка предмета на финишную ячейку (индекс 42)
+      const cards = tr.children;
       if (cards[42]) {
         cards[42].style.borderColor = winningItem.color;
         cards[42].innerHTML = `<span class="text-2xl">${winningItem.icon}</span><span class="text-[9px] text-gray-300 font-bold mt-1 truncate max-w-[70px]">${winningItem.name}</span>`;
       }
 
-      document.getElementById('caseRouletteTrack').style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)';
-      document.getElementById('caseRouletteTrack').style.transform = `translateX(-${42 * 88 - 150 + 44}px)`;
+      // 6. Запуск плавной прокрутки
+      tr.style.transition = 'transform 5s cubic-bezier(0.12, 0.8, 0.2, 1)';
+      tr.style.transform = `translateX(-${42 * 88 - 150 + 44}px)`;
 
       let tInt = setInterval(() => sound.tick(), 140);
       setTimeout(() => { clearInterval(tInt); tInt = setInterval(() => sound.tick(), 300); }, 3000);
@@ -1846,6 +1962,540 @@
     });
 
     // =========================================================
+    // 2. ИНТЕРАКТИВНЫЕ СКРЕТЧ-КАРТЫ
+    // =========================================================
+    const modalScratchCard = document.getElementById('modalScratchCard');
+    const scratchCanvas = document.getElementById('scratchCanvas');
+    const sCtx = scratchCanvas ? scratchCanvas.getContext('2d') : null;
+    const scratchUnderlay = document.getElementById('scratchPrizeUnderlay');
+    const scratchProgressVal = document.getElementById('scratchProgressVal');
+
+    let currentScratchType = 'trio';
+    let isScratching = false;
+    let isScratchClaimed = false;
+    let scratchAwardData = null;
+
+    window.openScratchCard = function(type) {
+      const costs = { trio: 30, fish: 75, vip: 150 };
+      const cost = costs[type] || 30;
+      if (pet.coins < cost) return alert(`Нужно ${cost} 🪙 для покупки билета!`);
+
+      pet.coins -= cost;
+      analytics.spentCoins += cost;
+      updatePetUI();
+
+      currentScratchType = type;
+      isScratchClaimed = false;
+      modalCasinoHub.classList.add('hidden');
+      modalScratchCard.classList.remove('hidden');
+
+      buildScratchPrizes(type);
+      initScratchCanvasLayer(type);
+      logAuditEvent(`Купила скретч-билет «${type}» (-${cost} 🪙)`, '🎟️');
+    };
+
+    function buildScratchPrizes(type) {
+      scratchUnderlay.innerHTML = '';
+      scratchProgressVal.innerText = '0%';
+
+      if (type === 'trio') {
+        document.getElementById('scratchTicketTitle').innerText = "🎟️ Лотерея «Мур-Трио» (30 🪙)";
+        scratchUnderlay.className = "absolute inset-0 p-3 grid grid-cols-3 grid-rows-2 gap-2 items-center justify-items-center";
+
+        const roll = Math.random() * 100;
+        let winSym = null, winAmount = 0;
+        if (roll < 8) { winSym = '💌'; winAmount = 'КУПОН'; }
+        else if (roll < 25) { winSym = '🪙'; winAmount = 100; }
+        else if (roll < 55) { winSym = '🍕'; winAmount = 60; }
+        else if (roll < 80) { winSym = '🍣'; winAmount = 45; }
+
+        scratchAwardData = { won: !!winSym, sym: winSym, amount: winAmount, type: 'trio' };
+        let symbols = winSym ? [winSym, winSym, winSym] : ['🍣', '🍕', '🍰', '🍣', '🍕', '🍰'];
+        if (winSym) {
+          const pool = ['🍣', '🍕', '🍰', '⭐', '🐾'].filter(s => s !== winSym);
+          while (symbols.length < 6) symbols.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
+        symbols.sort(() => Math.random() - 0.5);
+        symbols.forEach(sym => {
+          scratchUnderlay.innerHTML += `<div class="w-16 h-16 bg-[#18192a] border border-[#2e304f] rounded-xl flex items-center justify-center text-3xl shadow-inner">${sym}</div>`;
+        });
+      } else if (type === 'fish') {
+        document.getElementById('scratchTicketTitle').innerText = "🐟 «Золотая Рыбка» (75 🪙)";
+        scratchUnderlay.className = "absolute inset-0 p-3 grid grid-cols-2 grid-rows-2 gap-3 items-center justify-items-center";
+        const won = Math.random() < 0.35;
+        scratchAwardData = { won, amount: 200, type: 'fish' };
+        let items = won ? ['🐟', '🐚', '🐚', '🐚'] : ['🐚', '🐚', '🐚', '🐚'];
+        items.sort(() => Math.random() - 0.5);
+        items.forEach(it => {
+          scratchUnderlay.innerHTML += `<div class="w-24 h-16 bg-[#121424] border border-[#2e304f] rounded-xl flex items-center justify-center text-4xl shadow-inner">${it}</div>`;
+        });
+      } else {
+        document.getElementById('scratchTicketTitle').innerText = "⭐ «Таганрог VIP Express» (150 🪙)";
+        scratchUnderlay.className = "absolute inset-0 p-4 flex flex-col items-center justify-center text-center";
+        const roll = Math.random() * 100;
+        let prizeName = "Утешительный приз: 50 🪙", isWish = false;
+        if (roll < 12) { prizeName = "💌 СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ!"; isWish = true; }
+        else if (roll < 35) { prizeName = "☕ Кофе + Десерт в Таганрог!"; }
+        else if (roll < 65) { prizeName = "💰 Джекпот: 250 🪙!"; }
+
+        scratchAwardData = { won: true, prizeName, isWish, type: 'vip' };
+        scratchUnderlay.innerHTML = `
+          <div class="bg-gradient-to-r from-amber-950/60 to-purple-950/60 border-2 border-amber-400 p-3 rounded-2xl w-full flex flex-col items-center">
+            <span class="text-4xl animate-bounce">⭐</span>
+            <div class="cute-font text-amber-300 font-black text-sm mt-1">${prizeName}</div>
+            <div class="text-[10px] text-gray-300 mt-0.5">Lex Labs VIP Certificate</div>
+          </div>
+        `;
+      }
+    }
+
+    function initScratchCanvasLayer(type) {
+      if (!sCtx) return;
+      sCtx.globalCompositeOperation = 'source-over';
+      const w = scratchCanvas.width, h = scratchCanvas.height;
+      const grad = sCtx.createLinearGradient(0, 0, w, h);
+      if (type === 'vip') {
+        grad.addColorStop(0, '#f59e0b'); grad.addColorStop(0.5, '#fef08a'); grad.addColorStop(1, '#b45309');
+      } else {
+        grad.addColorStop(0, '#94a3b8'); grad.addColorStop(0.5, '#f1f5f9'); grad.addColorStop(1, '#475569');
+      }
+      sCtx.fillStyle = grad;
+      sCtx.fillRect(0, 0, w, h);
+      sCtx.fillStyle = type === 'vip' ? '#78350f' : '#1e293b';
+      sCtx.font = "bold 18px 'Comfortaa', sans-serif";
+      sCtx.textAlign = 'center';
+      sCtx.fillText("🪙 СОТРИ ЛАПКОЙ! 🪙", w / 2, h / 2 - 10);
+      sCtx.font = "bold 11px 'Nunito', sans-serif";
+      sCtx.fillText("Сотри 55% слоя, чтобы открыть приз", w / 2, h / 2 + 15);
+    }
+
+    function scratchAt(x, y) {
+      if (isScratchClaimed || !sCtx) return;
+      sCtx.globalCompositeOperation = 'destination-out';
+      sCtx.beginPath();
+      sCtx.arc(x, y, 22, 0, Math.PI * 2);
+      sCtx.fill();
+      sound.playTone(800 + Math.random() * 300, 'sawtooth', 0.03, 0.06);
+      checkScratchPercentage();
+    }
+
+    function checkScratchPercentage() {
+      if (isScratchClaimed || !sCtx) return;
+      const w = scratchCanvas.width, h = scratchCanvas.height;
+      const pixels = sCtx.getImageData(0, 0, w, h).data;
+      let clearCount = 0;
+      for (let i = 3; i < pixels.length; i += 128) {
+        if (pixels[i] === 0) clearCount++;
+      }
+      const percent = Math.min(100, Math.round((clearCount / (pixels.length / 128)) * 100));
+      scratchProgressVal.innerText = `${percent}%`;
+      if (percent >= 55) claimScratchPrize();
+    }
+
+    function claimScratchPrize() {
+      if (isScratchClaimed) return;
+      isScratchClaimed = true;
+      sCtx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+      scratchProgressVal.innerText = "100%";
+      if (!scratchAwardData) return;
+
+      if (scratchAwardData.won) {
+        sound.win();
+        confetti({ particleCount: 80, spread: 80 });
+        if (scratchAwardData.type === 'trio') {
+          if (scratchAwardData.amount === 'КУПОН') triggerWishDrop("Лотерея «Мур-Трио»");
+          else { pet.coins += scratchAwardData.amount; alert(`🎉 ТРИ В РЯД! Выигрыш: +${scratchAwardData.amount} 🪙!`); }
+        } else if (scratchAwardData.type === 'fish') {
+          pet.coins += scratchAwardData.amount;
+          alert(`🐟 ЗОЛОТАЯ РЫБКА НАЙДЕНА! ДЖЕКПОТ: +${scratchAwardData.amount} 🪙!`);
+        } else if (scratchAwardData.type === 'vip') {
+          if (scratchAwardData.isWish) triggerWishDrop("Таганрог VIP Express");
+          else { pet.coins += 100; alert(`⭐ VIP БИЛЕТ: ${scratchAwardData.prizeName}!`); }
+        }
+      } else {
+        sound.pop();
+        alert("В этот раз мимо! Попробуй другой билетик 🐾");
+      }
+      updatePetUI();
+    }
+
+    scratchCanvas?.addEventListener('pointerdown', (e) => {
+      isScratching = true;
+      const rect = scratchCanvas.getBoundingClientRect();
+      scratchAt((e.clientX - rect.left) * (scratchCanvas.width / rect.width), (e.clientY - rect.top) * (scratchCanvas.height / rect.height));
+    });
+
+    scratchCanvas?.addEventListener('pointermove', (e) => {
+      if (!isScratching) return;
+      const rect = scratchCanvas.getBoundingClientRect();
+      scratchAt((e.clientX - rect.left) * (scratchCanvas.width / rect.width), (e.clientY - rect.top) * (scratchCanvas.height / rect.height));
+    });
+
+    window.addEventListener('pointerup', () => { isScratching = false; });
+    document.getElementById('btnScratchAutoReveal')?.addEventListener('click', claimScratchPrize);
+    document.getElementById('closeScratchBtn')?.addEventListener('click', () => modalScratchCard.classList.add('hidden'));
+
+    // 3. СЛОТЫ 777
+    const slotSymbols = ['🐱', '🍣', '🪙', '👑', '⭐', '💌', '🌸'];
+    let isSlotSpinning = false;
+    document.getElementById('btnSpinSlots')?.addEventListener('click', () => {
+      if (isSlotSpinning) return;
+      if (pet.coins < 20) return alert("Нужно 20 🪙!");
+      pet.coins -= 20; analytics.spentCoins += 20; updatePetUI();
+      isSlotSpinning = true; document.getElementById('btnSpinSlots').disabled = true;
+      document.getElementById('slotStatusText').innerText = "Барабаны крутятся... 🎰";
+
+      let spins = 0;
+      const interval = setInterval(() => {
+        document.getElementById('slotReel1').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+        document.getElementById('slotReel2').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+        document.getElementById('slotReel3').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+        sound.tick();
+        spins++;
+        if (spins > 16) {
+          clearInterval(interval);
+          isSlotSpinning = false;
+          document.getElementById('btnSpinSlots').disabled = false;
+          const roll = Math.random() * 100;
+          let r1, r2, r3, won = 0;
+          if (roll < 2) { r1 = r2 = r3 = '💌'; triggerWishDrop("Слоты 777"); }
+          else if (roll < 8) { r1 = r2 = r3 = '⭐'; won = 300; }
+          else if (roll < 20) { r1 = r2 = r3 = '👑'; won = 150; }
+          else if (roll < 40) { r1 = r2 = r3 = '🪙'; won = 80; }
+          else if (roll < 65) { r1 = r2 = r3 = '🍣'; won = 50; }
+          else { r1 = '🐱'; r2 = '🍣'; r3 = '⭐'; }
+
+          document.getElementById('slotReel1').innerText = r1;
+          document.getElementById('slotReel2').innerText = r2;
+          document.getElementById('slotReel3').innerText = r3;
+          if (won > 0) {
+            sound.win(); confetti({ particleCount: 50 });
+            pet.coins += won;
+            document.getElementById('slotStatusText').innerHTML = `🎉 ПОБЕДА! <b class="text-amber-300">+${won} 🪙</b>`;
+          } else if (r1 !== '💌') {
+            sound.pop();
+            document.getElementById('slotStatusText').innerText = "Мимо! Попробуй еще разок 🐾";
+          }
+          updatePetUI();
+        }
+      }, 90);
+    });
+
+    // 4. МУР-КРАШ (CRASH ROCKET)
+    let isCrashRunning = false;
+    let crashMultiplier = 1.00;
+    let crashCrashPoint = 1.00;
+    let crashInterval = null;
+    const btnCrashStart = document.getElementById('btnCrashStart');
+    const btnCrashCashout = document.getElementById('btnCrashCashout');
+    const crashMultiplierText = document.getElementById('crashMultiplierText');
+    const crashRocketIcon = document.getElementById('crashRocketIcon');
+    const crashStatusLabel = document.getElementById('crashStatusLabel');
+
+    btnCrashStart?.addEventListener('click', () => {
+      if (isCrashRunning) return;
+      if (pet.coins < 25) return alert("Для запуска ракеты нужно 25 🪙!");
+
+      pet.coins -= 25;
+      analytics.spentCoins += 25;
+      updatePetUI();
+
+      isCrashRunning = true;
+      crashMultiplier = 1.00;
+      // Pre-determine crash point (weighted towards 1.2x - 3.5x, rarely 8x+)
+      const rand = Math.random();
+      if (rand < 0.15) crashCrashPoint = 1.05 + Math.random() * 0.2; // instant crash
+      else if (rand < 0.60) crashCrashPoint = 1.30 + Math.random() * 1.5;
+      else if (rand < 0.90) crashCrashPoint = 2.80 + Math.random() * 3.0;
+      else crashCrashPoint = 6.00 + Math.random() * 6.0; // big pump
+
+      btnCrashStart.disabled = true;
+      btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
+      btnCrashCashout.disabled = false;
+      btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-rose-500 text-white font-black text-xs active:scale-95 shadow-lg animate-pulse";
+      crashStatusLabel.innerText = "Ракета летит! Забери выигрыш!";
+      crashRocketIcon.style.transform = "translateY(-10px) rotate(-15deg)";
+
+      sound.playTone(400, 'sine', 0.1, 0.1);
+
+      crashInterval = setInterval(() => {
+        crashMultiplier += 0.03 * (crashMultiplier * 0.4);
+        crashMultiplierText.innerText = `${crashMultiplier.toFixed(2)}x`;
+        sound.tick();
+
+        if (crashMultiplier >= crashCrashPoint) {
+          // EXPLODE!
+          clearInterval(crashInterval);
+          isCrashRunning = false;
+          sound.playTone(110, 'sawtooth', 0.3, 0.4);
+          triggerHaptic();
+          crashMultiplierText.className = "mono-font text-4xl font-black text-rose-500";
+          crashRocketIcon.innerText = "💥";
+          crashRocketIcon.style.transform = "translateY(0px) rotate(0deg)";
+          crashStatusLabel.innerText = `КРАШ на ${crashMultiplier.toFixed(2)}x! Ставка сгорела 🙀`;
+
+          btnCrashCashout.disabled = true;
+          btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gray-600 text-gray-400 font-black text-xs cursor-not-allowed";
+          btnCrashStart.disabled = false;
+          btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+        }
+      }, 100);
+    });
+
+    btnCrashCashout?.addEventListener('click', () => {
+      if (!isCrashRunning) return;
+      clearInterval(crashInterval);
+      isCrashRunning = false;
+
+      const won = Math.floor(25 * crashMultiplier);
+      pet.coins += won;
+      sound.win();
+      confetti({ particleCount: 50, spread: 60 });
+
+      crashStatusLabel.innerHTML = `ВЫИГРЫШ: <b class="text-amber-300">+${won} 🪙</b> (на ${crashMultiplier.toFixed(2)}x)!`;
+      logAuditEvent(`Мур-Краш: зафиксировала x${crashMultiplier.toFixed(2)} (+${won} 🪙)`, '🚀');
+
+      btnCrashCashout.disabled = true;
+      btnCrashCashout.className = "flex-1 py-3 rounded-2xl bg-gray-600 text-gray-400 font-black text-xs cursor-not-allowed";
+      btnCrashStart.disabled = false;
+      btnCrashStart.className = "flex-1 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+
+      updatePetUI();
+    });
+
+    // 5. КОШАЧЬИ КОСТИ (DICE)
+    window.playDiceGame = function(choice) {
+      if (pet.coins < 15) return alert("Нужно 15 🪙 для броска костей!");
+      pet.coins -= 15;
+      analytics.spentCoins += 15;
+      updatePetUI();
+
+      sound.tick();
+      const d1 = Math.floor(Math.random() * 6) + 1;
+      const d2 = Math.floor(Math.random() * 6) + 1;
+      const sum = d1 + d2;
+      const diceEmojis = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+      document.getElementById('diceVal1').innerText = diceEmojis[d1 - 1];
+      document.getElementById('diceVal2').innerText = diceEmojis[d2 - 1];
+      document.getElementById('diceSumText').innerText = `Сумма: ${sum}`;
+
+      let won = 0;
+      if (choice === 'lo' && sum < 7) won = 30;
+      else if (choice === 'hi' && sum > 7) won = 30;
+      else if (choice === 'seven' && sum === 7) won = 75;
+
+      if (won > 0) {
+        sound.win();
+        confetti({ particleCount: 35 });
+        pet.coins += won;
+        logAuditEvent(`Кости: победа ${choice} (+${won} 🪙)`, '🎲');
+        alert(`🎉 ВЕРНО! Выпало ${sum}. Твой выигрыш: +${won} 🪙!`);
+      } else {
+        sound.pop();
+      }
+      updatePetUI();
+    };
+
+    // =========================================================
+    // МИНИ-ИГРА: КОШАЧЬЯ РЫБАЛКА
+    // =========================================================
+    const modalFishing = document.getElementById('modalFishing');
+    const btnFishingAction = document.getElementById('btnFishingAction');
+    const fishingBobber = document.getElementById('fishingBobber');
+    const fishingAlert = document.getElementById('fishingAlert');
+    const fishingResult = document.getElementById('fishingResult');
+
+    let fishingState = 'idle';
+    let fishingTimer = null;
+    let biteTimer = null;
+
+    document.getElementById('btnJobFishing')?.addEventListener('click', () => {
+      document.getElementById('modalWork').classList.add('hidden');
+      modalFishing.classList.remove('hidden');
+      resetFishing();
+      logAuditEvent('Запустила Кошачью Рыбалку', '🎣');
+    });
+
+    function resetFishing() {
+      fishingState = 'idle';
+      clearTimeout(fishingTimer);
+      clearTimeout(biteTimer);
+      fishingBobber.className = "text-5xl transition-transform duration-300 mt-6";
+      fishingBobber.innerText = "🪝";
+      fishingAlert.style.opacity = '0';
+      fishingResult.innerText = "Закинь удочку в пруд!";
+      btnFishingAction.innerText = "ЗАБРОСИТЬ УДОЧКУ 🎣";
+      btnFishingAction.className = "w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+    }
+
+    btnFishingAction?.addEventListener('click', () => {
+      if (fishingState === 'idle') {
+        sound.pop();
+        fishingState = 'waiting';
+        fishingBobber.innerText = "🔴";
+        fishingBobber.className = "text-5xl transition-transform duration-300 mt-10 animate-bounce";
+        fishingResult.innerText = "Ждем поклёвки... Терпение, котик!";
+        btnFishingAction.innerText = "ЖДЕМ ПОКЛЁВКИ... ⏳";
+        btnFishingAction.className = "w-full max-w-sm py-3.5 rounded-2xl bg-gray-700 text-gray-400 font-black text-xs cursor-not-allowed";
+
+        const delay = 1600 + Math.random() * 2400;
+        fishingTimer = setTimeout(() => {
+          fishingState = 'bite';
+          sound.playTone(850, 'triangle', 0.15, 0.3);
+          triggerHaptic();
+          fishingBobber.className = "text-5xl transition-transform duration-100 mt-16 scale-125";
+          fishingAlert.style.opacity = '1';
+          fishingResult.innerText = "ПОДСЕКАЙ БЫСТРЕЕ!";
+          btnFishingAction.innerText = "ПОДСЕЧЬ! 🎯";
+          btnFishingAction.className = "w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-xs active:scale-95 animate-pulse shadow-lg cursor-pointer";
+
+          biteTimer = setTimeout(() => {
+            if (fishingState === 'bite') {
+              sound.pop();
+              fishingResult.innerText = "Эх, рыба сорвалась с крючка!";
+              resetFishing();
+            }
+          }, 900);
+        }, delay);
+
+      } else if (fishingState === 'bite') {
+        clearTimeout(biteTimer);
+        fishingState = 'idle';
+        sound.win();
+        confetti({ particleCount: 40, spread: 60 });
+
+        const roll = Math.random() * 100;
+        let fishEmoji = '🐟', fishName = 'Карасик', earned = 10;
+
+        if (roll < 8) {
+          fishEmoji = '👑'; fishName = 'Золотая рыбка-желание!'; earned = 40;
+          checkRareWishDrop(0.2, "Кошачья Рыбалка");
+        } else if (roll < 25) {
+          fishEmoji = '🐡'; fishName = 'Королевский Осетр'; earned = 28;
+        } else if (roll < 55) {
+          fishEmoji = '🐠'; fishName = 'Речная Форель'; earned = 18;
+        }
+
+        pet.coins += earned;
+        pet.energy = Math.max(5, pet.energy - 10);
+        addXP(earned);
+
+        fishingBobber.innerText = fishEmoji;
+        fishingAlert.style.opacity = '0';
+        fishingResult.innerHTML = `Поймана <b class="text-amber-300">${fishName}</b>! <span class="text-emerald-400">+${earned} 🪙</span>`;
+        logAuditEvent(`Рыбалка: поймала ${fishName} (+${earned} 🪙)`, '🎣');
+        updatePetUI();
+
+        btnFishingAction.innerText = "ЕЩЕ ЗАБРОС 🎣";
+        btnFishingAction.className = "w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-xs active:scale-95 transition shadow-lg";
+      }
+    });
+
+    // =========================================================
+    // МИНИ-ИГРА: МУР-ПАМЯТЬ
+    // =========================================================
+    const modalMemory = document.getElementById('modalMemory');
+    const memoryGrid = document.getElementById('memoryCardsGrid');
+    const memoryTimerText = document.getElementById('memoryTimerText');
+
+    let memoryTimer = null;
+    let memoryTimeLeft = 25;
+    let memoryFlipped = [];
+    let memoryMatchedCount = 0;
+    let isMemoryLocked = false;
+
+    document.getElementById('btnJobMemory')?.addEventListener('click', () => {
+      document.getElementById('modalWork').classList.add('hidden');
+      modalMemory.classList.remove('hidden');
+      startMemoryGame();
+      logAuditEvent('Запустила Мур-Память', '🧩');
+    });
+
+    function startMemoryGame() {
+      memoryTimeLeft = 25;
+      memoryFlipped = [];
+      memoryMatchedCount = 0;
+      isMemoryLocked = false;
+      memoryTimerText.innerText = `${memoryTimeLeft}с`;
+      memoryGrid.innerHTML = '';
+
+      const items = ['🍣', '🍕', '🍰', '🐱', '👑', '🌸'];
+      const cards = [...items, ...items].sort(() => Math.random() - 0.5);
+
+      cards.forEach((sym, idx) => {
+        const card = document.createElement('div');
+        card.className = "h-16 bg-[#18192a] border border-[#2e304f] rounded-2xl flex items-center justify-center text-3xl cursor-pointer active:scale-90 transition-transform shadow-inner";
+        card.dataset.sym = sym;
+        card.dataset.index = idx;
+        card.innerText = '❓';
+
+        card.addEventListener('pointerdown', () => handleMemoryCardClick(card));
+        memoryGrid.appendChild(card);
+      });
+
+      clearInterval(memoryTimer);
+      memoryTimer = setInterval(() => {
+        memoryTimeLeft--;
+        memoryTimerText.innerText = `${memoryTimeLeft}с`;
+        if (memoryTimeLeft <= 0) {
+          clearInterval(memoryTimer);
+          sound.pop();
+          alert("Время вышло! Попробуй собрать быстрее 🐾");
+          modalMemory.classList.add('hidden');
+        }
+      }, 1000);
+    }
+
+    function handleMemoryCardClick(card) {
+      if (isMemoryLocked || card.innerText !== '❓') return;
+
+      sound.pop();
+      card.innerText = card.dataset.sym;
+      card.classList.add('border-pink-500', 'bg-pink-950/40');
+      memoryFlipped.push(card);
+
+      if (memoryFlipped.length === 2) {
+        isMemoryLocked = true;
+        const [c1, c2] = memoryFlipped;
+
+        if (c1.dataset.sym === c2.dataset.sym) {
+          sound.win();
+          triggerHaptic();
+          c1.classList.add('border-emerald-400', 'bg-emerald-950/40');
+          c2.classList.add('border-emerald-400', 'bg-emerald-950/40');
+          memoryMatchedCount++;
+          memoryFlipped = [];
+          isMemoryLocked = false;
+
+          if (memoryMatchedCount === 6) {
+            clearInterval(memoryTimer);
+            confetti({ particleCount: 60, spread: 75 });
+            const earned = 15 + Math.min(15, memoryTimeLeft);
+            pet.coins += earned;
+            pet.energy = Math.max(5, pet.energy - 12);
+            addXP(earned);
+            logAuditEvent(`Мур-Память: все пары найдены (+${earned} 🪙)`, '🧩');
+            updatePetUI();
+            setTimeout(() => {
+              alert(`🎉 ОТЛИЧНАЯ ПАМЯТЬ! Все пары найдены! Награда: +${earned} 🪙!`);
+              modalMemory.classList.add('hidden');
+            }, 300);
+          }
+        } else {
+          setTimeout(() => {
+            c1.innerText = '❓';
+            c2.innerText = '❓';
+            c1.className = "h-16 bg-[#18192a] border border-[#2e304f] rounded-2xl flex items-center justify-center text-3xl cursor-pointer active:scale-90 transition-transform shadow-inner";
+            c2.className = "h-16 bg-[#18192a] border border-[#2e304f] rounded-2xl flex items-center justify-center text-3xl cursor-pointer active:scale-90 transition-transform shadow-inner";
+            memoryFlipped = [];
+            isMemoryLocked = false;
+          }, 650);
+        }
+      }
+    }
+
+    // =========================================================
     // ТЕТРИС ДВИЖОК
     // =========================================================
     const tetrisCanvas = document.getElementById('tetrisCanvas'), tCtx = tetrisCanvas.getContext('2d');
@@ -1859,16 +2509,16 @@
       { color: '#f9e2af', blocks: [[1,1,1],[1,0,0]] }
     ];
 
-    document.getElementById('btnJobTetris').addEventListener('click', () => {
+    document.getElementById('btnJobTetris')?.addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
       document.getElementById('modalTetris').classList.remove('hidden');
       document.getElementById('tetrisOverlay').classList.remove('hidden');
     });
-    document.getElementById('closeTetrisBtn').addEventListener('click', () => {
+    document.getElementById('closeTetrisBtn')?.addEventListener('click', () => {
       clearInterval(tetrisTimer);
       document.getElementById('modalTetris').classList.add('hidden');
     });
-    document.getElementById('btnStartTetris').addEventListener('click', () => {
+    document.getElementById('btnStartTetris')?.addEventListener('click', () => {
       document.getElementById('tetrisOverlay').classList.add('hidden');
       tetrisBoard = Array.from({ length: 18 }, () => Array(10).fill(0));
       tetrisScore = 0;
@@ -1915,13 +2565,13 @@
           clearInterval(tetrisTimer);
           sound.win();
           confetti({ particleCount: 30, spread: 60 });
-          const earned = Math.min(ACTIVE_ECONOMY.maxTetris, Math.max(8, Math.floor(tetrisScore / 3)));
+          const earned = Math.min(ACTIVE_ECONOMY.maxTetris || 25, Math.max(8, Math.floor(tetrisScore / 3)));
           pet.coins += earned;
           pet.energy = Math.max(5, pet.energy - 15);
           addXP(earned);
           logAuditEvent(`Тетрис (+${earned} 🪙)`, '🧱');
           document.getElementById('tetrisOverlay').classList.remove('hidden');
-          document.getElementById('tetrisOverlay').innerHTML = `<span class="text-4xl">🧱</span><h4 class="cute-font text-amber-300 font-bold mt-1">Игра окончена!</h4><p class="text-xs text-gray-300">+${earned} 🪙</p><button id="btnRestartTetris" class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartTetris').click()">СЫГРАТЬ СНОВА ✨</button>`;
+          document.getElementById('tetrisOverlay').innerHTML = `<span class="text-4xl">🧱</span><h4 class="cute-font text-amber-300 font-bold mt-1">Игра окончена!</h4><p class="text-xs text-gray-300">+${earned} 🪙</p><button class="cute-font bg-pink-500 text-white font-bold py-2 px-5 rounded-xl mt-3 active:scale-95" onclick="document.getElementById('btnStartTetris').click()">СЫГРАТЬ СНОВА ✨</button>`;
           checkRareWishDrop(ACTIVE_WISH_CHANCES.tetris, "Тетрис");
           updatePetUI();
         }
@@ -1948,14 +2598,14 @@
       }
     }
 
-    document.getElementById('btnTetrisLeft').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(-1, 0, curPiece.blocks)) { curPiece.x--; sound.tick(); drawTetris(); } });
-    document.getElementById('btnTetrisRight').addEventListener('click', () => { if (curPiece && !checkTetrisCollision(1, 0, curPiece.blocks)) { curPiece.x++; sound.tick(); drawTetris(); } });
-    document.getElementById('btnTetrisRotate').addEventListener('click', () => {
+    document.getElementById('btnTetrisLeft')?.addEventListener('click', () => { if (curPiece && !checkTetrisCollision(-1, 0, curPiece.blocks)) { curPiece.x--; sound.tick(); drawTetris(); } });
+    document.getElementById('btnTetrisRight')?.addEventListener('click', () => { if (curPiece && !checkTetrisCollision(1, 0, curPiece.blocks)) { curPiece.x++; sound.tick(); drawTetris(); } });
+    document.getElementById('btnTetrisRotate')?.addEventListener('click', () => {
       if (!curPiece) return;
       const rot = curPiece.blocks[0].map((_, i) => curPiece.blocks.map(row => row[i]).reverse());
       if (!checkTetrisCollision(0, 0, rot)) { curPiece.blocks = rot; sound.tick(); drawTetris(); }
     });
-    document.getElementById('btnTetrisDown').addEventListener('click', updateTetris);
+    document.getElementById('btnTetrisDown')?.addEventListener('click', updateTetris);
 
     // =========================================================
     // МУР-РАННЕР SUBWAY CAT
@@ -1965,17 +2615,17 @@
     let playerTargetLane = 0, playerX = 0, playerY = 0, isJumping = false, isSliding = false, jumpVel = 0, slideTimer = 0;
     let hasShield = false, magnetTime = 0, trackObjects = [], trackOffset = 0;
 
-    document.getElementById('btnJobRunner').addEventListener('click', () => {
+    document.getElementById('btnJobRunner')?.addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
       document.getElementById('modalRunner').classList.remove('hidden');
       document.getElementById('runnerOverlay').classList.remove('hidden');
     });
-    document.getElementById('closeRunnerBtn').addEventListener('click', () => {
+    document.getElementById('closeRunnerBtn')?.addEventListener('click', () => {
       isRunnerRunning = false;
       cancelAnimationFrame(runnerAnimFrame);
       document.getElementById('modalRunner').classList.add('hidden');
     });
-    document.getElementById('btnStartRunner').addEventListener('click', () => {
+    document.getElementById('btnStartRunner')?.addEventListener('click', () => {
       document.getElementById('runnerOverlay').classList.add('hidden');
       isRunnerRunning = true;
       runnerCoins = 0;
@@ -2044,13 +2694,13 @@
             cancelAnimationFrame(runnerAnimFrame);
             sound.win();
             confetti({ particleCount: 35, spread: 70 });
-            const earned = Math.min(ACTIVE_ECONOMY.maxRunner, Math.max(10, runnerCoins));
+            const earned = Math.min(ACTIVE_ECONOMY.maxRunner || 25, Math.max(10, runnerCoins));
             pet.coins += earned;
             pet.energy = Math.max(5, pet.energy - 15);
             addXP(earned);
             logAuditEvent(`Subway Cat (+${earned} 🪙)`, '🏃');
             document.getElementById('runnerOverlay').classList.remove('hidden');
-            document.getElementById('runnerOverlay').innerHTML = `<span class="text-5xl">💥</span><h4 class="cute-font text-amber-300 font-bold mt-2">Забег окончен!</h4><p class="text-xs text-gray-200">+${earned} 🪙</p><button id="btnRestartSubway" class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-2.5 px-6 rounded-2xl text-xs mt-4 active:scale-95" onclick="document.getElementById('btnStartRunner').click()">ЕЩЕ ЗАБЕГ 🛹</button>`;
+            document.getElementById('runnerOverlay').innerHTML = `<span class="text-5xl">💥</span><h4 class="cute-font text-amber-300 font-bold mt-2">Забег окончен!</h4><p class="text-xs text-gray-200">+${earned} 🪙</p><button class="cute-font bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black py-2.5 px-6 rounded-2xl text-xs mt-4 active:scale-95" onclick="document.getElementById('btnStartRunner').click()">ЕЩЕ ЗАБЕГ 🛹</button>`;
             checkRareWishDrop(ACTIVE_WISH_CHANCES.subway, "Subway Cat");
             updatePetUI();
             return;
@@ -2088,27 +2738,13 @@
       runnerAnimFrame = requestAnimationFrame(loop);
     });
 
-    document.getElementById('btnCtrlLeft').addEventListener('click', () => { if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); } });
-    document.getElementById('btnCtrlRight').addEventListener('click', () => { if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); } });
-    document.getElementById('btnCtrlJump').addEventListener('click', () => { if (!isJumping && !isSliding) { isJumping = true; jumpVel = 11; sound.tick(); } });
-    document.getElementById('btnCtrlSlide').addEventListener('click', () => { if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); } });
-
-    let tStartX = 0, tStartY = 0;
-    document.getElementById('runnerCanvas').addEventListener('touchstart', (e) => { tStartX = e.touches[0].clientX; tStartY = e.touches[0].clientY; }, { passive: true });
-    document.getElementById('runnerCanvas').addEventListener('touchend', (e) => {
-      if (!isRunnerRunning) return;
-      const dx = e.changedTouches[0].clientX - tStartX, dy = e.changedTouches[0].clientY - tStartY;
-      if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 35 && playerTargetLane < 1) { playerTargetLane++; sound.tick(); }
-        else if (dx < -35 && playerTargetLane > -1) { playerTargetLane--; sound.tick(); }
-      } else {
-        if (dy < -35 && !isJumping && !isSliding) { isJumping = true; jumpVel = 11; sound.tick(); }
-        else if (dy > 35 && !isSliding) { isSliding = true; slideTimer = 35; sound.tick(); }
-      }
-    }, { passive: true });
+    document.getElementById('btnCtrlLeft')?.addEventListener('click', () => { if (playerTargetLane > -1) { playerTargetLane--; sound.tick(); } });
+    document.getElementById('btnCtrlRight')?.addEventListener('click', () => { if (playerTargetLane < 1) { playerTargetLane++; sound.tick(); } });
+    document.getElementById('btnCtrlJump')?.addEventListener('click', () => { if (!isJumping && !isSliding) { isJumping = true; jumpVel = 11; sound.tick(); } });
+    document.getElementById('btnCtrlSlide')?.addEventListener('click', () => { if (!isSliding) { isSliding = true; slideTimer = 35; sound.tick(); } });
 
     // =========================================================
-    // 3. КУРЬЕР ВКУСНЯШЕК
+    // КУРЬЕР ВКУСНЯШЕК
     // =========================================================
     const modalMiniGame = document.getElementById('modalMiniGame');
     const miniGameCanvas = document.getElementById('miniGameCanvas');
@@ -2120,20 +2756,20 @@
 
     let courierScore = 0, courierTimeLeft = 15, courierInterval = null, isCourierRunning = false;
 
-    document.getElementById('btnJobCatcher').addEventListener('click', () => {
+    document.getElementById('btnJobCatcher')?.addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
       modalMiniGame.classList.remove('hidden');
       gameStartOverlay.classList.remove('hidden');
       logAuditEvent('Запустила Курьера вкусняшек', '🛵');
     });
 
-    closeMiniGameBtn.addEventListener('click', () => {
+    closeMiniGameBtn?.addEventListener('click', () => {
       isCourierRunning = false;
       clearInterval(courierInterval);
       modalMiniGame.classList.add('hidden');
     });
 
-    btnStartGame.addEventListener('click', startCourierGame);
+    btnStartGame?.addEventListener('click', startCourierGame);
 
     function startCourierGame() {
       gameStartOverlay.classList.add('hidden');
@@ -2185,17 +2821,16 @@
         <span class="text-4xl">🛵</span>
         <h4 class="cute-font text-amber-300 font-bold text-base mt-2">Смена окончена!</h4>
         <p class="text-xs text-gray-300 mt-1">Доставлено: <b class="text-pink-300">${courierScore}</b><br>Награда: <b class="text-amber-300">+${earnedCoins} 🪙</b></p>
-        <button id="btnRestartCourier" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-3">
+        <button id="btnRestartCourier" class="cute-font bg-pink-500 hover:bg-pink-400 text-white font-bold py-2 px-5 rounded-2xl text-xs active:scale-95 transition shadow-lg mt-3" onclick="startCourierGame()">
           ЕЩЕ СМЕНУ 🛵
         </button>
       `;
-      document.getElementById('btnRestartCourier').addEventListener('click', startCourierGame);
       checkRareWishDrop(ACTIVE_WISH_CHANCES.catcher || 0.3, "Мини-игра Курьер");
       updatePetUI();
     }
 
     // =========================================================
-    // 4. OSU! CAT: РИТМ-ДВИЖОК & СИНТЕЗАТОР (С КЛАССИКОЙ)
+    // OSU! CAT STREAMER
     // =========================================================
     const modalRhythmGame = document.getElementById('modalRhythmGame');
     const rhythmStartOverlay = document.getElementById('rhythmStartOverlay');
@@ -2210,88 +2845,18 @@
     const osuGenreBadge = document.getElementById('osuGenreBadge');
 
     const OSU_GENRES = {
-      mozart: {
-        name: "Венский вальс (Моцарт)",
-        bpm: 126,
-        rootFreq: 261.63,
-        scale: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16],
-        style: 'waltz'
-      },
-      storm: {
-        name: "Вивальди «Шторм»",
-        bpm: 144,
-        rootFreq: 196.00,
-        scale: [0, 2, 3, 5, 7, 8, 11, 12, 14, 15],
-        style: 'baroque'
-      },
-      moonlight: {
-        name: "Лунная соната (Неоклассика)",
-        bpm: 104,
-        rootFreq: 220.00,
-        scale: [0, 2, 3, 5, 7, 8, 10, 12],
-        style: 'piano'
-      },
-      kawaii: {
-        name: "Kawaii Anime Pop",
-        bpm: 120,
-        rootFreq: 293.66,
-        scale: [0, 2, 4, 7, 9, 12, 14],
-        style: 'anime'
-      },
-      phonk: {
-        name: "Drift Phonk",
-        bpm: 136,
-        rootFreq: 146.83,
-        scale: [0, 1, 5, 7, 8, 12],
-        style: 'phonk'
-      }
+      mozart: { name: "Венский вальс (Моцарт)", bpm: 126, rootFreq: 261.63, scale: [0, 2, 4, 5, 7, 9, 11, 12, 14, 16], style: 'waltz' },
+      storm: { name: "Вивальди «Шторм»", bpm: 144, rootFreq: 196.00, scale: [0, 2, 3, 5, 7, 8, 11, 12, 14, 15], style: 'baroque' },
+      moonlight: { name: "Лунная соната (Неоклассика)", bpm: 104, rootFreq: 220.00, scale: [0, 2, 3, 5, 7, 8, 10, 12], style: 'piano' },
+      kawaii: { name: "Kawaii Anime Pop", bpm: 120, rootFreq: 293.66, scale: [0, 2, 4, 7, 9, 12, 14], style: 'anime' },
+      phonk: { name: "Drift Phonk", bpm: 136, rootFreq: 146.83, scale: [0, 1, 5, 7, 8, 12], style: 'phonk' }
     };
 
     const OSU_DIFFICULTIES = {
-      easy: {
-        name: "Лапка",
-        approachTime: 1.15,
-        radius: 34,
-        spawnStep: 2,
-        hpDrain: 4,
-        window300: 0.10,
-        window100: 0.18,
-        window50: 0.26,
-        multiplier: 1.0
-      },
-      normal: {
-        name: "Хвостик",
-        approachTime: 0.90,
-        radius: 29,
-        spawnStep: 1,
-        hpDrain: 6,
-        window300: 0.08,
-        window100: 0.15,
-        window50: 0.22,
-        multiplier: 1.3
-      },
-      hard: {
-        name: "Тыгыдык",
-        approachTime: 0.72,
-        radius: 25,
-        spawnStep: 0.5,
-        hpDrain: 9,
-        window300: 0.065,
-        window100: 0.12,
-        window50: 0.18,
-        multiplier: 1.7
-      },
-      insane: {
-        name: "Безумие",
-        approachTime: 0.52,
-        radius: 21,
-        spawnStep: 0.25,
-        hpDrain: 12,
-        window300: 0.05,
-        window100: 0.09,
-        window50: 0.14,
-        multiplier: 2.2
-      }
+      easy: { name: "Лапка", approachTime: 1.15, radius: 34, spawnStep: 2, hpDrain: 4, window300: 0.10, window100: 0.18, window50: 0.26, multiplier: 1.0 },
+      normal: { name: "Хвостик", approachTime: 0.90, radius: 29, spawnStep: 1, hpDrain: 6, window300: 0.08, window100: 0.15, window50: 0.22, multiplier: 1.3 },
+      hard: { name: "Тыгыдык", approachTime: 0.72, radius: 25, spawnStep: 0.5, hpDrain: 9, window300: 0.065, window100: 0.12, window50: 0.18, multiplier: 1.7 },
+      insane: { name: "Безумие", approachTime: 0.52, radius: 21, spawnStep: 0.25, hpDrain: 12, window300: 0.05, window100: 0.09, window50: 0.14, multiplier: 2.2 }
     };
 
     let selectedGenre = 'mozart';
@@ -2310,7 +2875,6 @@
     let osuHp = 100;
     let osuHitsCount = { 300: 0, 100: 0, 50: 0, miss: 0 };
     let currentCircleIndex = 1;
-
     let nextNoteTime = 0;
     let current16thStep = 0;
 
@@ -2334,15 +2898,15 @@
       });
     });
 
-    document.getElementById('btnJobRhythm').addEventListener('click', () => {
+    document.getElementById('btnJobRhythm')?.addEventListener('click', () => {
       document.getElementById('modalWork').classList.add('hidden');
       modalRhythmGame.classList.remove('hidden');
       rhythmStartOverlay.classList.remove('hidden');
       logAuditEvent('Открыла Osu! Cat Streamer', '🎧');
     });
 
-    closeRhythmBtn.addEventListener('click', stopOsuGame);
-    btnStartOsuGame.addEventListener('click', startOsuGame);
+    closeRhythmBtn?.addEventListener('click', stopOsuGame);
+    btnStartOsuGame?.addEventListener('click', startOsuGame);
 
     function initOsuAudioContext() {
       if (!osuAudioCtx) {
@@ -2386,15 +2950,10 @@
       const step = stepIndex % 16;
 
       if (g.style === 'waltz') {
-        if (step % 6 === 0) {
-          playInstrumentNote(g.rootFreq * 0.5, time, 0.45, 'triangle', 0.4);
-        } else if (step % 2 === 0) {
-          playInstrumentNote(g.rootFreq * 1.5, time, 0.12, 'sine', 0.18);
-        }
+        if (step % 6 === 0) playInstrumentNote(g.rootFreq * 0.5, time, 0.45, 'triangle', 0.4);
+        else if (step % 2 === 0) playInstrumentNote(g.rootFreq * 1.5, time, 0.12, 'sine', 0.18);
       } else if (g.style === 'baroque') {
-        if (step % 4 === 0) {
-          playInstrumentNote(g.rootFreq * 0.5, time, 0.22, 'sawtooth', 0.25, 600);
-        }
+        if (step % 4 === 0) playInstrumentNote(g.rootFreq * 0.5, time, 0.22, 'sawtooth', 0.25, 600);
       } else {
         if (step === 0 || step === 8) {
           const osc = osuAudioCtx.createOscillator();
@@ -2418,13 +2977,9 @@
         const semitone = g.scale[noteIdx];
         const freq = g.rootFreq * Math.pow(2, semitone / 12) * (g.style === 'baroque' ? 2 : 1.5);
 
-        if (g.style === 'baroque') {
-          playInstrumentNote(freq, time, 0.14, 'sawtooth', 0.18, 2200);
-        } else if (g.style === 'piano' || g.style === 'waltz') {
-          playInstrumentNote(freq, time, 0.25, 'triangle', 0.22);
-        } else {
-          playInstrumentNote(freq, time, 0.12, 'square', 0.12, 1800);
-        }
+        if (g.style === 'baroque') playInstrumentNote(freq, time, 0.14, 'sawtooth', 0.18, 2200);
+        else if (g.style === 'piano' || g.style === 'waltz') playInstrumentNote(freq, time, 0.25, 'triangle', 0.22);
+        else playInstrumentNote(freq, time, 0.12, 'square', 0.12, 1800);
       }
 
       const diffConf = OSU_DIFFICULTIES[selectedDiff];
@@ -2583,7 +3138,7 @@
       osuHitFeedbacks.push({ text, x, y, color, alpha: 1.0 });
     }
 
-    osuCanvas.addEventListener('pointerdown', (e) => {
+    osuCanvas?.addEventListener('pointerdown', (e) => {
       if (!isOsuRunning || !osuAudioCtx) return;
       const rect = osuCanvas.getBoundingClientRect();
       const clickX = (e.clientX - rect.left) * (osuCanvas.width / rect.width);
@@ -2618,8 +3173,7 @@
 
       oCtx.fillStyle = '#1e1b4b';
       oCtx.fillRect(10, 8, w - 20, 6);
-      const hpColor = osuHp > 50 ? '#34d399' : osuHp > 25 ? '#fbbf24' : '#f43f5e';
-      oCtx.fillStyle = hpColor;
+      oCtx.fillStyle = osuHp > 50 ? '#34d399' : osuHp > 25 ? '#fbbf24' : '#f43f5e';
       oCtx.fillRect(10, 8, (w - 20) * (osuHp / 100), 6);
 
       osuCircles.forEach(c => {
@@ -2718,8 +3272,8 @@
     // ДЗЕН-КЛИКЕР
     // =========================================================
     let zenClicks = 0;
-    document.getElementById('btnZenClicker').addEventListener('click', () => document.getElementById('modalZen').classList.remove('hidden'));
-    document.getElementById('zenTapArea').addEventListener('pointerdown', (e) => {
+    document.getElementById('btnZenClicker')?.addEventListener('click', () => document.getElementById('modalZen').classList.remove('hidden'));
+    document.getElementById('zenTapArea')?.addEventListener('pointerdown', (e) => {
       zenClicks++;
       document.getElementById('zenTotalClicks').innerText = zenClicks;
       sound.purr();
@@ -2741,48 +3295,66 @@
     });
 
     // =========================================================
-    // РУЛЕТКА ВКУСНОСТЕЙ
+    // РУЛЕТКА ВКУСНОСТЕЙ (ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ ХОЛСТ 600x600)
     // =========================================================
-    const canvas = document.getElementById('rouletteCanvas'), ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('rouletteCanvas');
+    const ctx = canvas.getContext('2d');
     let currentAngle = 0, isSpinning = false;
     const PALETTE = ["#FF5E57", "#FFA940", "#FFD53F", "#1DD1A1", "#48DBFB", "#9B59B6", "#FF6B81", "#54A0FF"];
 
     function drawWheel() {
-      const w = 300, h = 300, cx = 150, cy = 150, radius = 132, arc = (2 * Math.PI) / wheelItems.length;
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2, radius = cx - 28; // Dinamiko a 600px![cite: 6]
+      const count = wheelItems.length, arc = (2 * Math.PI) / count;
+
       ctx.clearRect(0, 0, w, h);
-      for (let i = 0; i < wheelItems.length; i++) {
+      if (count === 0) return;
+
+      for (let i = 0; i < count; i++) {
         const start = currentAngle + i * arc;
+        const end = start + arc;
         ctx.beginPath();
         ctx.fillStyle = PALETTE[i % PALETTE.length];
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, radius, start, start + arc);
+        ctx.arc(cx, cy, radius, start, end);
         ctx.closePath();
         ctx.fill();
+        ctx.strokeStyle = "#181825";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(start + arc / 2);
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 16px 'Nunito', sans-serif";
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 6;
+        ctx.font = "bold 22px 'Nunito', sans-serif";
         ctx.textAlign = "right";
-        ctx.fillText(wheelItems[i].slice(0, 14), radius - 20, 0);
+        ctx.textBaseline = "middle";
+
+        let text = wheelItems[i];
+        if (text.length > 16) text = text.slice(0, 14) + "..";
+        ctx.fillText(text, radius - 35, 0);
         ctx.restore();
       }
+
       ctx.beginPath();
-      ctx.arc(cx, cy, 28, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, 45, 0, 2 * Math.PI);
       ctx.fillStyle = "#1e1e2e";
       ctx.fill();
       ctx.strokeStyle = "#f38ba8";
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 6;
       ctx.stroke();
       ctx.fillStyle = "#f38ba8";
-      ctx.font = "18px sans-serif";
+      ctx.font = "26px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("💖", cx, cy + 2);
     }
 
     const btnSpinWheel = document.getElementById('btnSpinWheel');
-    btnSpinWheel.addEventListener('click', () => {
+    btnSpinWheel?.addEventListener('click', () => {
       if (isSpinning || wheelItems.length < 2) return;
       isSpinning = true;
       btnSpinWheel.disabled = true;
@@ -2820,7 +3392,7 @@
       requestAnimationFrame(animate);
     });
 
-    document.getElementById('btnOpenWheelSettings').addEventListener('click', () => {
+    document.getElementById('btnOpenWheelSettings')?.addEventListener('click', () => {
       renderWheelSettingsList();
       document.getElementById('modalWheelSettings').classList.remove('hidden');
     });
@@ -2841,7 +3413,7 @@
       drawWheel();
     };
 
-    document.getElementById('btnAddWheelItem').addEventListener('click', () => {
+    document.getElementById('btnAddWheelItem')?.addEventListener('click', () => {
       const val = document.getElementById('inputNewItem').value.trim();
       if (val) {
         wheelItems.push(val);
@@ -2852,15 +3424,15 @@
       }
     });
 
-    // Навигация
-    document.getElementById('navTabPet').addEventListener('click', () => {
+    // Navigation
+    document.getElementById('navTabPet')?.addEventListener('click', () => {
       document.getElementById('tabPet').classList.remove('hidden');
       document.getElementById('tabRoulette').classList.add('hidden');
       document.getElementById('navTabPet').className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
       document.getElementById('navTabRoulette').className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
     });
 
-    document.getElementById('navTabRoulette').addEventListener('click', () => {
+    document.getElementById('navTabRoulette')?.addEventListener('click', () => {
       document.getElementById('tabRoulette').classList.remove('hidden');
       document.getElementById('tabRoulette').classList.add('flex');
       document.getElementById('tabPet').classList.add('hidden');
@@ -2869,13 +3441,13 @@
       drawWheel();
     });
 
-    document.getElementById('soundToggleBtn').addEventListener('click', () => {
+    document.getElementById('soundToggleBtn')?.addEventListener('click', () => {
       sound.enabled = !sound.enabled;
       document.getElementById('soundToggleBtn').innerText = sound.enabled ? '🔔' : '🔕';
       document.getElementById('soundToggleBtn').classList.toggle('opacity-50', !sound.enabled);
     });
 
-    document.getElementById('btnDailyBonus').addEventListener('click', () => {
+    document.getElementById('btnDailyBonus')?.addEventListener('click', () => {
       const last = parseInt(localStorage.getItem('katya_master_last_bonus')) || 0;
       if (Date.now() - last < 86400000) return alert("Бонус уже получен!");
       localStorage.setItem('katya_master_last_bonus', Date.now());
@@ -2892,7 +3464,7 @@
     });
 
     let secretClicks = 0, secretTimer = null;
-    document.getElementById('headerLevel').addEventListener('click', () => {
+    document.getElementById('headerLevel')?.addEventListener('click', () => {
       secretClicks++;
       clearTimeout(secretTimer);
       secretTimer = setTimeout(() => secretClicks = 0, 1200);
@@ -2900,7 +3472,7 @@
     });
 
     document.querySelectorAll('.closeModalBtn').forEach(b => b.addEventListener('click', () => {
-      document.querySelectorAll('#modalCasesHub, #modalCsgoCase, #modalWardrobe, #modalFeed, #modalWork, #modalTetris, #modalRunner, #modalMiniGame, #modalRhythmGame, #modalZen, #modalSecretWish, #modalWheelSettings').forEach(m => m.classList.add('hidden'));
+      document.querySelectorAll('#modalCasinoHub, #modalScratchCard, #modalFishing, #modalMemory, #modalCsgoCase, #modalWardrobe, #modalFeed, #modalWork, #modalTetris, #modalRunner, #modalMiniGame, #modalRhythmGame, #modalZen, #modalSecretWish, #modalWheelSettings').forEach(m => m.classList.add('hidden'));
     }));
 
     setInterval(() => {
