@@ -269,6 +269,7 @@ function syncToCloud() {
         analytics: window.analytics,
         wishes: window.wishesVault,
         caseHistory: window.caseHistory,
+        feedback: JSON.parse(localStorage.getItem("katya_master_feedback")) || [], // <--- ВОТ ЭТА СТРОКА
         rouletteHistory: JSON.parse(localStorage.getItem("katya_master_roulette_history")) || [],
         audit: JSON.parse(localStorage.getItem("katya_master_audit_events")) || [],
         lastActive: new Date().toLocaleString("ru-RU"),
@@ -1373,6 +1374,229 @@ document.getElementById("btnAddWheelItem")?.addEventListener("click", () => {
     drawWheel();
   }
 });
+
+/* -------------------------------------------------------------------------
+ * ПОЛНОЦЕННЫЙ САППОРТ / ОПРОСНИК (ГЛОБАЛЬНЫЕ ФУНКЦИИ В WINDOW)
+ * ------------------------------------------------------------------------- */
+window.currentFeedbackCategory = "💖 Любовь";
+window.currentFeedbackRating = 5;
+window.attachedScreenshotBase64 = null;
+window.attachedScreenshotFile = null;
+
+window.openSupportModal = function () {
+  const modal = document.getElementById("modalSupport");
+  const input = document.getElementById("supportMessageInput");
+  if (input) input.value = "";
+  const counter = document.getElementById("supportCharCounter");
+  if (counter) counter.innerText = "0/600";
+  window.resetSupportImage();
+  window.onFeedbackCat("💖 Любовь");
+  window.onStarClick(5);
+  modal?.classList.remove("hidden");
+  if (window.sound?.pop) window.sound.pop();
+};
+
+window.closeSupportModal = function () {
+  document.getElementById("modalSupport")?.classList.add("hidden");
+};
+
+// Привязка кнопки на котике
+document.getElementById("btnOpenSupport")?.addEventListener("click", window.openSupportModal);
+
+// Переключение категории
+window.onFeedbackCat = function (cat) {
+  window.currentFeedbackCategory = cat;
+  const btnLove = document.getElementById("typeBtnLove");
+  const btnIdea = document.getElementById("typeBtnIdea");
+  const btnBug = document.getElementById("typeBtnBug");
+
+  const activeCls = "support-cat-btn py-1.5 rounded-xl bg-pink-500 text-white shadow-sm transition font-bold cursor-pointer";
+  const inactiveCls = "support-cat-btn py-1.5 rounded-xl text-gray-400 hover:text-white transition font-bold cursor-pointer";
+
+  if (btnLove) btnLove.className = (cat === "💖 Любовь") ? activeCls : inactiveCls;
+  if (btnIdea) btnIdea.className = (cat === "💡 Идея") ? activeCls : inactiveCls;
+  if (btnBug) btnBug.className = (cat === "🪲 Баг") ? activeCls : inactiveCls;
+  if (window.sound?.pop) window.sound.pop();
+};
+
+// Клик по звездам
+window.onStarClick = function (stars) {
+  window.currentFeedbackRating = stars;
+  const starElements = document.querySelectorAll("#supportRatingStars .star-item");
+  starElements.forEach((el, idx) => {
+    el.className = (idx < stars) ? "star-item text-amber-400 p-0.5 select-none" : "star-item text-gray-600 p-0.5 select-none";
+  });
+  if (window.sound?.pop) window.sound.pop();
+};
+
+// Картинки
+window.onSupportFileChange = function (e) {
+  if (e.target.files && e.target.files[0]) {
+    window.processImageFile(e.target.files[0]);
+  }
+};
+
+window.processImageFile = function (file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  window.attachedScreenshotFile = file;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const maxDim = 800;
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      window.attachedScreenshotBase64 = canvas.toDataURL("image/jpeg", 0.7);
+
+      const preview = document.getElementById("supportImagePreview");
+      const container = document.getElementById("imagePreviewContainer");
+      const prompt = document.getElementById("uploadPrompt");
+      if (preview) preview.src = window.attachedScreenshotBase64;
+      container?.classList.remove("hidden");
+      prompt?.classList.add("hidden");
+      if (window.sound?.pop) window.sound.pop();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.resetSupportImage = function (e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  window.attachedScreenshotBase64 = null;
+  window.attachedScreenshotFile = null;
+  const input = document.getElementById("supportImageInput");
+  const preview = document.getElementById("supportImagePreview");
+  const container = document.getElementById("imagePreviewContainer");
+  const prompt = document.getElementById("uploadPrompt");
+  if (input) input.value = "";
+  if (preview) preview.src = "";
+  container?.classList.add("hidden");
+  prompt?.classList.remove("hidden");
+};
+
+// Вставка из буфера через Ctrl+V
+window.addEventListener("paste", (e) => {
+  if (document.getElementById("modalSupport")?.classList.contains("hidden")) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let it of items) {
+    if (it.type.indexOf("image") !== -1) {
+      window.processImageFile(it.getAsFile());
+      break;
+    }
+  }
+});
+
+// Счетчик символов
+document.getElementById("supportMessageInput")?.addEventListener("input", (e) => {
+  const counter = document.getElementById("supportCharCounter");
+  if (counter) counter.innerText = `${e.target.value.length}/600`;
+});
+
+// Отправка отчёта
+window.submitFeedbackReport = async function () {
+  const input = document.getElementById("supportMessageInput");
+  const text = input ? input.value.trim() : "";
+  const sendBtn = document.getElementById("btnSendSupportMessage");
+
+  if (!text) {
+    alert("Напиши хотя бы пару слов перед отправкой! 🐾");
+    return;
+  }
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.innerText = "ОТПРАВЛЯЕМ... ⏳";
+  }
+
+  const feedbackData = {
+    id: "fb_" + Date.now(),
+    category: window.currentFeedbackCategory,
+    rating: window.currentFeedbackRating,
+    text: text,
+    petName: window.pet?.name || "Зефирка",
+    petLevel: window.pet?.level || 1,
+    coins: window.pet?.coins || 0,
+    hasImage: !!window.attachedScreenshotBase64,
+    image: window.attachedScreenshotBase64 || null,
+    date: new Date().toLocaleString("ru-RU")
+  };
+
+  // 1. Сохраняем в localStorage и в базу JSONBin для твоего дашборда
+  let storedFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+  storedFeedback.unshift(feedbackData);
+  if (storedFeedback.length > 30) storedFeedback.pop();
+  localStorage.setItem("katya_master_feedback", JSON.stringify(storedFeedback));
+
+  // 2. Формируем текст для Telegram
+  const starsStr = "★".repeat(window.currentFeedbackRating) + "☆".repeat(5 - window.currentFeedbackRating);
+  const tgCaption = 
+`💌 *НОВЫЙ ОТЧЁТ ИЗ ТАМАГОЧИ!*
+
+📌 *Тема:* ${window.currentFeedbackCategory}
+⭐ *Оценка:* ${starsStr} (${window.currentFeedbackRating}/5)
+🐱 *Котик:* ${feedbackData.petName} (Ур. ${feedbackData.petLevel})
+🪙 *Монет:* ${feedbackData.coins}
+⏰ *Дата:* ${feedbackData.date}
+
+💬 *Сообщение:*
+${text}`;
+
+  try {
+    if (window.attachedScreenshotFile) {
+      const formData = new FormData();
+      formData.append("chat_id", TELEGRAM_CHAT_ID);
+      formData.append("photo", window.attachedScreenshotFile);
+      formData.append("caption", tgCaption);
+      formData.append("parse_mode", "Markdown");
+
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        body: formData
+      });
+    } else {
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: tgCaption,
+          parse_mode: "Markdown"
+        })
+      });
+    }
+
+    if (typeof syncToCloud === "function") syncToCloud();
+
+    if (window.sound?.win) window.sound.win();
+    if (typeof confetti === "function") confetti({ particleCount: 70, spread: 80 });
+
+    alert("Послание успешно отправлено разработчику! 💖✨");
+    window.closeSupportModal();
+    if (typeof logAuditEvent === "function") {
+      logAuditEvent(`Отправила отзыв [${window.currentFeedbackCategory}]`, "💌");
+    }
+  } catch (err) {
+    console.error("Feedback submit error:", err);
+    alert("Сообщение сохранено в игре, разработчик увидит его в дашборде! 🐾");
+    window.closeSupportModal();
+  } finally {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = `<span>ОТПРАВИТЬ ОТЧЁТ</span> <span>🚀</span>`;
+    }
+  }
+};
 
 /* -------------------------------------------------------------------------
  * 10. ДЗЕН-КЛИКЕР (ASMR), DAILY БОНУС И СИСТЕМНЫЕ СЛУШАТЕЛИ

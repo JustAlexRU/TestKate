@@ -113,6 +113,9 @@
           <button id="soundToggleBtn" class="bg-[#1e1e2e] border border-[#313244] w-8 h-8 rounded-full flex items-center justify-center text-sm active:scale-90 transition">
             🔔
           </button>
+          <button id="btnOpenSupport" class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 w-8 h-8 rounded-full flex items-center justify-center text-sm active:scale-90 transition hover:border-pink-400 shadow-sm" title="Написать автору">
+                      💌
+          </button>
         </div>
       </header>
 
@@ -960,5 +963,76 @@
   <script src="cases.js"></script>
   <script src="casino.js"></script>
   <script src="games.js"></script>
+
+<!-- МОДАЛЬНОЕ ОКНО: ПОЛНОЦЕННЫЙ САППОРТ И ФИДБЕК -->
+  <div id="modalSupport" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 pointer-events-auto">
+    <div class="relative bg-gradient-to-b from-[#1c1a2e] via-[#141424] to-[#0c0d18] border-2 border-pink-500/50 rounded-3xl w-full max-w-sm p-4 flex flex-col gap-3 shadow-[0_0_40px_rgba(244,114,182,0.25)] max-h-[92vh] overflow-y-auto z-10 pointer-events-auto">
+      
+      <!-- Хедер -->
+      <div class="flex justify-between items-center border-b border-[#313244] pb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl animate-bounce">💌</span>
+          <div>
+            <h3 class="cute-font font-black text-pink-300 text-sm">Послание разработчику</h3>
+            <p class="text-[10px] text-gray-400">Прямой чат с создателем Зефирки ✨</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSupportModal()" class="text-gray-400 hover:text-white text-base p-1 cursor-pointer">✕</button>
+      </div>
+
+      <!-- 1. Выбор категории -->
+      <div class="flex flex-col gap-1">
+        <span class="text-[10px] font-bold text-gray-400">Тема сообщения:</span>
+        <div class="grid grid-cols-3 bg-[#0a0a14] p-1 rounded-2xl border border-[#2e304f] gap-1 text-[11px] font-bold">
+          <button type="button" id="typeBtnLove" onclick="onFeedbackCat('💖 Любовь')" class="support-cat-btn py-1.5 rounded-xl bg-pink-500 text-white shadow-sm transition font-bold cursor-pointer">💖 Любовь</button>
+          <button type="button" id="typeBtnIdea" onclick="onFeedbackCat('💡 Идея')" class="support-cat-btn py-1.5 rounded-xl text-gray-400 hover:text-white transition font-bold cursor-pointer">💡 Идея</button>
+          <button type="button" id="typeBtnBug" onclick="onFeedbackCat('🪲 Баг')" class="support-cat-btn py-1.5 rounded-xl text-gray-400 hover:text-white transition font-bold cursor-pointer">🪲 Баг</button>
+        </div>
+      </div>
+
+      <!-- 2. Оценка настроения (Рейтинг) -->
+      <div class="flex items-center justify-between bg-[#121324] border border-[#2e304f] p-2 rounded-2xl">
+        <span class="text-[10px] text-gray-400 font-bold">Оценка настроения:</span>
+        <div id="supportRatingStars" class="flex gap-1.5 text-lg cursor-pointer">
+          <span onclick="onStarClick(1)" class="star-item text-amber-400 p-0.5">★</span>
+          <span onclick="onStarClick(2)" class="star-item text-amber-400 p-0.5">★</span>
+          <span onclick="onStarClick(3)" class="star-item text-amber-400 p-0.5">★</span>
+          <span onclick="onStarClick(4)" class="star-item text-amber-400 p-0.5">★</span>
+          <span onclick="onStarClick(5)" class="star-item text-amber-400 p-0.5">★</span>
+        </div>
+      </div>
+
+      <!-- 3. Поле сообщения -->
+      <div class="flex flex-col gap-1">
+        <textarea id="supportMessageInput" rows="3" maxlength="600" placeholder="Напиши своё сообщение, идею или опиши баг..." class="w-full bg-[#101120] border border-[#2e304f] focus:border-pink-500 rounded-2xl p-2.5 text-xs text-gray-200 outline-none resize-none placeholder-gray-500 transition cursor-text"></textarea>
+        <div class="flex justify-between text-[9px] text-gray-500 px-1">
+          <span>Синхронизируется с дашбордом & TG</span>
+          <span id="supportCharCounter">0/600</span>
+        </div>
+      </div>
+
+      <!-- 4. Прикрепление скриншота -->
+      <div class="flex flex-col gap-1.5">
+        <label class="w-full border-2 border-dashed border-[#3a3d60] hover:border-pink-500/60 rounded-2xl p-2.5 flex flex-col items-center justify-center cursor-pointer bg-[#0e0f1c] transition text-center group">
+          <input type="file" id="supportImageInput" accept="image/*" class="hidden" onchange="onSupportFileChange(event)">
+          <div id="uploadPrompt" class="flex items-center gap-2 text-[11px] text-gray-400 group-hover:text-pink-300">
+            <span class="text-lg">📷</span>
+            <span class="font-bold">Прикрепить скриншот</span>
+          </div>
+          <div id="imagePreviewContainer" class="hidden relative w-full mt-1">
+            <img id="supportImagePreview" src="" alt="Скриншот" class="max-h-28 w-auto mx-auto rounded-xl border border-pink-500/40 object-contain shadow-md">
+            <button type="button" onclick="resetSupportImage(event)" class="absolute -top-2 -right-1 bg-rose-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow cursor-pointer">✕</button>
+          </div>
+        </label>
+      </div>
+
+      <!-- Кнопка отправки -->
+      <button type="button" id="btnSendSupportMessage" onclick="submitFeedbackReport()" class="cute-font w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white font-black text-xs active:scale-95 transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
+        <span>ОТПРАВИТЬ ОТЧЁТ</span>
+        <span>🚀</span>
+      </button>
+
+    </div>
+  </div>
 </body>
 </html>
