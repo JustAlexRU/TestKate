@@ -362,28 +362,6 @@ window.syncToCloud = syncToCloud;
 
 // 2. СВЕРКА: Раз в 15 секунд проверяет базу на предмет изменений из дашборда
 async function pullCloudSettings() {
-
-// СВЕРКА УВЕДОМЛЕНИЙ О ВЫПОЛНЕННЫХ БАГАХ
-    if (Array.isArray(remoteUser?.rewardNotifications)) {
-      const unreadReward = remoteUser.rewardNotifications.find(r => !r.claimed);
-      if (unreadReward) {
-        window.currentPendingReward = unreadReward;
-        
-        document.getElementById("taskRewardMessage").innerText = unreadReward.message;
-        document.getElementById("taskRewardCoinsVal").innerText = `+${unreadReward.coins} 🪙`;
-        document.getElementById("taskRewardDevReport").innerText = unreadReward.devReport || "Сбой устранён!";
-        
-        const timeEl = document.getElementById("taskRewardTimeSpent");
-        if (timeEl) {
-          timeEl.innerText = unreadReward.timeSpentMin ? `Затрачено: ${unreadReward.timeSpentMin} мин` : "";
-        }
-        
-        document.getElementById("modalTaskReward")?.classList.remove("hidden");
-        if (window.sound?.win) window.sound.win();
-        if (typeof confetti === "function") confetti({ particleCount: 75, spread: 80 });
-      }
-    }
-
   if (isLocalExecution || isSyncInProgress) return;
 
   try {
@@ -412,9 +390,10 @@ async function pullCloudSettings() {
       window.ACTIVE_WISH_CHANCES = Object.assign(window.ACTIVE_WISH_CHANCES, root.wishChances);
     }
 
-    // В. Сверка изменений профиля игрока (если ты накинул монеты или поменял статы в дашборде)
-    const remoteUser = root[currentUser];
-    if (remoteUser?.pet) {
+    // В. ОБЪЯВЛЯЕМ remoteUser (из-за отсутствия этой строки падала ошибка)
+    const remoteUser = root[currentUser] || root["katya"];
+
+    if (remoteUser && remoteUser.pet) {
       const rp = remoteUser.pet;
       const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean"];
 
@@ -425,7 +404,6 @@ async function pullCloudSettings() {
         }
       });
 
-      // Сверка текстовых полей (имя, активная комната, цвет)
       if (rp.name && rp.name !== window.pet.name) {
         window.pet.name = rp.name;
         needUIUpdate = true;
@@ -440,8 +418,8 @@ async function pullCloudSettings() {
       }
     }
 
-    // Г. Подтягивание выданных через базу вещей или комнат
-    if (Array.isArray(remoteUser?.ownedItems)) {
+    // Г. Сверка вещей и комнат
+    if (remoteUser && Array.isArray(remoteUser.ownedItems)) {
       remoteUser.ownedItems.forEach((it) => {
         if (!window.ownedItems.includes(it)) {
           window.ownedItems.push(it);
@@ -451,7 +429,7 @@ async function pullCloudSettings() {
       localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
     }
 
-    if (Array.isArray(remoteUser?.ownedRooms)) {
+    if (remoteUser && Array.isArray(remoteUser.ownedRooms)) {
       remoteUser.ownedRooms.forEach((rm) => {
         if (!window.ownedRooms.includes(rm)) {
           window.ownedRooms.push(rm);
@@ -461,11 +439,32 @@ async function pullCloudSettings() {
       localStorage.setItem("katya_master_rooms", JSON.stringify(window.ownedRooms));
     }
 
-    // Д. Сверка купонов желаний (если ты активировал или добавил купон в базе)
-    if (Array.isArray(remoteUser?.wishes)) {
+    // Д. Сверка купонов желаний
+    if (remoteUser && Array.isArray(remoteUser.wishes)) {
       if (JSON.stringify(remoteUser.wishes) !== JSON.stringify(window.wishesVault)) {
         window.wishesVault = remoteUser.wishes;
         localStorage.setItem("katya_master_wishes_vault", JSON.stringify(window.wishesVault));
+      }
+    }
+
+    // Е. Сверка уведомлений о наградах
+    if (remoteUser && Array.isArray(remoteUser.rewardNotifications)) {
+      const pendingThanks = remoteUser.rewardNotifications.find((r) => !r.claimed);
+      if (pendingThanks) {
+        window.currentPendingReward = pendingThanks;
+        const valEl = document.getElementById("thanksRewardCoinsVal");
+        const boxEl = document.getElementById("thanksRewardBox");
+
+        if (pendingThanks.coins > 0) {
+          if (valEl) valEl.innerText = `+${pendingThanks.coins} 🪙`;
+          if (boxEl) boxEl.classList.remove("hidden");
+        } else {
+          if (boxEl) boxEl.classList.add("hidden");
+        }
+
+        document.getElementById("modalProjectThanks")?.classList.remove("hidden");
+        if (window.sound?.win) window.sound.win();
+        if (typeof confetti === "function") confetti({ particleCount: 75, spread: 80 });
       }
     }
 
