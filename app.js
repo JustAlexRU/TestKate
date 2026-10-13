@@ -133,7 +133,7 @@ function safeHydrate(key, defaults) {
   }
 }
 
-// Глобальные состояния, доступные всем модулям
+// Глобальные состояния
 window.activeEquipment = safeHydrate("katya_active_equipment", { head: "crown", eyes: "none", body: "bow", legs: "none" });
 window.ownedItems = safeHydrate("katya_owned_items", ["bow", "crown"]);
 window.ownedRooms = safeHydrate("katya_master_rooms", ["neon"]);
@@ -238,46 +238,75 @@ function logAuditEvent(text, icon = "📌") {
 window.logAuditEvent = logAuditEvent;
 
 /* -------------------------------------------------------------------------
- * 3. ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (JSONBIN)
+ * 3. ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (АВТО-ОТПРАВКА + LIVE-СВЕРКА С JSONBIN)
  * ------------------------------------------------------------------------- */
 let cloudSyncTimer = null;
+let isSyncInProgress = false;
+
+// 1. ОТПРАВКА: Срабатывает при любом изменении в игре (дебаунс 1.5 сек)
 function syncToCloud() {
   if (isLocalExecution) return;
   clearTimeout(cloudSyncTimer);
+
   cloudSyncTimer = setTimeout(async () => {
+    if (isSyncInProgress) return;
+    isSyncInProgress = true;
+
     try {
+      // Запрашиваем актуальный корень, чтобы не затереть глобальные конфиги дашборда
       const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
         headers: { "X-Master-Key": JSONBIN_API_KEY }
       });
+      if (!res.ok) throw new Error("Fetch failed");
       const root = (await res.json()).record || {};
+
+      // Полный снимок состояния игрока
       root[currentUser] = {
         pet: window.pet,
+        activeEquipment: window.activeEquipment,
+        ownedItems: window.ownedItems,
+        ownedRooms: window.ownedRooms,
         analytics: window.analytics,
         wishes: window.wishesVault,
         caseHistory: window.caseHistory,
         rouletteHistory: JSON.parse(localStorage.getItem("katya_master_roulette_history")) || [],
         audit: JSON.parse(localStorage.getItem("katya_master_audit_events")) || [],
-        lastActive: new Date().toLocaleString("ru-RU")
+        lastActive: new Date().toLocaleString("ru-RU"),
+        clientUpdatedAt: Date.now()
       };
+
       await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_API_KEY },
+        headers: { 
+          "Content-Type": "application/json", 
+          "X-Master-Key": JSONBIN_API_KEY 
+        },
         body: JSON.stringify(root)
       });
-    } catch (e) {}
-  }, 1200);
+    } catch (e) {
+      console.warn("[CloudSync] Push error:", e);
+    } finally {
+      isSyncInProgress = false;
+    }
+  }, 1500);
 }
 window.syncToCloud = syncToCloud;
 
+// 2. СВЕРКА: Раз в 15 секунд проверяет базу на предмет изменений из дашборда
 async function pullCloudSettings() {
-  if (isLocalExecution) return;
+  if (isLocalExecution || isSyncInProgress) return;
+
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_API_KEY }
     });
+    if (!res.ok) return;
     const root = (await res.json()).record || {};
     window.currentCloudData = root;
 
+    let needUIUpdate = false;
+
+    // А. Сверка экономики из дашборда
     if (root.economyConfig) {
       window.ACTIVE_ECONOMY = Object.assign(window.ACTIVE_ECONOMY, root.economyConfig);
       const lblStd = document.getElementById("labelCaseStandardCost");
@@ -288,25 +317,82 @@ async function pullCloudSettings() {
       if (lblBlk) lblBlk.innerText = `${window.ACTIVE_ECONOMY.caseCostBlack || 320} 🪙`;
     }
 
+    // Б. Сверка шансов выпадения
     if (root.wishChances) {
       window.ACTIVE_WISH_CHANCES = Object.assign(window.ACTIVE_WISH_CHANCES, root.wishChances);
     }
 
-    if (root[currentUser]?.pet) {
-      const rp = root[currentUser].pet;
-      let changed = false;
-      ["coins", "level", "xp", "hunger", "happy", "energy", "clean"].forEach((f) => {
-        if (rp[f] !== undefined && rp[f] !== window.pet[f]) {
+    // В. Сверка изменений профиля игрока (если ты накинул монеты или поменял статы в дашборде)
+    const remoteUser = root[currentUser];
+    if (remoteUser?.pet) {
+      const rp = remoteUser.pet;
+      const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean"];
+
+      numericFields.forEach((f) => {
+        if (typeof rp[f] === "number" && rp[f] !== window.pet[f]) {
           window.pet[f] = rp[f];
-          changed = true;
+          needUIUpdate = true;
         }
       });
-      if (changed) updatePetUI();
+
+      // Сверка текстовых полей (имя, активная комната, цвет)
+      if (rp.name && rp.name !== window.pet.name) {
+        window.pet.name = rp.name;
+        needUIUpdate = true;
+      }
+      if (rp.activeRoom && rp.activeRoom !== window.pet.activeRoom) {
+        window.pet.activeRoom = rp.activeRoom;
+        needUIUpdate = true;
+      }
+      if (rp.color && rp.color !== window.pet.color) {
+        window.pet.color = rp.color;
+        needUIUpdate = true;
+      }
     }
-  } catch (e) {}
+
+    // Г. Подтягивание выданных через базу вещей или комнат
+    if (Array.isArray(remoteUser?.ownedItems)) {
+      remoteUser.ownedItems.forEach((it) => {
+        if (!window.ownedItems.includes(it)) {
+          window.ownedItems.push(it);
+          needUIUpdate = true;
+        }
+      });
+      localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
+    }
+
+    if (Array.isArray(remoteUser?.ownedRooms)) {
+      remoteUser.ownedRooms.forEach((rm) => {
+        if (!window.ownedRooms.includes(rm)) {
+          window.ownedRooms.push(rm);
+          needUIUpdate = true;
+        }
+      });
+      localStorage.setItem("katya_master_rooms", JSON.stringify(window.ownedRooms));
+    }
+
+    // Д. Сверка купонов желаний (если ты активировал или добавил купон в базе)
+    if (Array.isArray(remoteUser?.wishes)) {
+      if (JSON.stringify(remoteUser.wishes) !== JSON.stringify(window.wishesVault)) {
+        window.wishesVault = remoteUser.wishes;
+        localStorage.setItem("katya_master_wishes_vault", JSON.stringify(window.wishesVault));
+      }
+    }
+
+    if (needUIUpdate) {
+      localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
+      updatePetUI();
+    }
+  } catch (e) {
+    console.warn("[CloudSync] Pull error:", e);
+  }
 }
+
+// Первичный опрос и поллинг каждые 15 секунд
 pullCloudSettings();
-if (!isLocalExecution) setInterval(pullCloudSettings, 20000);
+if (!isLocalExecution) {
+  setInterval(pullCloudSettings, 15000);
+}
 
 /* -------------------------------------------------------------------------
  * 4. ВИЗУАЛ ПИТОМЦА, ДЕКОРАЦИИ И НОЧНОЙ РЕЖИМ
