@@ -3,6 +3,73 @@
  * Файл: app.js (Ядро тамагочи, инвентарь, гардероб, облако, рулетка еды)
  * ========================================================================= */
 
+/* =========================================================================
+ * 0. ЧЁРНЫЙ ЯЩИК ЛОГОВ И ОШИБОК БРАУЗЕРА (CLIENT-SIDE TELEMETRY)
+ * ========================================================================= */
+window.CLIENT_LOGS_BUFFER = [];
+window.LAST_CAUGHT_ERROR = null;
+
+function pushClientLog(level, args) {
+  try {
+    const formattedArgs = Array.from(args).map(arg => {
+      if (arg instanceof Error) return `${arg.name}: ${arg.message}\n${arg.stack || ""}`;
+      if (typeof arg === "object") {
+        try { return JSON.stringify(arg); } catch (e) { return String(arg); }
+      }
+      return String(arg);
+    }).join(" ");
+
+    window.CLIENT_LOGS_BUFFER.push({
+      time: new Date().toLocaleTimeString("ru-RU"),
+      level: level,
+      msg: formattedArgs
+    });
+
+    // Храним последние 25 событий, чтобы не раздувать память
+    if (window.CLIENT_LOGS_BUFFER.length > 25) {
+      window.CLIENT_LOGS_BUFFER.shift();
+    }
+  } catch (e) {}
+}
+
+// 1. Перехват console.error и console.warn
+const _origConsoleError = console.error;
+const _origConsoleWarn = console.warn;
+
+console.error = function (...args) {
+  pushClientLog("ERROR", args);
+  _origConsoleError.apply(console, args);
+};
+
+console.warn = function (...args) {
+  pushClientLog("WARN", args);
+  _origConsoleWarn.apply(console, args);
+};
+
+// 2. Глобальный перехват сбоев скриптов (window.onerror)
+window.addEventListener("error", function (e) {
+  window.LAST_CAUGHT_ERROR = {
+    message: e.message || "Unknown error",
+    filename: (e.filename || "").split("/").pop(),
+    lineno: e.lineno,
+    colno: e.colno,
+    stack: e.error ? e.error.stack : null,
+    time: new Date().toLocaleTimeString("ru-RU")
+  };
+  pushClientLog("FATAL", [`${e.message} at ${window.LAST_CAUGHT_ERROR.filename}:${e.lineno}`]);
+});
+
+// 3. Перехват упавших Promise (async/await)
+window.addEventListener("unhandledrejection", function (e) {
+  const reason = e.reason instanceof Error ? e.reason.message : String(e.reason);
+  window.LAST_CAUGHT_ERROR = {
+    message: `Unhandled Promise: ${reason}`,
+    stack: e.reason instanceof Error ? e.reason.stack : null,
+    time: new Date().toLocaleTimeString("ru-RU")
+  };
+  pushClientLog("PROMISE_FAIL", [reason]);
+});
+
 /* -------------------------------------------------------------------------
  * 1. ЗВУКОВОЙ ДВИЖОК (WEB AUDIO API)
  * ------------------------------------------------------------------------- */
@@ -295,6 +362,28 @@ window.syncToCloud = syncToCloud;
 
 // 2. СВЕРКА: Раз в 15 секунд проверяет базу на предмет изменений из дашборда
 async function pullCloudSettings() {
+
+// СВЕРКА УВЕДОМЛЕНИЙ О ВЫПОЛНЕННЫХ БАГАХ
+    if (Array.isArray(remoteUser?.rewardNotifications)) {
+      const unreadReward = remoteUser.rewardNotifications.find(r => !r.claimed);
+      if (unreadReward) {
+        window.currentPendingReward = unreadReward;
+        
+        document.getElementById("taskRewardMessage").innerText = unreadReward.message;
+        document.getElementById("taskRewardCoinsVal").innerText = `+${unreadReward.coins} 🪙`;
+        document.getElementById("taskRewardDevReport").innerText = unreadReward.devReport || "Сбой устранён!";
+        
+        const timeEl = document.getElementById("taskRewardTimeSpent");
+        if (timeEl) {
+          timeEl.innerText = unreadReward.timeSpentMin ? `Затрачено: ${unreadReward.timeSpentMin} мин` : "";
+        }
+        
+        document.getElementById("modalTaskReward")?.classList.remove("hidden");
+        if (window.sound?.win) window.sound.win();
+        if (typeof confetti === "function") confetti({ particleCount: 75, spread: 80 });
+      }
+    }
+
   if (isLocalExecution || isSyncInProgress) return;
 
   try {
@@ -1376,12 +1465,33 @@ document.getElementById("btnAddWheelItem")?.addEventListener("click", () => {
 });
 
 /* -------------------------------------------------------------------------
- * ПОЛНОЦЕННЫЙ САППОРТ / ОПРОСНИК (ГЛОБАЛЬНЫЕ ФУНКЦИИ В WINDOW)
+ * ПОЛНОЦЕННЫЙ САППОРТ / ОПРОСНИК (ГЛОБАЛЬНЫЕ ФУНКЦИИ В WINDOW С ЛОГАМИ)
  * ------------------------------------------------------------------------- */
 window.currentFeedbackCategory = "💖 Любовь";
 window.currentFeedbackRating = 5;
 window.attachedScreenshotBase64 = null;
 window.attachedScreenshotFile = null;
+window.claimTaskRewardModal = function () {
+  if (window.currentPendingReward) {
+    window.currentPendingReward.claimed = true;
+    logAuditEvent(`Получила компенсацию за закрытую задачу (+${window.currentPendingReward.coins} 🪙)`, "🎁");
+    window.currentPendingReward = null;
+    if (typeof syncToCloud === "function") syncToCloud();
+  }
+  document.getElementById("modalTaskReward")?.classList.add("hidden");
+  updatePetUI();
+};
+
+window.closeThanksModal = function () {
+  if (window.currentPendingReward) {
+    window.currentPendingReward.claimed = true;
+    logAuditEvent(`Получила благодарность от разработчика (+${window.currentPendingReward.coins || 0} 🪙)`, "💖");
+    window.currentPendingReward = null;
+    if (typeof syncToCloud === "function") syncToCloud();
+  }
+  document.getElementById("modalProjectThanks")?.classList.add("hidden");
+  updatePetUI();
+};
 
 window.openSupportModal = function () {
   const modal = document.getElementById("modalSupport");
@@ -1429,7 +1539,7 @@ window.onStarClick = function (stars) {
   if (window.sound?.pop) window.sound.pop();
 };
 
-// Картинки
+// Обработка загрузки файла
 window.onSupportFileChange = function (e) {
   if (e.target.files && e.target.files[0]) {
     window.processImageFile(e.target.files[0]);
@@ -1484,7 +1594,7 @@ window.resetSupportImage = function (e) {
   prompt?.classList.remove("hidden");
 };
 
-// Вставка из буфера через Ctrl+V
+// Вставка из буфера обмена (Ctrl+V)
 window.addEventListener("paste", (e) => {
   if (document.getElementById("modalSupport")?.classList.contains("hidden")) return;
   const items = e.clipboardData?.items;
@@ -1503,11 +1613,12 @@ document.getElementById("supportMessageInput")?.addEventListener("input", (e) =>
   if (counter) counter.innerText = `${e.target.value.length}/600`;
 });
 
-// Отправка отчёта
+// Отправка отчёта: Telegram + JSONBin + Логи браузера (100% безопасные кавычки)
 window.submitFeedbackReport = async function () {
   const input = document.getElementById("supportMessageInput");
   const text = input ? input.value.trim() : "";
   const sendBtn = document.getElementById("btnSendSupportMessage");
+  const attachLogs = document.getElementById("attachLogsCheckbox")?.checked ?? true;
 
   if (!text) {
     alert("Напиши хотя бы пару слов перед отправкой! 🐾");
@@ -1519,6 +1630,14 @@ window.submitFeedbackReport = async function () {
     sendBtn.innerText = "ОТПРАВЛЯЕМ... ⏳";
   }
 
+  // Сбор телеметрии браузера (Чёрный ящик)
+  const techLogs = attachLogs ? {
+    userAgent: navigator.userAgent,
+    screen: window.innerWidth + "x" + window.innerHeight,
+    lastError: window.LAST_CAUGHT_ERROR || null,
+    consoleHistory: Array.isArray(window.CLIENT_LOGS_BUFFER) ? [...window.CLIENT_LOGS_BUFFER] : []
+  } : null;
+
   const feedbackData = {
     id: "fb_" + Date.now(),
     category: window.currentFeedbackCategory,
@@ -1529,48 +1648,64 @@ window.submitFeedbackReport = async function () {
     coins: window.pet?.coins || 0,
     hasImage: !!window.attachedScreenshotBase64,
     image: window.attachedScreenshotBase64 || null,
+    techLogs: techLogs,
     date: new Date().toLocaleString("ru-RU")
   };
 
-  // 1. Сохраняем в localStorage и в базу JSONBin для твоего дашборда
+  // 1. Сохраняем в localStorage и отправляем в JSONBin для твоего дашборда
   let storedFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
   storedFeedback.unshift(feedbackData);
   if (storedFeedback.length > 30) storedFeedback.pop();
   localStorage.setItem("katya_master_feedback", JSON.stringify(storedFeedback));
 
-  // 2. Формируем текст для Telegram
+  // 2. Формируем текст для Telegram через безопасную склейку строк
   const starsStr = "★".repeat(window.currentFeedbackRating) + "☆".repeat(5 - window.currentFeedbackRating);
-  const tgCaption = 
-`💌 *НОВЫЙ ОТЧЁТ ИЗ ТАМАГОЧИ!*
+  
+  let techSummary = "";
+  if (attachLogs) {
+    if (window.LAST_CAUGHT_ERROR) {
+      const errFile = window.LAST_CAUGHT_ERROR.filename || "app.js";
+      const errLine = window.LAST_CAUGHT_ERROR.lineno || "?";
+      techSummary = "\n\n🚨 *КРИТИЧЕСКИЙ СБОЙ:*\n" + window.LAST_CAUGHT_ERROR.message + " (" + errFile + ":" + errLine + ")";
+    } else if (Array.isArray(window.CLIENT_LOGS_BUFFER) && window.CLIENT_LOGS_BUFFER.length > 0) {
+      const recentWarns = window.CLIENT_LOGS_BUFFER.slice(-3).map(l => "[" + l.time + " " + l.level + "] " + l.msg).join("\n");
+      techSummary = "\n\n📋 *Консоль браузера:*\n" + recentWarns;
+    } else {
+      techSummary = "\n\n✅ *Ошибок в консоли нет*";
+    }
+  }
 
-📌 *Тема:* ${window.currentFeedbackCategory}
-⭐ *Оценка:* ${starsStr} (${window.currentFeedbackRating}/5)
-🐱 *Котик:* ${feedbackData.petName} (Ур. ${feedbackData.petLevel})
-🪙 *Монет:* ${feedbackData.coins}
-⏰ *Дата:* ${feedbackData.date}
-
-💬 *Сообщение:*
-${text}`;
+  const tgMessage = 
+"💌 *НОВОЕ ПОСЛАНИЕ ИЗ ТАМАГОЧИ!*\n\n" +
+"📌 *Тема:* " + window.currentFeedbackCategory + "\n" +
+"⭐ *Оценка:* " + starsStr + " (" + window.currentFeedbackRating + "/5)\n" +
+"🐱 *Котик:* " + feedbackData.petName + " (Ур. " + feedbackData.petLevel + ")\n" +
+"🪙 *Монет:* " + feedbackData.coins + "\n" +
+"📱 *Экран:* " + window.innerWidth + "x" + window.innerHeight + "\n" +
+"⏰ *Дата:* " + feedbackData.date + "\n\n" +
+"💬 *Сообщение:*\n" + text + techSummary;
 
   try {
     if (window.attachedScreenshotFile) {
       const formData = new FormData();
       formData.append("chat_id", TELEGRAM_CHAT_ID);
       formData.append("photo", window.attachedScreenshotFile);
-      formData.append("caption", tgCaption);
+      // Лимит Telegram на подпись к фото - 1024 символа
+      const safeCaption = tgMessage.length > 1020 ? tgMessage.substring(0, 1017) + "..." : tgMessage;
+      formData.append("caption", safeCaption);
       formData.append("parse_mode", "Markdown");
 
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+      await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendPhoto", {
         method: "POST",
         body: formData
       });
     } else {
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: tgCaption,
+          text: tgMessage,
           parse_mode: "Markdown"
         })
       });
@@ -1581,10 +1716,10 @@ ${text}`;
     if (window.sound?.win) window.sound.win();
     if (typeof confetti === "function") confetti({ particleCount: 70, spread: 80 });
 
-    alert("Послание успешно отправлено разработчику! 💖✨");
+    alert("Послание и технический отчёт успешно отправлены разработчику! 💖✨");
     window.closeSupportModal();
     if (typeof logAuditEvent === "function") {
-      logAuditEvent(`Отправила отзыв [${window.currentFeedbackCategory}]`, "💌");
+      logAuditEvent("Отправила отзыв [" + window.currentFeedbackCategory + "]", "💌");
     }
   } catch (err) {
     console.error("Feedback submit error:", err);
@@ -1593,7 +1728,7 @@ ${text}`;
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = `<span>ОТПРАВИТЬ ОТЧЁТ</span> <span>🚀</span>`;
+      sendBtn.innerHTML = "<span>ОТПРАВИТЬ ОТЧЁТ</span> <span>🚀</span>";
     }
   }
 };

@@ -16,6 +16,10 @@ let currentMainTab = "overview";
 let currentOddsTab = "case_std";
 let currentEcoShopSlot = "body";
 
+window.currentOpenBugIndex = null;
+window.activeTimerInterval = null;
+window.timerRunning = false;
+
 // Дефолтные ставки и цены
 const DEFAULT_ECONOMY = {
   caseCostStandard: 80,
@@ -103,20 +107,37 @@ document.getElementById("btnRefresh")?.addEventListener("click", () => {
 // 2. ПЕРЕКЛЮЧЕНИЕ ГЛАВНЫХ ВКЛАДОК ДАШБОРДА
 window.switchMainTab = function (tabId) {
   currentMainTab = tabId;
+
   document.querySelectorAll(".dashboard-pane").forEach((pane) => {
     pane.classList.add("hidden");
+    pane.classList.remove("flex");
   });
-  document.getElementById(`pane_${tabId}`)?.classList.remove("hidden");
+
+  const targetPane = document.getElementById(`pane_${tabId}`);
+  if (targetPane) {
+    targetPane.classList.remove("hidden");
+    targetPane.classList.add("flex");
+  }
 
   document.querySelectorAll(".main-tab-btn").forEach((btn) => {
-    btn.className = "main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition";
+    btn.className = "main-tab-btn relative flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition cursor-pointer";
   });
 
   const activeBtn = document.getElementById(`mainTab_${tabId}`);
   if (activeBtn) {
-    activeBtn.className = "main-tab-btn flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black whitespace-nowrap shadow transition";
+    activeBtn.className = "main-tab-btn relative flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black whitespace-nowrap shadow transition cursor-pointer";
   }
+
+  if (tabId === "kanban") {
+    window.renderKanbanBoard();
+  } else if (tabId === "inbox") {
+    window.renderFeedbackInbox();
+  }
+
+  window.updateUnreadBadges();
 };
+
+window.switchDashboardTab = window.switchMainTab;
 
 // 3. ПОДВКЛАДКИ ЭКОНОМИКИ
 window.switchEcoSubTab = function (subId) {
@@ -124,7 +145,7 @@ window.switchEcoSubTab = function (subId) {
     document.getElementById(`ecoContainer_${k}`)?.classList.add("hidden");
     document.getElementById(`ecoContainer_${k}`)?.classList.remove("grid", "flex");
     const b = document.getElementById(`ecoSub_${k}`);
-    if (b) b.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap";
+    if (b) b.className = "px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap cursor-pointer";
   });
 
   const targetBox = document.getElementById(`ecoContainer_${subId}`);
@@ -134,7 +155,7 @@ window.switchEcoSubTab = function (subId) {
   }
 
   const actBtn = document.getElementById(`ecoSub_${subId}`);
-  if (actBtn) actBtn.className = "px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap";
+  if (actBtn) actBtn.className = "px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap cursor-pointer";
 };
 
 // 4. СБОР И РЕНДЕР ДАННЫХ
@@ -197,6 +218,11 @@ async function renderDashboard() {
     renderRouletteHistory(rouletteHistory);
     renderAudit(audit);
     calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes);
+    
+    // Обновляем бейджи и Канбан
+    window.updateUnreadBadges();
+    if (currentMainTab === "kanban") window.renderKanbanBoard();
+    if (currentMainTab === "inbox") window.renderFeedbackInbox();
   } catch (e) {
     console.error("Dashboard error:", e);
   }
@@ -213,7 +239,6 @@ function renderEconomyInputs() {
     });
   }
 
-  // Кейсы и Казино
   const rew = Object.assign({}, DEFAULT_ECONOMY, currentCloudData.economyConfig || {});
   const casesBox = document.getElementById("ecoContainer_cases");
   if (casesBox) {
@@ -231,7 +256,6 @@ function renderEconomyInputs() {
     `;
   }
 
-  // Награды игр
   const rewBox = document.getElementById("ecoContainer_rewards");
   if (rewBox) {
     rewBox.innerHTML = `
@@ -270,7 +294,6 @@ window.filterShopInputs = function (slot) {
   });
 };
 
-// Сохранение всей экономики
 document.getElementById("btnSaveFullEconomy")?.addEventListener("click", async () => {
   const foodKeys = ["sushi", "pizza", "kfc", "bento", "earl_grey", "puer", "cheese", "chips"];
   const newFood = {};
@@ -317,15 +340,14 @@ window.switchOddsMode = function (modeKey) {
   currentOddsTab = modeKey;
   document.querySelectorAll(".odds-tab-btn").forEach((b) => {
     b.className = b.dataset.tab === modeKey
-      ? "odds-tab-btn px-3 py-1.5 rounded-xl bg-amber-500 text-black font-black whitespace-nowrap transition"
-      : "odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition";
+      ? "odds-tab-btn px-3 py-1.5 rounded-xl bg-amber-500 text-black font-black whitespace-nowrap transition cursor-pointer"
+      : "odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition cursor-pointer";
   });
 
   const box = document.getElementById("oddsItemsContainer");
   if (!box) return;
   box.innerHTML = "";
 
-  // Получаем шансы из облака или дефолтные
   let items = [];
   if (currentCloudData.allChances?.[modeKey]) {
     items = currentCloudData.allChances[modeKey];
@@ -386,7 +408,7 @@ document.getElementById("btnSaveAllChances")?.addEventListener("click", async ()
   renderDashboard();
 });
 
-// 7. СОХРАНЕНИЕ ПИТОМЦА И ВЫДАЧА КУПОНОВ
+// 7. СОХРАНЕНИЕ ПИТОМЦА И КУПОНЫ
 document.getElementById("btnSavePetEdits")?.addEventListener("click", async () => {
   const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
   if (!currentCloudData[sel]) currentCloudData[sel] = {};
@@ -410,7 +432,6 @@ document.getElementById("btnSavePetEdits")?.addEventListener("click", async () =
   renderDashboard();
 });
 
-// Ручная выдача купона
 document.getElementById("btnGrantCustomWish")?.addEventListener("click", async () => {
   const wishTitle = prompt("Введи название или повод для желания:", "Особое желание от Алексея");
   if (!wishTitle) return;
@@ -439,7 +460,6 @@ document.getElementById("btnGrantCustomWish")?.addEventListener("click", async (
   renderDashboard();
 });
 
-// Рендер купонов
 function renderWishesGrid(wishes) {
   const box = document.getElementById("wishesGrid");
   const count = document.getElementById("badgeWishCount");
@@ -543,11 +563,10 @@ function renderAudit(audit) {
   });
 }
 
-// 9. ИИ-СОВЕТНИК (RTP РАСЧЕТ БЕЗ ЗАЦИКЛИВАНИЯ)
+// 9. ИИ-СОВЕТНИК
 let generatedAdvisorEdits = [];
 
 function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
-  const coins = pet.coins || 0;
   const eco = Object.assign({}, DEFAULT_ECONOMY, currentCloudData.economyConfig || {});
   const chances = currentCloudData.allChances || {};
 
@@ -555,7 +574,6 @@ function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
   let reasons = [];
   generatedAdvisorEdits = [];
 
-  // Слоты RTP
   const slotBet = eco.betSlots || 20;
   const slotsOdds = chances.slots || [];
   const pStar = slotsOdds.find((x) => x.id === "slot_star")?.chance || 1;
@@ -581,7 +599,6 @@ function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
     });
   }
 
-  // Фильтр от повторов
   generatedAdvisorEdits = generatedAdvisorEdits.filter((it) => Math.abs(Number(it.oldVal) - Number(it.newVal)) > 0.05);
 
   if (generatedAdvisorEdits.length === 0) {
@@ -589,7 +606,6 @@ function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
     risk = 10;
   }
 
-  // Обновление плашки
   const pBadge = document.getElementById("churnRiskPercentBadge");
   if (pBadge) {
     pBadge.innerText = `${risk}% (${risk > 50 ? "ВЫСОКИЙ РИСК" : risk > 25 ? "Умеренный" : "Оптимально"})`;
@@ -600,7 +616,6 @@ function calculateChurnAndGenerateAdvisor(pet, analytics, audit, wishes = []) {
   const detEl = document.getElementById("churnRiskDetails");
   if (detEl) detEl.innerHTML = reasons.length > 0 ? reasons.join("<br>") : `RTP сбалансирован: Слоты <b>${rtpSlots}%</b>. Баланс стабилен.`;
 
-  // Отрисовка рекомендаций на вкладке
   const container = document.getElementById("advisorFormList");
   if (!container) return;
   container.innerHTML = "";
@@ -638,4 +653,504 @@ async function saveCloud() {
   });
 }
 
+// 10. КАНБАН БАГОВ, ТАЙМЕРЫ И СТАТИСТИКА
+window.renderKanbanBoard = function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+
+  const colInbox = document.getElementById("colInbox");
+  const colInProgress = document.getElementById("colInProgress");
+  const colTesting = document.getElementById("colTesting");
+  const colDone = document.getElementById("colDone");
+  if (!colInbox || !colInProgress || !colTesting || !colDone) return;
+
+  colInbox.innerHTML = "";
+  colInProgress.innerHTML = "";
+  colTesting.innerHTML = "";
+  colDone.innerHTML = "";
+
+  let counts = { inbox: 0, in_progress: 0, testing: 0, done: 0 };
+
+  list.forEach((item, idx) => {
+    if (!item.category?.includes("Баг")) return;
+
+    const status = item.status || "inbox";
+    if (counts[status] !== undefined) counts[status]++;
+
+    const isUnread = item.isRead === false || item.isRead === undefined;
+    const timeSpentSec = item.timeSpentSec || 0;
+    const timeStr = formatSecondsToHms(timeSpentSec);
+
+    const card = document.createElement("div");
+    card.className = `bg-[#18192a] border ${isUnread ? "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]" : "border-[#2e304f]"} hover:border-pink-500 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow transition cursor-pointer relative active:scale-98`;
+    
+    card.onclick = () => window.openBugDetailModal(idx);
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center text-[10px]">
+        <div class="flex items-center gap-1.5">
+          ${isUnread ? '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>' : ''}
+          <span class="text-amber-400 font-bold">${"★".repeat(item.rating || 5)}</span>
+        </div>
+        <span class="text-gray-500 font-mono text-[9px]">${item.date ? item.date.split(",")[1] || item.date : ""}</span>
+      </div>
+
+      <p class="text-xs text-gray-200 line-clamp-2 leading-tight font-sans">${escapeHtml(item.text)}</p>
+
+      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t border-white/5 mt-0.5">
+        <span class="flex items-center gap-1 font-mono text-amber-300">
+          <span>⏱️</span> <span>${timeStr}</span>
+        </span>
+        <div class="flex items-center gap-1">
+          ${item.image ? '<span title="Прикреплен скриншот">📷</span>' : ''}
+          ${item.techLogs ? '<span title="Есть логи сбоя">🛠️</span>' : ''}
+          ${item.rewardGranted ? '<span class="text-emerald-400 font-bold">✓</span>' : ''}
+        </div>
+      </div>
+    `;
+
+    if (status === "done") colDone.appendChild(card);
+    else if (status === "testing") colTesting.appendChild(card);
+    else if (status === "in_progress") colInProgress.appendChild(card);
+    else colInbox.appendChild(card);
+  });
+
+  document.getElementById("countInbox").innerText = counts.inbox;
+  document.getElementById("countInProgress").innerText = counts.in_progress;
+  document.getElementById("countTesting").innerText = counts.testing;
+  document.getElementById("countDone").innerText = counts.done;
+
+  window.updateDevStats(list);
+  window.updateUnreadBadges();
+};
+
+window.renderFeedbackInbox = function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+  const container = document.getElementById("inboxListContainer");
+  if (!container) return;
+
+  container.innerHTML = "";
+  let nonBugCount = 0;
+
+  list.forEach((item, idx) => {
+    if (item.category?.includes("Баг")) return;
+    nonBugCount++;
+
+    const isUnread = item.isRead === false || item.isRead === undefined;
+    const isLove = item.category?.includes("Любовь");
+
+    const card = document.createElement("div");
+    card.className = `bg-[#18192a] border ${isUnread ? "border-pink-500 shadow-[0_0_15px_rgba(244,114,182,0.3)]" : "border-[#2e304f]"} rounded-2xl p-3.5 flex flex-col gap-2 relative transition cursor-pointer`;
+
+    card.onclick = () => {
+      if (item.isRead !== true) {
+        item.isRead = true;
+        saveFeedbackListToCloud(list);
+        window.renderFeedbackInbox();
+      }
+    };
+
+    let imgHtml = item.image ? `<img src="${item.image}" alt="Скриншот" onclick="window.openFullImage('${item.image}')" class="max-h-32 rounded-xl mt-1 w-auto object-contain cursor-pointer border border-white/10">` : "";
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center text-[10px]">
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded-lg ${isLove ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'} font-bold">
+            ${item.category}
+          </span>
+          ${isUnread ? '<span class="text-[9px] bg-pink-500 text-white font-bold px-1.5 py-0.2 rounded-full animate-pulse">NEW</span>' : ''}
+        </div>
+        <span class="text-gray-500 font-mono text-[9px]">${item.date || ""}</span>
+      </div>
+
+      <p class="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed select-text font-sans">${escapeHtml(item.text)}</p>
+      ${imgHtml}
+
+      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-2 border-t border-white/5">
+        <span>🐱 ${item.petName || "Зефирка"} (Ур. ${item.petLevel || 1})</span>
+        <span class="text-amber-400">${"★".repeat(item.rating || 5)}</span>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (nonBugCount === 0) {
+    container.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-12">В ящике отзывов пока пусто 🐾</div>`;
+  }
+
+  window.updateUnreadBadges();
+};
+
+window.updateUnreadBadges = function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+
+  let unreadBugs = 0;
+  let unreadInbox = 0;
+
+  list.forEach(item => {
+    const isBug = item.category?.includes("Баг");
+    const isUnread = item.isRead === false || item.isRead === undefined;
+
+    if (isUnread) {
+      if (isBug) unreadBugs++;
+      else unreadInbox++;
+    }
+  });
+
+  const bBug = document.getElementById("badgeUnreadBugs");
+  const bInbox = document.getElementById("badgeUnreadInbox");
+
+  if (bBug) {
+    bBug.innerText = unreadBugs;
+    bBug.classList.toggle("hidden", unreadBugs === 0);
+  }
+  if (bInbox) {
+    bInbox.innerText = unreadInbox;
+    bInbox.classList.toggle("hidden", unreadInbox === 0);
+  }
+};
+
+window.openBugDetailModal = function (idx) {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+  const bug = list[idx];
+  if (!bug) return;
+
+  window.currentOpenBugIndex = idx;
+  
+  if (bug.isRead !== true) {
+    bug.isRead = true;
+    saveFeedbackListToCloud(list);
+  }
+
+  document.getElementById("detailBugTitle").innerText = `Баг-репорт [ID: ${bug.id || idx}]`;
+  document.getElementById("detailBugTimeAgo").innerText = bug.date || "";
+  document.getElementById("detailBugRating").innerText = "★".repeat(bug.rating || 5) + ` (${bug.rating || 5}/5)`;
+  document.getElementById("detailBugText").innerText = bug.text || "";
+  document.getElementById("detailStatusSelect").value = bug.status || "inbox";
+  document.getElementById("detailDevReportInput").value = bug.devReport || "";
+
+  const imgBox = document.getElementById("detailBugImageContainer");
+  const imgEl = document.getElementById("detailBugImage");
+  if (bug.image) {
+    imgEl.src = bug.image;
+    imgBox.classList.remove("hidden");
+    imgEl.onclick = () => window.openFullImage(bug.image);
+  } else {
+    imgBox.classList.add("hidden");
+  }
+
+  const btnLogs = document.getElementById("btnDetailOpenLogs");
+  if (bug.techLogs) {
+    btnLogs.classList.remove("hidden");
+    btnLogs.onclick = () => window.viewTechLogs(idx);
+  } else {
+    btnLogs.classList.add("hidden");
+  }
+
+  document.getElementById("btnDetailAiPrompt").onclick = () => window.copyAiDebugPrompt(idx);
+
+  clearInterval(window.activeTimerInterval);
+  window.timerRunning = false;
+  document.getElementById("btnTimerToggle").innerText = "▶ Старт таймера";
+  document.getElementById("btnTimerToggle").className = "py-1.5 px-3 rounded-xl bg-amber-500 text-black font-black text-xs active:scale-95 transition cursor-pointer";
+  updateTimerDisplay(bug.timeSpentSec || 0);
+
+  document.getElementById("modalBugDetail")?.classList.remove("hidden");
+};
+
+window.toggleBugTimer = function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || [];
+  const bug = list[window.currentOpenBugIndex];
+  if (!bug) return;
+
+  const btn = document.getElementById("btnTimerToggle");
+
+  if (!window.timerRunning) {
+    window.timerRunning = true;
+    btn.innerText = "⏸ Пауза";
+    btn.className = "py-1.5 px-3 rounded-xl bg-rose-500 text-white font-black text-xs active:scale-95 transition cursor-pointer";
+    
+    window.activeTimerInterval = setInterval(() => {
+      bug.timeSpentSec = (bug.timeSpentSec || 0) + 1;
+      updateTimerDisplay(bug.timeSpentSec);
+    }, 1000);
+  } else {
+    window.timerRunning = false;
+    clearInterval(window.activeTimerInterval);
+    btn.innerText = "▶ Продолжить";
+    btn.className = "py-1.5 px-3 rounded-xl bg-amber-500 text-black font-black text-xs active:scale-95 transition cursor-pointer";
+    saveFeedbackListToCloud(list);
+  }
+};
+
+window.addManualMinutes = function (mins) {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || [];
+  const bug = list[window.currentOpenBugIndex];
+  if (!bug) return;
+
+  bug.timeSpentSec = (bug.timeSpentSec || 0) + mins * 60;
+  updateTimerDisplay(bug.timeSpentSec);
+  saveFeedbackListToCloud(list);
+};
+
+function updateTimerDisplay(totalSec) {
+  const el = document.getElementById("detailTimerDisplay");
+  if (el) el.innerText = formatSecondsToHms(totalSec);
+}
+
+function formatSecondsToHms(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
+}
+
+window.saveBugDetailModal = async function () {
+  const saveBtn = document.getElementById("btnSaveBugDetail");
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerText = "СОХРАНЕНИЕ... ⏳";
+  }
+
+  try {
+    const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+    if (!currentCloudData[targetUser]) currentCloudData[targetUser] = {};
+    const userRecord = currentCloudData[targetUser];
+    let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+    
+    if (window.currentOpenBugIndex === null || !list[window.currentOpenBugIndex]) {
+      document.getElementById("modalBugDetail")?.classList.add("hidden");
+      return;
+    }
+
+    const bug = list[window.currentOpenBugIndex];
+    const newStatus = document.getElementById("detailStatusSelect")?.value || "inbox";
+    const devReport = document.getElementById("detailDevReportInput")?.value.trim() || "";
+
+    bug.devReport = devReport;
+    bug.status = newStatus;
+
+    if (window.activeTimerInterval) {
+      clearInterval(window.activeTimerInterval);
+      window.activeTimerInterval = null;
+    }
+    window.timerRunning = false;
+
+    // Если задачу закрыли в done
+    if (newStatus === "done" && !bug.rewardGranted) {
+      const rewardStr = prompt("Баг закрыт! Сколько монет начислить Кате в благодарность?", "35");
+      
+      if (rewardStr !== null) {
+        const coinsAmount = parseInt(rewardStr, 10) || 0;
+        bug.rewardGranted = true;
+        bug.rewardAmount = coinsAmount;
+        bug.resolvedAt = new Date().toLocaleString("ru-RU");
+
+        if (!Array.isArray(userRecord.rewardNotifications)) {
+          userRecord.rewardNotifications = [];
+        }
+
+        userRecord.rewardNotifications.push({
+          id: "thanks_" + Date.now(),
+          coins: coinsAmount,
+          date: new Date().toLocaleString("ru-RU"),
+          claimed: false
+        });
+
+        if (coinsAmount > 0) {
+          if (!userRecord.pet) userRecord.pet = {};
+          userRecord.pet.coins = (userRecord.pet.coins || 0) + coinsAmount;
+        }
+
+        if (!Array.isArray(userRecord.devChangelog)) {
+          userRecord.devChangelog = [];
+        }
+        userRecord.devChangelog.unshift({
+          bugId: bug.id || ("bug_" + Date.now()),
+          title: bug.text.substring(0, 50),
+          timeSpentSec: bug.timeSpentSec || 0,
+          devReport: devReport,
+          resolvedAt: bug.resolvedAt
+        });
+      }
+    }
+
+    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+    userRecord.feedback = list;
+    
+    await saveFeedbackListToCloud(list);
+  } catch (err) {
+    console.error("Ошибка при сохранении бага:", err);
+  } finally {
+    document.getElementById("modalBugDetail")?.classList.add("hidden");
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerText = "💾 СОХРАНИТЬ И ПРИМЕНИТЬ";
+    }
+    window.renderKanbanBoard();
+  }
+};
+
+window.updateDevStats = function (list) {
+  if (!Array.isArray(list)) return;
+  let totalSec = 0;
+  let resolvedCount = 0;
+
+  list.forEach(item => {
+    if (item.category?.includes("Баг")) {
+      totalSec += (item.timeSpentSec || 0);
+      if (item.status === "done") {
+        resolvedCount++;
+      }
+    }
+  });
+
+  const totalHours = Math.floor(totalSec / 3600);
+  const totalMins = Math.floor((totalSec % 3600) / 60);
+  const avgMins = resolvedCount > 0 ? Math.round((totalSec / 60) / resolvedCount) : 0;
+
+  const elTotalTime = document.getElementById("devTotalTimeSpent");
+  const elResolved = document.getElementById("devResolvedBugsCount");
+  const elAvg = document.getElementById("devAvgFixTime");
+
+  if (elTotalTime) elTotalTime.innerText = `${totalHours} ч ${totalMins} мин`;
+  if (elResolved) elResolved.innerText = `${resolvedCount} шт`;
+  if (elAvg) elAvg.innerText = `${avgMins} мин`;
+};
+
+async function saveFeedbackListToCloud(list) {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!currentCloudData[targetUser]) currentCloudData[targetUser] = {};
+  currentCloudData[targetUser].feedback = list;
+  localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+  await saveCloud();
+}
+
+window.copyAiDebugPrompt = function (idx) {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+  const item = list[idx];
+  if (!item) return;
+
+  const logs = item.techLogs || {};
+  let errorBlock = "Ошибок не зафиксировано";
+  if (logs.lastError) {
+    errorBlock = 
+      "Сообщение: " + logs.lastError.message + "\n" +
+      "Файл: " + (logs.lastError.filename || "неизвестно") + "\n" +
+      "Строка: " + (logs.lastError.lineno || "?") + "\n" +
+      (logs.lastError.stack ? "Стек вызовов:\n" + logs.lastError.stack : "");
+  }
+
+  let consoleBlock = "Пусто";
+  if (Array.isArray(logs.consoleHistory) && logs.consoleHistory.length > 0) {
+    consoleBlock = logs.consoleHistory.map(l => "[" + l.time + " " + l.level + "] " + l.msg).join("\n");
+  }
+
+  const promptText = 
+`Привет! В моем проекте Тамагочи пользователь оставил отчёт о баге. Помоги проанализировать проблему и напиши готовое исправление кода.
+
+### Контекст отчёта:
+- Категория: ${item.category || "Баг"}
+- Оценка: ${item.rating || 5}/5
+- Дата: ${item.date || "не указана"}
+- Состояние питомца: ${item.petName || "Зефирка"}, уровень ${item.petLevel || 1}, монет: ${item.coins || 0}
+- Прикреплен скриншот: ${item.hasImage ? "Да" : "Нет"}
+
+### Текст пользователя:
+"${item.text || ""}"
+
+### Технические логи браузера:
+- Экран устройства: ${logs.screen || "Неизвестно"}
+- User-Agent: ${logs.userAgent || "Неизвестно"}
+
+### Последняя ошибка скрипта:
+\`\`\`
+${errorBlock}
+\`\`\`
+
+### Последние записи консоли браузера:
+\`\`\`
+${consoleBlock}
+\`\`\`
+
+Пожалуйста, объясни, из-за чего возникла проблема, и предоставь готовый блок кода для решения.`;
+
+  navigator.clipboard.writeText(promptText).then(() => {
+    alert("🤖 Промт для AI успешно скопирован в буфер обмена!");
+  }).catch(() => {
+    prompt("Скопируй промт вручную:", promptText);
+  });
+};
+
+window.viewTechLogs = function (idx) {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+  const item = list[idx];
+  if (!item || !item.techLogs) return;
+
+  const logs = item.techLogs;
+  const content = document.getElementById("techLogsContent");
+  if (!content) return;
+
+  let html = `
+    <div class="p-2 rounded-xl bg-[#141526] border border-[#2e304f] space-y-1">
+      <div><b>User-Agent:</b> <span class="text-gray-400">${escapeHtml(logs.userAgent || "N/A")}</span></div>
+      <div><b>Экран:</b> <span class="text-amber-300">${logs.screen || "N/A"}</span></div>
+    </div>
+  `;
+
+  if (logs.lastError) {
+    html += `
+      <div class="p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/50 text-rose-300">
+        <div class="font-bold flex items-center gap-1.5 text-rose-400">🚨 Критический сбой скрипта:</div>
+        <div class="mt-1">${escapeHtml(logs.lastError.message)}</div>
+        <div class="text-[10px] text-gray-400 mt-0.5">Файл: <b>${logs.lastError.filename}</b>, строка: <b>${logs.lastError.lineno}</b></div>
+        ${logs.lastError.stack ? `<pre class="mt-1 text-[9px] text-rose-200/70 overflow-x-auto whitespace-pre-wrap">${escapeHtml(logs.lastError.stack)}</pre>` : ""}
+      </div>
+    `;
+  }
+
+  if (Array.isArray(logs.consoleHistory) && logs.consoleHistory.length > 0) {
+    html += `<div class="font-bold text-gray-400 pt-1">Хронология консоли (${logs.consoleHistory.length}):</div>`;
+    logs.consoleHistory.forEach(l => {
+      const color = l.level === "ERROR" || l.level === "FATAL" ? "text-rose-400" : "text-amber-400";
+      html += `
+        <div class="text-[11px] p-1.5 rounded-lg bg-[#0e0f1a] border border-white/5 flex gap-2">
+          <span class="text-gray-500 font-bold">${l.time}</span>
+          <span class="${color} font-bold">[${l.level}]</span>
+          <span class="text-gray-300 truncate">${escapeHtml(l.msg)}</span>
+        </div>
+      `;
+    });
+  }
+
+  content.innerHTML = html;
+  document.getElementById("modalTechLogsViewer")?.classList.remove("hidden");
+};
+
+window.openFullImage = function (src) {
+  window.open(src, "_blank");
+};
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// 11. ПЕРВИЧНЫЙ ЗАПУСК
 checkAuth();

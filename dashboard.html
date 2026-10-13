@@ -69,7 +69,7 @@
         </div>
       </div>
 
-      <button id="btnSubmitPin" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition active:scale-95 shadow-lg mt-1">
+      <button id="btnSubmitPin" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs tracking-wider transition active:scale-95 shadow-lg mt-1 cursor-pointer">
         АВТОРИЗОВАТЬСЯ
       </button>
       <a href="index.html" class="text-[11px] text-gray-500 hover:text-gray-400 transition">← Вернуться к игре</a>
@@ -77,9 +77,9 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 2. ОСНОВНОЙ КОМАНДНЫЙ ЦЕНТР (С ТАБОВОЙ СИСТЕМОЙ)                         -->
+  <!-- 2. ОСНОВНОЙ КОМАНДНЫЙ ЦЕНТР                                               -->
   <!-- ========================================================================= -->
-  <div id="dashboardContent" class="hidden max-w-6xl mx-auto flex flex-col gap-5">
+  <div id="dashboardContent" class="hidden max-w-7xl mx-auto flex flex-col gap-5">
 
     <!-- Верхний бар управления -->
     <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-[#111222]/90 border border-[#2a2d4a] p-4 sm:p-5 rounded-3xl backdrop-blur-md gap-4 shadow-2xl">
@@ -102,38 +102,48 @@
             <option value="katya">Катя (Таганрог)</option>
           </select>
         </div>
-        <button id="btnPrintReport" class="px-3 py-2 rounded-xl bg-purple-900/40 border border-purple-500/50 text-xs font-bold text-purple-200 active:scale-95 transition">📄 Отчет</button>
-        <button id="btnRefresh" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] text-xs font-bold text-gray-200 active:scale-95 transition">🔄 Обновить</button>
-        <button id="btnResetTelemetry" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 text-xs font-bold text-rose-300 active:scale-95 transition">🗑️ Очистить логи</button>
-        <button id="btnLogout" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] text-xs font-bold text-gray-400 hover:text-white active:scale-95 transition">Выйти ✕</button>
+        <button id="btnPrintReport" class="px-3 py-2 rounded-xl bg-purple-900/40 border border-purple-500/50 text-xs font-bold text-purple-200 active:scale-95 transition cursor-pointer">📄 Отчет</button>
+        <button id="btnRefresh" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] text-xs font-bold text-gray-200 active:scale-95 transition cursor-pointer">🔄 Обновить</button>
+        <button id="btnResetTelemetry" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-800/50 text-xs font-bold text-rose-300 active:scale-95 transition cursor-pointer">🗑️ Очистить логи</button>
+        <button id="btnLogout" class="px-3 py-2 rounded-xl bg-[#1b1d33] border border-[#2e3256] text-xs font-bold text-gray-400 hover:text-white active:scale-95 transition cursor-pointer">Выйти ✕</button>
       </div>
     </header>
 
-    <!-- ГЛАВНОЕ МЕНЮ ВКЛАДОК (DASHBOARD NAVIGATION) -->
+    <!-- ГЛАВНОЕ МЕНЮ ВКЛАДОК -->
     <nav class="flex bg-[#111222] p-1.5 rounded-2xl border border-[#22243d] text-xs font-bold gap-1.5 overflow-x-auto shadow-lg no-print">
-      <button onclick="switchMainTab('overview')" id="mainTab_overview" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black whitespace-nowrap shadow transition">
+      <button onclick="switchMainTab('overview')" id="mainTab_overview" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-black whitespace-nowrap shadow transition cursor-pointer">
         📊 Обзор & Аналитика
       </button>
-      <button onclick="switchMainTab('pet')" id="mainTab_pet" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition">
+      <button onclick="switchMainTab('pet')" id="mainTab_pet" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition cursor-pointer">
         🐱 Питомец & Дропы
       </button>
-      <button onclick="switchMainTab('economy')" id="mainTab_economy" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition">
+      <button onclick="switchMainTab('economy')" id="mainTab_economy" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition cursor-pointer">
         🪙 Экономика & Цены
       </button>
-      <button onclick="switchMainTab('odds')" id="mainTab_odds" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition">
+      <button onclick="switchMainTab('odds')" id="mainTab_odds" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-gray-400 hover:text-white whitespace-nowrap transition cursor-pointer">
         🎲 Шансы и Алгоритмы
       </button>
-      <button onclick="switchMainTab('advisor')" id="mainTab_advisor" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-indigo-400 hover:text-indigo-200 whitespace-nowrap transition flex items-center justify-center gap-1.5">
+      <button onclick="switchMainTab('advisor')" id="mainTab_advisor" class="main-tab-btn flex-1 py-2.5 px-3 rounded-xl text-indigo-400 hover:text-indigo-200 whitespace-nowrap transition flex items-center justify-center gap-1.5 cursor-pointer">
         <span>🧠</span> ИИ-Советник (RTP)
+      </button>
+      
+      <!-- Вкладка Канбана -->
+      <button onclick="switchMainTab('kanban')" id="mainTab_kanban" class="main-tab-btn relative flex-1 py-2.5 px-3 rounded-xl text-rose-400 hover:text-rose-200 whitespace-nowrap transition flex items-center justify-center gap-1.5 cursor-pointer">
+        <span>🪲</span>
+        <span>Канбан багов</span>
+        <span id="badgeUnreadBugs" class="hidden absolute top-1 right-1 bg-rose-500 text-white font-mono font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">0</span>
+      </button>
+
+      <!-- Вкладка Ящика отзывов -->
+      <button onclick="switchMainTab('inbox')" id="mainTab_inbox" class="main-tab-btn relative flex-1 py-2.5 px-3 rounded-xl text-pink-400 hover:text-pink-200 whitespace-nowrap transition flex items-center justify-center gap-1.5 cursor-pointer">
+        <span>💌</span>
+        <span>Ящик отзывов</span>
+        <span id="badgeUnreadInbox" class="hidden absolute top-1 right-1 bg-pink-500 text-white font-mono font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-md animate-pulse">0</span>
       </button>
     </nav>
 
-    <!-- ========================================================================= -->
-    <!-- ВКЛАДКА 1: 📊 ОБЗОР, KPI И ТЕЛЕМЕТРИЯ                                    -->
-    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 1: ОБЗОР -->
     <section id="pane_overview" class="dashboard-pane flex flex-col gap-4">
-      
-      <!-- Карточка статуса оттока игрока -->
       <div id="churnWarningCard" class="bg-[#18182d] border-2 border-emerald-500/40 rounded-3xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
         <div class="flex items-center gap-3">
           <span class="text-4xl" id="churnRiskEmoji">✅</span>
@@ -145,12 +155,11 @@
             <p id="churnRiskDetails" class="text-xs text-gray-300 mt-1">Оценка математического ожидания выплат и активности игрока...</p>
           </div>
         </div>
-        <button onclick="switchMainTab('advisor')" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs whitespace-nowrap active:scale-95 transition shadow-lg">
+        <button onclick="switchMainTab('advisor')" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs whitespace-nowrap active:scale-95 transition shadow-lg cursor-pointer">
           Открыть рекомендации ИИ ➔
         </button>
       </div>
 
-      <!-- KPI Метрики -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 print-box">
         <div class="bg-[#111222] border border-[#22243d] p-4 rounded-2xl flex flex-col">
           <span class="text-xs text-gray-400">⏱️ Время в игре</span>
@@ -174,7 +183,6 @@
         </div>
       </div>
 
-      <!-- Анализ мини-игр и времени суток -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="bg-[#111222] border border-[#22243d] p-5 rounded-3xl flex flex-col gap-3 shadow-lg">
           <div class="flex justify-between items-center border-b border-[#22243d] pb-2">
@@ -192,26 +200,25 @@
           <div class="grid grid-cols-4 gap-2 text-center mt-1">
             <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
               <span class="text-xl">🌙</span><span class="text-[10px] text-gray-400 mt-1">Ночь</span>
-              <span id="timeNightCount" class="font-mono text-base font-black text-purple-300 mt-0.5">0</span>
+              <span id="timeNightCount" class="mono-font text-base font-black text-purple-300 mt-0.5">0</span>
             </div>
             <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
               <span class="text-xl">🌅</span><span class="text-[10px] text-gray-400 mt-1">Утро</span>
-              <span id="timeMorningCount" class="font-mono text-base font-black text-amber-300 mt-0.5">0</span>
+              <span id="timeMorningCount" class="mono-font text-base font-black text-amber-300 mt-0.5">0</span>
             </div>
             <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
               <span class="text-xl">☀️</span><span class="text-[10px] text-gray-400 mt-1">День</span>
-              <span id="timeDayCount" class="font-mono text-base font-black text-yellow-300 mt-0.5">0</span>
+              <span id="timeDayCount" class="mono-font text-base font-black text-yellow-300 mt-0.5">0</span>
             </div>
             <div class="bg-[#0b0c16] border border-[#22243d] p-3 rounded-2xl flex flex-col items-center">
               <span class="text-xl">🌆</span><span class="text-[10px] text-gray-400 mt-1">Вечер</span>
-              <span id="timeEveningCount" class="font-mono text-base font-black text-rose-300 mt-0.5">0</span>
+              <span id="timeEveningCount" class="mono-font text-base font-black text-rose-300 mt-0.5">0</span>
             </div>
           </div>
           <p id="peakTimeSummary" class="text-[11px] text-gray-400 text-center mt-1">Пик активности: <b class="text-pink-300">...</b></p>
         </div>
       </div>
 
-      <!-- Журнал действий (Audit Trail) -->
       <div class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
         <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
           <h2 class="cute-font text-base sm:text-lg font-black text-gray-300">📜 Поминутный журнал аудита (Audit Trail)</h2>
@@ -221,19 +228,15 @@
       </div>
     </section>
 
-    <!-- ========================================================================= -->
-    <!-- ВКЛАДКА 2: 🐱 ПИТОМЕЦ, ДРОПЫ И КУПОНЫ ЖЕЛАНИЙ                             -->
-    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 2: ПИТОМЕЦ -->
     <section id="pane_pet" class="dashboard-pane hidden flex flex-col gap-4">
-      
-      <!-- Редактор состояния котика -->
       <div class="bg-[#111222] border-2 border-pink-500/30 rounded-3xl p-5 shadow-xl flex flex-col gap-4">
         <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
           <div>
             <h2 class="cute-font text-base font-black text-pink-300">⚙️ Редактор состояния котика</h2>
             <p class="text-xs text-gray-400">Мгновенно синхронизируется с выбранным игроком</p>
           </div>
-          <button id="btnSavePetEdits" class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-black text-xs active:scale-95 transition shadow-lg">
+          <button id="btnSavePetEdits" class="px-4 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-black text-xs active:scale-95 transition shadow-lg cursor-pointer">
             💾 СОХРАНИТЬ КОТИКА
           </button>
         </div>
@@ -250,7 +253,6 @@
         </div>
       </div>
 
-      <!-- Купоны желаний -->
       <div class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
         <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
           <div>
@@ -258,10 +260,10 @@
             <p class="text-xs text-gray-400">Управление статусом желаний и ручная выдача</p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="btnGrantCustomWish" class="px-3 py-1 rounded-xl bg-indigo-900/40 border border-indigo-500/50 text-[11px] font-bold text-indigo-300 hover:bg-indigo-800/40 transition">
+            <button id="btnGrantCustomWish" class="px-3 py-1 rounded-xl bg-indigo-900/40 border border-indigo-500/50 text-[11px] font-bold text-indigo-300 hover:bg-indigo-800/40 transition cursor-pointer">
               + Выдать купон
             </button>
-            <button id="btnClearExpiredWishes" class="px-3 py-1 rounded-xl bg-rose-900/40 border border-rose-600/50 text-[11px] font-bold text-rose-300 hover:bg-rose-800/40 transition">
+            <button id="btnClearExpiredWishes" class="px-3 py-1 rounded-xl bg-rose-900/40 border border-rose-600/50 text-[11px] font-bold text-rose-300 hover:bg-rose-800/40 transition cursor-pointer">
               🧹 Очистить просроченные
             </button>
             <span id="badgeWishCount" class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold">0 шт</span>
@@ -270,7 +272,6 @@
         <div id="wishesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1"></div>
       </div>
 
-      <!-- История дропов и заказов -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-3">
           <div class="flex justify-between items-center border-b border-[#22243d] pb-3">
@@ -290,9 +291,7 @@
       </div>
     </section>
 
-    <!-- ========================================================================= -->
-    <!-- ВКЛАДКА 3: 🪙 ЭКОНОМИКА, ЦЕНЫ И СТАВКИ                                   -->
-    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 3: ЭКОНОМИКА -->
     <section id="pane_economy" class="dashboard-pane hidden flex flex-col gap-4">
       <div class="bg-[#111222] border border-[#22243d] rounded-3xl p-5 shadow-xl flex flex-col gap-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#22243d] pb-3 gap-2">
@@ -300,20 +299,18 @@
             <h2 class="cute-font text-base font-black text-emerald-300">🪙 Полный редактор экономики</h2>
             <p class="text-xs text-gray-400">Цены магазина, еды, кейсов, ставки казино и выплаты за игры</p>
           </div>
-          <button id="btnSaveFullEconomy" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg">
+          <button id="btnSaveFullEconomy" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg cursor-pointer">
             💾 СОХРАНИТЬ ВСЮ ЭКОНОМИКУ
           </button>
         </div>
 
-        <!-- Подвкладки категорий экономики -->
         <div class="flex gap-2 border-b border-[#22243d] pb-2 text-xs font-bold overflow-x-auto">
-          <button onclick="switchEcoSubTab('food')" id="ecoSub_food" class="px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap">🍱 Еда</button>
-          <button onclick="switchEcoSubTab('shop')" id="ecoSub_shop" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">🛍️ Гардероб</button>
-          <button onclick="switchEcoSubTab('cases')" id="ecoSub_cases" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">🎰 Казино и Кейсы</button>
-          <button onclick="switchEcoSubTab('rewards')" id="ecoSub_rewards" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap">🎮 Награды игр</button>
+          <button onclick="switchEcoSubTab('food')" id="ecoSub_food" class="px-3 py-1.5 rounded-lg bg-pink-500 text-white whitespace-nowrap cursor-pointer">🍱 Еда</button>
+          <button onclick="switchEcoSubTab('shop')" id="ecoSub_shop" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🛍️ Гардероб</button>
+          <button onclick="switchEcoSubTab('cases')" id="ecoSub_cases" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🎰 Казино и Кейсы</button>
+          <button onclick="switchEcoSubTab('rewards')" id="ecoSub_rewards" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🎮 Награды игр</button>
         </div>
 
-        <!-- Контейнеры подвкладок -->
         <div id="ecoContainer_food" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
         <div id="ecoContainer_shop" class="hidden flex-col gap-3">
           <div class="flex gap-1.5 text-[11px] font-bold overflow-x-auto border-b border-[#1c1d33] pb-1.5">
@@ -331,9 +328,7 @@
       </div>
     </section>
 
-    <!-- ========================================================================= -->
-    <!-- ВКЛАДКА 4: 🎲 ШАНСЫ ВЫПАДЕНИЯ И АЛГОРИТМЫ (DROPS & ODDS)                 -->
-    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 4: ШАНСЫ И АЛГОРИТМЫ -->
     <section id="pane_odds" class="dashboard-pane hidden flex flex-col gap-4">
       <div class="bg-[#111222] border-2 border-amber-500/40 rounded-3xl p-5 shadow-xl flex flex-col gap-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#22243d] pb-3 gap-2">
@@ -341,22 +336,21 @@
             <h2 class="cute-font text-base font-black text-amber-300">🎲 Настройка шансов дропа во всех режимах</h2>
             <p class="text-xs text-gray-400">Переключайте вкладку и настраивайте процент выпадения каждого предмета</p>
           </div>
-          <button id="btnSaveAllChances" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg">
+          <button id="btnSaveAllChances" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#11111b] font-black text-xs active:scale-95 transition shadow-lg cursor-pointer">
             💾 СОХРАНИТЬ ШАНСЫ РЕЖИМА
           </button>
         </div>
 
-        <!-- Навигация по режимам азарта -->
         <div class="flex gap-1.5 border-b border-[#22243d] pb-2 text-xs font-bold overflow-x-auto" id="chancesModesNav">
-          <button onclick="switchOddsMode('case_std')" data-tab="case_std" class="odds-tab-btn px-3 py-1.5 rounded-xl bg-amber-500 text-black font-black whitespace-nowrap">📦 Стандарт Кейс</button>
-          <button onclick="switchOddsMode('case_prem')" data-tab="case_prem" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">💜 Премиум Кейс</button>
-          <button onclick="switchOddsMode('case_blk')" data-tab="case_blk" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">👑 Black Box</button>
-          <button onclick="switchOddsMode('case_hw')" data-tab="case_hw" class="odds-tab-btn px-3 py-1.5 rounded-xl text-orange-400 hover:text-orange-200 whitespace-nowrap">🎃 Хеллоуин Кейс</button>
-          <button onclick="switchOddsMode('slots')" data-tab="slots" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">🍒 Слоты 777</button>
-          <button onclick="switchOddsMode('scratch')" data-tab="scratch" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">🎟️ Скретч-карты</button>
-          <button onclick="switchOddsMode('crash')" data-tab="crash" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">🚀 Мур-Краш</button>
-          <button onclick="switchOddsMode('fishing')" data-tab="fishing" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">🎣 Рыбалка</button>
-          <button onclick="switchOddsMode('wishes')" data-tab="wishes" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap">💌 Дроп Купонов</button>
+          <button onclick="switchOddsMode('case_std')" data-tab="case_std" class="odds-tab-btn px-3 py-1.5 rounded-xl bg-amber-500 text-black font-black whitespace-nowrap cursor-pointer">📦 Стандарт Кейс</button>
+          <button onclick="switchOddsMode('case_prem')" data-tab="case_prem" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">💜 Премиум Кейс</button>
+          <button onclick="switchOddsMode('case_blk')" data-tab="case_blk" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">👑 Black Box</button>
+          <button onclick="switchOddsMode('case_hw')" data-tab="case_hw" class="odds-tab-btn px-3 py-1.5 rounded-xl text-orange-400 hover:text-orange-200 whitespace-nowrap cursor-pointer">🎃 Хеллоуин Кейс</button>
+          <button onclick="switchOddsMode('slots')" data-tab="slots" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🍒 Слоты 777</button>
+          <button onclick="switchOddsMode('scratch')" data-tab="scratch" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🎟️ Скретч-карты</button>
+          <button onclick="switchOddsMode('crash')" data-tab="crash" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🚀 Мур-Краш</button>
+          <button onclick="switchOddsMode('fishing')" data-tab="fishing" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">🎣 Рыбалка</button>
+          <button onclick="switchOddsMode('wishes')" data-tab="wishes" class="odds-tab-btn px-3 py-1.5 rounded-xl text-gray-400 hover:text-white whitespace-nowrap cursor-pointer">💌 Дроп Купонов</button>
         </div>
 
         <div id="oddsItemsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
@@ -368,9 +362,7 @@
       </div>
     </section>
 
-    <!-- ========================================================================= -->
-    <!-- ВКЛАДКА 5: 🧠 ЭКОНОМИЧЕСКИЙ ИИ-СОВЕТНИК (RTP AUDIT)                      -->
-    <!-- ========================================================================= -->
+    <!-- ВКЛАДКА 5: ИИ-СОВЕТНИК -->
     <section id="pane_advisor" class="dashboard-pane hidden flex flex-col gap-4">
       <div class="bg-[#18182b] border-2 border-indigo-500/80 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#2a2d4a] pb-3 gap-2">
@@ -381,7 +373,7 @@
               <p class="text-[11px] text-gray-400">Математический расчёт ожидаемого возврата игроку (RTP) и анти-банкротные меры</p>
             </div>
           </div>
-          <button id="btnApplyAdvisorPackage" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 text-[#090910] font-black text-xs active:scale-95 transition shadow-lg">
+          <button id="btnApplyAdvisorPackage" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 text-[#090910] font-black text-xs active:scale-95 transition shadow-lg cursor-pointer">
             ✅ ПРИМЕНИТЬ ПАКЕТ В ОБЛАКО
           </button>
         </div>
@@ -390,9 +382,212 @@
       </div>
     </section>
 
+    <!-- ВКЛАДКА 6: КАНБАН БАГОВ -->
+    <section id="pane_kanban" class="dashboard-pane hidden flex flex-col gap-4">
+      
+      <!-- Панель статистики разработки -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#0d0e1a] border border-[#2e304f] rounded-3xl p-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl">
+            ⏱️
+          </div>
+          <div>
+            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Общее время фиксов:</span>
+            <span id="devTotalTimeSpent" class="text-base font-black text-amber-300 font-mono">0 ч 0 мин</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl">
+            ✅
+          </div>
+          <div>
+            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Исправлено багов:</span>
+            <span id="devResolvedBugsCount" class="text-base font-black text-emerald-300 font-mono">0 шт</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-xl">
+            ⚡
+          </div>
+          <div>
+            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Среднее время на баг:</span>
+            <span id="devAvgFixTime" class="text-base font-black text-indigo-300 font-mono">0 мин</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Хедер канбана -->
+      <div class="flex justify-between items-center border-b border-[#313244] pb-3">
+        <div>
+          <h2 class="cute-font text-xl font-black text-rose-400 flex items-center gap-2">
+            <span>🪲</span> Технический трекер багов
+          </h2>
+          <p class="text-xs text-gray-400">Кликни по карточке, чтобы открыть детали, таймер и отчёт разработчика</p>
+        </div>
+        <button onclick="renderKanbanBoard()" class="py-1.5 px-3 bg-[#1e1e2e] border border-[#313244] hover:border-pink-500 rounded-xl text-xs font-bold text-gray-300 transition active:scale-95 cursor-pointer">
+          🔄 Обновить
+        </button>
+      </div>
+
+      <!-- Колонки канбана -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start select-none">
+        <div class="bg-[#121324]/90 border border-slate-700/60 rounded-3xl p-3 flex flex-col gap-3 min-h-[460px]">
+          <div class="flex justify-between items-center pb-1 border-b border-white/5">
+            <span class="font-black text-slate-300 text-xs">📥 Принято</span>
+            <span id="countInbox" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono text-[10px] font-bold">0</span>
+          </div>
+          <div id="colInbox" class="flex flex-col gap-2 overflow-y-auto max-h-[72vh] pr-1"></div>
+        </div>
+
+        <div class="bg-[#121324]/90 border border-amber-500/40 rounded-3xl p-3 flex flex-col gap-3 min-h-[460px]">
+          <div class="flex justify-between items-center pb-1 border-b border-white/5">
+            <span class="font-black text-amber-300 text-xs">⚙️ В работе</span>
+            <span id="countInProgress" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold">0</span>
+          </div>
+          <div id="colInProgress" class="flex flex-col gap-2 overflow-y-auto max-h-[72vh] pr-1"></div>
+        </div>
+
+        <div class="bg-[#121324]/90 border border-purple-500/40 rounded-3xl p-3 flex flex-col gap-3 min-h-[460px]">
+          <div class="flex justify-between items-center pb-1 border-b border-white/5">
+            <span class="font-black text-purple-300 text-xs">🧪 Тест / Проверка</span>
+            <span id="countTesting" class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">0</span>
+          </div>
+          <div id="colTesting" class="flex flex-col gap-2 overflow-y-auto max-h-[72vh] pr-1"></div>
+        </div>
+
+        <div class="bg-[#121324]/90 border border-emerald-500/40 rounded-3xl p-3 flex flex-col gap-3 min-h-[460px]">
+          <div class="flex justify-between items-center pb-1 border-b border-white/5">
+            <span class="font-black text-emerald-300 text-xs">✅ Выполнено</span>
+            <span id="countDone" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">0</span>
+          </div>
+          <div id="colDone" class="flex flex-col gap-2 overflow-y-auto max-h-[72vh] pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ВКЛАДКА 7: ЯЩИК ОТЗЫВОВ И ПРЕДЛОЖЕНИЙ -->
+    <section id="pane_inbox" class="dashboard-pane hidden flex flex-col gap-4 select-none">
+      <div class="flex justify-between items-center border-b border-[#313244] pb-3">
+        <div>
+          <h2 class="cute-font text-xl font-black text-pink-400 flex items-center gap-2">
+            <span>💌</span> Ящик предложений и любовных записок
+          </h2>
+          <p class="text-xs text-gray-400">Тёплые слова, идеи и пожелания по игре от Кати</p>
+        </div>
+        <button onclick="renderFeedbackInbox()" class="py-1.5 px-3 bg-[#1e1e2e] border border-[#313244] hover:border-pink-500 rounded-xl text-xs font-bold text-gray-300 transition active:scale-95 cursor-pointer">
+          🔄 Обновить
+        </button>
+      </div>
+
+      <div id="inboxListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 items-start"></div>
+    </section>
+
   </div>
 
-  <!-- Внешний скрипт базы предметов и движка дашборда -->
+  <!-- МОДАЛКА: ДЕТАЛИ БАГА, ТАЙМЕР И ОТЧЁТ РАЗРАБОТЧИКА -->
+  <div id="modalBugDetail" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-3 select-none">
+    <div class="bg-[#121324] border-2 border-rose-500/50 rounded-3xl w-full max-w-2xl p-5 flex flex-col gap-3.5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      
+      <div class="flex justify-between items-start border-b border-white/5 pb-2">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🪲</span>
+            <h3 id="detailBugTitle" class="font-black text-rose-300 text-sm">Баг-репорт</h3>
+            <span id="detailBugTimeAgo" class="text-[10px] text-gray-500 font-mono"></span>
+          </div>
+          <div id="detailBugRating" class="text-amber-400 text-xs mt-0.5"></div>
+        </div>
+        <button onclick="document.getElementById('modalBugDetail').classList.add('hidden')" class="text-gray-400 hover:text-white p-1 cursor-pointer">✕</button>
+      </div>
+
+      <!-- Текст проблемы -->
+      <div class="bg-[#0b0c16] border border-[#2e304f] rounded-2xl p-3">
+        <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider block mb-1">Описание от Кати:</span>
+        <p id="detailBugText" class="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed select-text font-sans"></p>
+      </div>
+
+      <!-- Скриншот и кнопки -->
+      <div id="detailBugMediaRow" class="flex items-center gap-3">
+        <div id="detailBugImageContainer" class="hidden">
+          <img id="detailBugImage" src="" alt="Скриншот" class="max-h-28 rounded-xl border border-white/10 cursor-pointer object-contain shadow">
+        </div>
+        <div class="flex flex-col gap-1.5 flex-1">
+          <button id="btnDetailOpenLogs" class="hidden py-2 px-3 rounded-xl bg-indigo-950/70 border border-indigo-500/40 text-xs font-mono text-indigo-300 hover:bg-indigo-900 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>🛠️</span> <span>Открыть консоль и стек ошибки</span>
+          </button>
+          <button id="btnDetailAiPrompt" class="py-2 px-3 rounded-xl bg-gradient-to-r from-pink-600/30 to-purple-600/30 border border-pink-500/40 text-xs font-bold text-pink-300 hover:border-pink-400 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>🤖</span> <span>Скопировать готовый промт для AI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- БЛОК ТАЙМЕРА РАЗРАБОТКИ -->
+      <div class="bg-[#18192e] border border-amber-500/30 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl animate-pulse">⏱️</span>
+          <div>
+            <span class="text-[10px] text-gray-400 font-bold block">Время на разработку / фикс:</span>
+            <span id="detailTimerDisplay" class="font-mono text-lg font-black text-amber-300">00:00:00</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnTimerToggle" onclick="toggleBugTimer()" class="py-1.5 px-3 rounded-xl bg-amber-500 text-black font-black text-xs active:scale-95 transition cursor-pointer">
+            ▶ Старт таймера
+          </button>
+          <button onclick="addManualMinutes(15)" class="py-1.5 px-2.5 rounded-xl bg-[#2e304f] text-gray-300 hover:text-white font-bold text-xs active:scale-95 transition cursor-pointer" title="Добавить 15 минут вручную">
+            +15 мин
+          </button>
+        </div>
+      </div>
+
+      <!-- СТАТУС ЗАДАЧИ -->
+      <div class="flex items-center justify-between gap-2 bg-[#0b0c16] border border-[#2e304f] p-2.5 rounded-2xl">
+        <span class="text-xs text-gray-400 font-bold">Статус задачи:</span>
+        <select id="detailStatusSelect" class="bg-[#18192e] border border-[#3b3d68] rounded-xl px-3 py-1.5 text-xs font-bold text-gray-200 outline-none cursor-pointer">
+          <option value="inbox">📥 Принято</option>
+          <option value="in_progress">⚙️ В работе</option>
+          <option value="testing">🧪 Тестирование</option>
+          <option value="done">✅ Выполнено (Закрыть и наградить)</option>
+        </select>
+      </div>
+
+      <!-- ТЕХНИЧЕСКИЙ ОТЧЁТ РАЗРАБОТЧИКА -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <span>📝</span> <span>Технический отчёт о фиксе (для себя и статистики):</span>
+        </label>
+        <textarea id="detailDevReportInput" rows="2" placeholder="Например: Исправил утечку памяти в setInterval и обновил tailwind-классы..." class="w-full bg-[#0b0c16] border border-[#2e304f] focus:border-indigo-500 rounded-2xl p-2.5 text-xs text-gray-200 outline-none resize-none font-mono"></textarea>
+      </div>
+
+      <!-- Кнопка сохранения -->
+      <button 
+        type="button" 
+        id="btnSaveBugDetail" 
+        onclick="saveBugDetailModal()" 
+        class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs active:scale-95 transition shadow-lg cursor-pointer pointer-events-auto relative z-20"
+      >
+        💾 СОХРАНИТЬ И ПРИМЕНИТЬ
+      </button>
+
+    </div>
+  </div>
+
+  <!-- МОДАЛКА: ТЕХНИЧЕСКИЙ ОТЧЁТ БРАУЗЕРА -->
+  <div id="modalTechLogsViewer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4 select-none">
+    <div class="bg-[#0b0c16] border-2 border-indigo-500/60 rounded-3xl w-full max-w-2xl p-4 flex flex-col gap-3 shadow-2xl max-h-[85vh]">
+      <div class="flex justify-between items-center border-b border-[#2e304f] pb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🛠️</span>
+          <h3 class="font-bold text-indigo-300 text-sm">Технический отчёт браузера</h3>
+        </div>
+        <button onclick="document.getElementById('modalTechLogsViewer').classList.add('hidden')" class="text-gray-400 hover:text-white cursor-pointer">✕</button>
+      </div>
+      <div id="techLogsContent" class="overflow-y-auto font-mono text-xs text-gray-300 bg-[#06070d] p-3 rounded-2xl border border-[#1e2038] space-y-2"></div>
+    </div>
+  </div>
+
   <script src="items.js"></script>
   <script src="dashboard.js"></script>
 </body>
