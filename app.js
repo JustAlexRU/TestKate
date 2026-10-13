@@ -547,14 +547,20 @@ function updatePetUI() {
   document.getElementById("xpBar").style.width = xpPercent + "%";
   document.getElementById("xpText").innerText = `${window.pet.xp}/${maxXp}`;
 
-  document.getElementById("statHungerVal").innerText = `${window.pet.hunger}%`;
-  document.getElementById("statHungerBar").style.width = `${window.pet.hunger}%`;
-  document.getElementById("statHappyVal").innerText = `${window.pet.happy}%`;
-  document.getElementById("statHappyBar").style.width = `${window.pet.happy}%`;
-  document.getElementById("statEnergyVal").innerText = `${window.pet.energy}%`;
-  document.getElementById("statEnergyBar").style.width = `${window.pet.energy}%`;
-  document.getElementById("statCleanVal").innerText = `${window.pet.clean}%`;
-  document.getElementById("statCleanBar").style.width = `${window.pet.clean}%`;
+// Округляем до целых чисел перед выводом
+  const hunger = Math.round(window.pet.hunger);
+  const happy = Math.round(window.pet.happy);
+  const energy = Math.round(window.pet.energy);
+  const clean = Math.round(window.pet.clean);
+
+  document.getElementById("statHungerVal").innerText = `${hunger}%`;
+  document.getElementById("statHungerBar").style.width = `${hunger}%`;
+  document.getElementById("statHappyVal").innerText = `${happy}%`;
+  document.getElementById("statHappyBar").style.width = `${happy}%`;
+  document.getElementById("statEnergyVal").innerText = `${energy}%`;
+  document.getElementById("statEnergyBar").style.width = `${energy}%`;
+  document.getElementById("statCleanVal").innerText = `${clean}%`;
+  document.getElementById("statCleanBar").style.width = `${clean}%`;
 
   const sleepOverlay = document.getElementById("sleepOverlay");
   const zzzContainer = document.getElementById("zzzContainer");
@@ -881,13 +887,45 @@ document.getElementById("btnFreeFood")?.addEventListener("click", () => {
  * 7. ВИТРИНА МАГАЗИНА И ГАРДЕРОБ
  * ------------------------------------------------------------------------- */
 document.getElementById("btnWardrobe")?.addEventListener("click", () => {
-  renderWardrobeCategory("body", "wardrobeOutfitsSection");
-  renderWardrobeAccs();
-  renderWardrobeRooms();
-  renderColorShop();
+  switchWardrobeTab("outfits");
   document.getElementById("modalWardrobe")?.classList.remove("hidden");
   logAuditEvent("Открыла Гардероб и Витрину", "🛍️");
 });
+
+function switchWardrobeTab(tabKey) {
+  const tabs = [
+    { btnId: "tabWardrobeOutfits", secId: "wardrobeOutfitsSection", key: "outfits", render: () => renderWardrobeCategory("body", "wardrobeOutfitsSection") },
+    { btnId: "tabWardrobeAccs", secId: "wardrobeAccSection", key: "accs", render: renderWardrobeAccs },
+    { btnId: "tabWardrobeRooms", secId: "wardrobeRoomsSection", key: "rooms", render: renderWardrobeRooms },
+    { btnId: "tabWardrobeColors", secId: "wardrobeColorSection", key: "colors", render: renderColorShop }
+  ];
+
+  tabs.forEach(t => {
+    const btn = document.getElementById(t.btnId);
+    const sec = document.getElementById(t.secId);
+    if (!btn || !sec) return;
+
+    if (t.key === tabKey) {
+      btn.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white font-bold transition text-[11px] shadow-sm";
+      sec.classList.remove("hidden");
+      sec.classList.add("grid");
+      t.render();
+    } else {
+      btn.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]";
+      sec.classList.add("hidden");
+      sec.classList.remove("grid");
+    }
+  });
+
+  const coinsEl = document.getElementById("shopCoinsVal");
+  if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
+}
+
+// Слушатели клика по всем 4 вкладкам магазина
+document.getElementById("tabWardrobeOutfits")?.addEventListener("click", () => switchWardrobeTab("outfits"));
+document.getElementById("tabWardrobeAccs")?.addEventListener("click", () => switchWardrobeTab("accs"));
+document.getElementById("tabWardrobeRooms")?.addEventListener("click", () => switchWardrobeTab("rooms"));
+document.getElementById("tabWardrobeColors")?.addEventListener("click", () => switchWardrobeTab("colors"));
 
 function getRarityBadge(rarityKey) {
   const r = window.ITEM_RARITIES?.[rarityKey] || window.ITEM_RARITIES?.common;
@@ -1348,7 +1386,7 @@ document.getElementById("zenTapArea")?.addEventListener("pointerdown", () => {
   zenClicks++;
   if (window.sound?.purr) window.sound.purr();
   triggerHaptic();
-  window.pet.happy = Math.min(100, window.pet.happy + 1);
+  window.pet.happy = Math.min(100, window.pet.happy + 0.1);
   const clickCountEl = document.getElementById("zenTotalClicks");
   if (clickCountEl) clickCountEl.innerText = zenClicks;
 

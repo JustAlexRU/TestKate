@@ -288,8 +288,8 @@
         </button>
       </div>
 
-      <!-- Главная панель хабов: Инвентарь, Магазин, Ивент, Казино, Бонус -->
-      <div class="grid grid-cols-5 gap-1.5">
+<!-- Главная панель хабов: Инвентарь, Магазин, Ивент, Казино, Дзен, Бонус -->
+      <div class="grid grid-cols-3 gap-2">
         <button id="btnOpenInventory" class="bg-gradient-to-r from-indigo-900/60 to-purple-900/60 border border-indigo-500/70 rounded-2xl py-2 px-1 flex flex-col items-center justify-center text-[10px] font-black text-indigo-200 active:scale-95 transition shadow">
           <span class="text-base">🎒</span>
           <span>Инвентарь</span>
@@ -306,12 +306,15 @@
           <span class="text-base">🎰</span>
           <span>Казино</span>
         </button>
+        <button id="btnZenClicker" class="bg-gradient-to-r from-teal-900/60 to-emerald-900/60 border border-emerald-500/60 rounded-2xl py-2 px-1 text-[10px] font-black text-emerald-200 flex flex-col items-center justify-center active:scale-95 transition shadow">
+          <span class="text-base">🧘</span>
+          <span>Дзен</span>
+        </button>
         <button id="btnDailyBonus" class="bg-[#1e1e2e] border border-amber-500/40 rounded-2xl py-2 px-1 text-[10px] font-bold text-amber-300 flex flex-col items-center justify-center active:scale-95 transition">
           <span class="text-base">🎁</span>
           <span>Бонус</span>
         </button>
       </div>
-    </section>
 
     <!-- TAB 2: РУЛЕТКА ВКУСНОСТЕЙ -->
     <section id="tabRoulette" class="hidden flex-col gap-3 w-full items-center justify-center my-auto">
