@@ -327,6 +327,25 @@ function syncToCloud() {
       if (!res.ok) throw new Error("Fetch failed");
       const root = (await res.json()).record || {};
 
+      // Берем актуальный feedback из облака (где хранятся статусы из дашборда)
+      const cloudFeedback = root[currentUser]?.feedback || [];
+      const localFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+
+      // Синхронизируем статусы: если в облаке статус уже изменился (done, in_progress), обновляем локально
+      localFeedback.forEach(localItem => {
+        const cloudItem = cloudFeedback.find(c => c.id === localItem.id);
+        if (cloudItem) {
+          if (cloudItem.status) localItem.status = cloudItem.status;
+          if (cloudItem.devReport) localItem.devReport = cloudItem.devReport;
+          if (cloudItem.timeSpentSec) localItem.timeSpentSec = cloudItem.timeSpentSec;
+          if (cloudItem.rewardGranted) localItem.rewardGranted = cloudItem.rewardGranted;
+        }
+      });
+      localStorage.setItem("katya_master_feedback", JSON.stringify(localFeedback));
+
+      // Если в облаке есть данные, отдаем приоритет облачному массиву со статусами
+      const mergedFeedback = cloudFeedback.length > 0 ? cloudFeedback : localFeedback;
+
       // Полный снимок состояния игрока
       root[currentUser] = {
         pet: window.pet,
@@ -336,7 +355,9 @@ function syncToCloud() {
         analytics: window.analytics,
         wishes: window.wishesVault,
         caseHistory: window.caseHistory,
-        feedback: JSON.parse(localStorage.getItem("katya_master_feedback")) || [], // <--- ВОТ ЭТА СТРОКА
+        feedback: mergedFeedback,
+        rewardNotifications: root[currentUser]?.rewardNotifications || [], // Не затираем награды из дашборда
+        devChangelog: root[currentUser]?.devChangelog || [],               // Не затираем лог разработки
         rouletteHistory: JSON.parse(localStorage.getItem("katya_master_roulette_history")) || [],
         audit: JSON.parse(localStorage.getItem("katya_master_audit_events")) || [],
         lastActive: new Date().toLocaleString("ru-RU"),

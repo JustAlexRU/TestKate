@@ -654,6 +654,8 @@ async function saveCloud() {
 }
 
 // 10. КАНБАН БАГОВ, ТАЙМЕРЫ И СТАТИСТИКА
+window.currentOpenBugId = null; // Привязываемся строго к ID задачи!
+
 window.renderKanbanBoard = function () {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = currentCloudData?.[targetUser] || {};
@@ -672,8 +674,11 @@ window.renderKanbanBoard = function () {
 
   let counts = { inbox: 0, in_progress: 0, testing: 0, done: 0 };
 
-  list.forEach((item, idx) => {
+  list.forEach((item) => {
     if (!item.category?.includes("Баг")) return;
+
+    // Гарантируем наличие уникального id
+    if (!item.id) item.id = "bug_" + Math.random().toString(36).substring(2, 9);
 
     const status = item.status || "inbox";
     if (counts[status] !== undefined) counts[status]++;
@@ -685,7 +690,8 @@ window.renderKanbanBoard = function () {
     const card = document.createElement("div");
     card.className = `bg-[#18192a] border ${isUnread ? "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]" : "border-[#2e304f]"} hover:border-pink-500 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow transition cursor-pointer relative active:scale-98`;
     
-    card.onclick = () => window.openBugDetailModal(idx);
+    // Клик по карточке открывает модалку строго по ID
+    card.onclick = () => window.openBugDetailModal(item.id);
 
     card.innerHTML = `
       <div class="flex justify-between items-center text-[10px]">
@@ -705,7 +711,7 @@ window.renderKanbanBoard = function () {
         <div class="flex items-center gap-1">
           ${item.image ? '<span title="Прикреплен скриншот">📷</span>' : ''}
           ${item.techLogs ? '<span title="Есть логи сбоя">🛠️</span>' : ''}
-          ${item.rewardGranted ? '<span class="text-emerald-400 font-bold">✓</span>' : ''}
+          ${item.status === "done" ? '<span class="text-emerald-400 font-bold">✓ Закрыт</span>' : ''}
         </div>
       </div>
     `;
@@ -725,112 +731,23 @@ window.renderKanbanBoard = function () {
   window.updateUnreadBadges();
 };
 
-window.renderFeedbackInbox = function () {
+window.openBugDetailModal = function (bugId) {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = currentCloudData?.[targetUser] || {};
   let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-  const container = document.getElementById("inboxListContainer");
-  if (!container) return;
-
-  container.innerHTML = "";
-  let nonBugCount = 0;
-
-  list.forEach((item, idx) => {
-    if (item.category?.includes("Баг")) return;
-    nonBugCount++;
-
-    const isUnread = item.isRead === false || item.isRead === undefined;
-    const isLove = item.category?.includes("Любовь");
-
-    const card = document.createElement("div");
-    card.className = `bg-[#18192a] border ${isUnread ? "border-pink-500 shadow-[0_0_15px_rgba(244,114,182,0.3)]" : "border-[#2e304f]"} rounded-2xl p-3.5 flex flex-col gap-2 relative transition cursor-pointer`;
-
-    card.onclick = () => {
-      if (item.isRead !== true) {
-        item.isRead = true;
-        saveFeedbackListToCloud(list);
-        window.renderFeedbackInbox();
-      }
-    };
-
-    let imgHtml = item.image ? `<img src="${item.image}" alt="Скриншот" onclick="window.openFullImage('${item.image}')" class="max-h-32 rounded-xl mt-1 w-auto object-contain cursor-pointer border border-white/10">` : "";
-
-    card.innerHTML = `
-      <div class="flex justify-between items-center text-[10px]">
-        <div class="flex items-center gap-1.5">
-          <span class="px-2 py-0.5 rounded-lg ${isLove ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'} font-bold">
-            ${item.category}
-          </span>
-          ${isUnread ? '<span class="text-[9px] bg-pink-500 text-white font-bold px-1.5 py-0.2 rounded-full animate-pulse">NEW</span>' : ''}
-        </div>
-        <span class="text-gray-500 font-mono text-[9px]">${item.date || ""}</span>
-      </div>
-
-      <p class="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed select-text font-sans">${escapeHtml(item.text)}</p>
-      ${imgHtml}
-
-      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-2 border-t border-white/5">
-        <span>🐱 ${item.petName || "Зефирка"} (Ур. ${item.petLevel || 1})</span>
-        <span class="text-amber-400">${"★".repeat(item.rating || 5)}</span>
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-
-  if (nonBugCount === 0) {
-    container.innerHTML = `<div class="col-span-2 text-center text-xs text-gray-500 py-12">В ящике отзывов пока пусто 🐾</div>`;
-  }
-
-  window.updateUnreadBadges();
-};
-
-window.updateUnreadBadges = function () {
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = currentCloudData?.[targetUser] || {};
-  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-
-  let unreadBugs = 0;
-  let unreadInbox = 0;
-
-  list.forEach(item => {
-    const isBug = item.category?.includes("Баг");
-    const isUnread = item.isRead === false || item.isRead === undefined;
-
-    if (isUnread) {
-      if (isBug) unreadBugs++;
-      else unreadInbox++;
-    }
-  });
-
-  const bBug = document.getElementById("badgeUnreadBugs");
-  const bInbox = document.getElementById("badgeUnreadInbox");
-
-  if (bBug) {
-    bBug.innerText = unreadBugs;
-    bBug.classList.toggle("hidden", unreadBugs === 0);
-  }
-  if (bInbox) {
-    bInbox.innerText = unreadInbox;
-    bInbox.classList.toggle("hidden", unreadInbox === 0);
-  }
-};
-
-window.openBugDetailModal = function (idx) {
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = currentCloudData?.[targetUser] || {};
-  let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-  const bug = list[idx];
+  
+  // Ищем задачу по ID
+  const bug = list.find(b => b.id === bugId);
   if (!bug) return;
 
-  window.currentOpenBugIndex = idx;
+  window.currentOpenBugId = bugId;
   
   if (bug.isRead !== true) {
     bug.isRead = true;
     saveFeedbackListToCloud(list);
   }
 
-  document.getElementById("detailBugTitle").innerText = `Баг-репорт [ID: ${bug.id || idx}]`;
+  document.getElementById("detailBugTitle").innerText = `Баг-репорт [ID: ${bug.id}]`;
   document.getElementById("detailBugTimeAgo").innerText = bug.date || "";
   document.getElementById("detailBugRating").innerText = "★".repeat(bug.rating || 5) + ` (${bug.rating || 5}/5)`;
   document.getElementById("detailBugText").innerText = bug.text || "";
@@ -850,12 +767,12 @@ window.openBugDetailModal = function (idx) {
   const btnLogs = document.getElementById("btnDetailOpenLogs");
   if (bug.techLogs) {
     btnLogs.classList.remove("hidden");
-    btnLogs.onclick = () => window.viewTechLogs(idx);
+    btnLogs.onclick = () => window.viewTechLogsById(bug.id);
   } else {
     btnLogs.classList.add("hidden");
   }
 
-  document.getElementById("btnDetailAiPrompt").onclick = () => window.copyAiDebugPrompt(idx);
+  document.getElementById("btnDetailAiPrompt").onclick = () => window.copyAiDebugPromptById(bug.id);
 
   clearInterval(window.activeTimerInterval);
   window.timerRunning = false;
@@ -870,7 +787,7 @@ window.toggleBugTimer = function () {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = currentCloudData?.[targetUser] || {};
   let list = userRecord.feedback || [];
-  const bug = list[window.currentOpenBugIndex];
+  const bug = list.find(b => b.id === window.currentOpenBugId);
   if (!bug) return;
 
   const btn = document.getElementById("btnTimerToggle");
@@ -897,7 +814,7 @@ window.addManualMinutes = function (mins) {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = currentCloudData?.[targetUser] || {};
   let list = userRecord.feedback || [];
-  const bug = list[window.currentOpenBugIndex];
+  const bug = list.find(b => b.id === window.currentOpenBugId);
   if (!bug) return;
 
   bug.timeSpentSec = (bug.timeSpentSec || 0) + mins * 60;
@@ -905,18 +822,7 @@ window.addManualMinutes = function (mins) {
   saveFeedbackListToCloud(list);
 };
 
-function updateTimerDisplay(totalSec) {
-  const el = document.getElementById("detailTimerDisplay");
-  if (el) el.innerText = formatSecondsToHms(totalSec);
-}
-
-function formatSecondsToHms(sec) {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  return [h, m, s].map(v => v < 10 ? "0" + v : v).join(":");
-}
-
+// СОХРАНЕНИЕ СТАТУСА В БАЗУ ДАННЫХ
 window.saveBugDetailModal = async function () {
   const saveBtn = document.getElementById("btnSaveBugDetail");
   if (saveBtn) {
@@ -928,19 +834,21 @@ window.saveBugDetailModal = async function () {
     const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
     if (!currentCloudData[targetUser]) currentCloudData[targetUser] = {};
     const userRecord = currentCloudData[targetUser];
+    
+    // Получаем список задач строго из актуального объекта облака
     let list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
     
-    if (window.currentOpenBugIndex === null || !list[window.currentOpenBugIndex]) {
+    const bug = list.find(b => b.id === window.currentOpenBugId);
+    if (!bug) {
       document.getElementById("modalBugDetail")?.classList.add("hidden");
       return;
     }
 
-    const bug = list[window.currentOpenBugIndex];
     const newStatus = document.getElementById("detailStatusSelect")?.value || "inbox";
     const devReport = document.getElementById("detailDevReportInput")?.value.trim() || "";
 
     bug.devReport = devReport;
-    bug.status = newStatus;
+    bug.status = newStatus; // <--- ПРИНУДИТЕЛЬНО УСТАНАВЛИВАЕМ СТАТУС
 
     if (window.activeTimerInterval) {
       clearInterval(window.activeTimerInterval);
@@ -978,7 +886,7 @@ window.saveBugDetailModal = async function () {
           userRecord.devChangelog = [];
         }
         userRecord.devChangelog.unshift({
-          bugId: bug.id || ("bug_" + Date.now()),
+          bugId: bug.id,
           title: bug.text.substring(0, 50),
           timeSpentSec: bug.timeSpentSec || 0,
           devReport: devReport,
@@ -987,12 +895,16 @@ window.saveBugDetailModal = async function () {
       }
     }
 
-    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+    // Сохраняем в память и пишем напрямую в облако
     userRecord.feedback = list;
+    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
     
-    await saveFeedbackListToCloud(list);
+    // Делаем прямой PUT-запрос в JSONBin и ждем ответа сервера
+    await saveCloud();
+
   } catch (err) {
     console.error("Ошибка при сохранении бага:", err);
+    alert("Ошибка сети при сохранении в облако: " + err.message);
   } finally {
     document.getElementById("modalBugDetail")?.classList.add("hidden");
     if (saveBtn) {
@@ -1002,155 +914,6 @@ window.saveBugDetailModal = async function () {
     window.renderKanbanBoard();
   }
 };
-
-window.updateDevStats = function (list) {
-  if (!Array.isArray(list)) return;
-  let totalSec = 0;
-  let resolvedCount = 0;
-
-  list.forEach(item => {
-    if (item.category?.includes("Баг")) {
-      totalSec += (item.timeSpentSec || 0);
-      if (item.status === "done") {
-        resolvedCount++;
-      }
-    }
-  });
-
-  const totalHours = Math.floor(totalSec / 3600);
-  const totalMins = Math.floor((totalSec % 3600) / 60);
-  const avgMins = resolvedCount > 0 ? Math.round((totalSec / 60) / resolvedCount) : 0;
-
-  const elTotalTime = document.getElementById("devTotalTimeSpent");
-  const elResolved = document.getElementById("devResolvedBugsCount");
-  const elAvg = document.getElementById("devAvgFixTime");
-
-  if (elTotalTime) elTotalTime.innerText = `${totalHours} ч ${totalMins} мин`;
-  if (elResolved) elResolved.innerText = `${resolvedCount} шт`;
-  if (elAvg) elAvg.innerText = `${avgMins} мин`;
-};
-
-async function saveFeedbackListToCloud(list) {
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  if (!currentCloudData[targetUser]) currentCloudData[targetUser] = {};
-  currentCloudData[targetUser].feedback = list;
-  localStorage.setItem("katya_master_feedback", JSON.stringify(list));
-  await saveCloud();
-}
-
-window.copyAiDebugPrompt = function (idx) {
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = currentCloudData?.[targetUser] || {};
-  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-  const item = list[idx];
-  if (!item) return;
-
-  const logs = item.techLogs || {};
-  let errorBlock = "Ошибок не зафиксировано";
-  if (logs.lastError) {
-    errorBlock = 
-      "Сообщение: " + logs.lastError.message + "\n" +
-      "Файл: " + (logs.lastError.filename || "неизвестно") + "\n" +
-      "Строка: " + (logs.lastError.lineno || "?") + "\n" +
-      (logs.lastError.stack ? "Стек вызовов:\n" + logs.lastError.stack : "");
-  }
-
-  let consoleBlock = "Пусто";
-  if (Array.isArray(logs.consoleHistory) && logs.consoleHistory.length > 0) {
-    consoleBlock = logs.consoleHistory.map(l => "[" + l.time + " " + l.level + "] " + l.msg).join("\n");
-  }
-
-  const promptText = 
-`Привет! В моем проекте Тамагочи пользователь оставил отчёт о баге. Помоги проанализировать проблему и напиши готовое исправление кода.
-
-### Контекст отчёта:
-- Категория: ${item.category || "Баг"}
-- Оценка: ${item.rating || 5}/5
-- Дата: ${item.date || "не указана"}
-- Состояние питомца: ${item.petName || "Зефирка"}, уровень ${item.petLevel || 1}, монет: ${item.coins || 0}
-- Прикреплен скриншот: ${item.hasImage ? "Да" : "Нет"}
-
-### Текст пользователя:
-"${item.text || ""}"
-
-### Технические логи браузера:
-- Экран устройства: ${logs.screen || "Неизвестно"}
-- User-Agent: ${logs.userAgent || "Неизвестно"}
-
-### Последняя ошибка скрипта:
-\`\`\`
-${errorBlock}
-\`\`\`
-
-### Последние записи консоли браузера:
-\`\`\`
-${consoleBlock}
-\`\`\`
-
-Пожалуйста, объясни, из-за чего возникла проблема, и предоставь готовый блок кода для решения.`;
-
-  navigator.clipboard.writeText(promptText).then(() => {
-    alert("🤖 Промт для AI успешно скопирован в буфер обмена!");
-  }).catch(() => {
-    prompt("Скопируй промт вручную:", promptText);
-  });
-};
-
-window.viewTechLogs = function (idx) {
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = currentCloudData?.[targetUser] || {};
-  const list = userRecord.feedback || JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-  const item = list[idx];
-  if (!item || !item.techLogs) return;
-
-  const logs = item.techLogs;
-  const content = document.getElementById("techLogsContent");
-  if (!content) return;
-
-  let html = `
-    <div class="p-2 rounded-xl bg-[#141526] border border-[#2e304f] space-y-1">
-      <div><b>User-Agent:</b> <span class="text-gray-400">${escapeHtml(logs.userAgent || "N/A")}</span></div>
-      <div><b>Экран:</b> <span class="text-amber-300">${logs.screen || "N/A"}</span></div>
-    </div>
-  `;
-
-  if (logs.lastError) {
-    html += `
-      <div class="p-2.5 rounded-xl bg-rose-950/40 border border-rose-500/50 text-rose-300">
-        <div class="font-bold flex items-center gap-1.5 text-rose-400">🚨 Критический сбой скрипта:</div>
-        <div class="mt-1">${escapeHtml(logs.lastError.message)}</div>
-        <div class="text-[10px] text-gray-400 mt-0.5">Файл: <b>${logs.lastError.filename}</b>, строка: <b>${logs.lastError.lineno}</b></div>
-        ${logs.lastError.stack ? `<pre class="mt-1 text-[9px] text-rose-200/70 overflow-x-auto whitespace-pre-wrap">${escapeHtml(logs.lastError.stack)}</pre>` : ""}
-      </div>
-    `;
-  }
-
-  if (Array.isArray(logs.consoleHistory) && logs.consoleHistory.length > 0) {
-    html += `<div class="font-bold text-gray-400 pt-1">Хронология консоли (${logs.consoleHistory.length}):</div>`;
-    logs.consoleHistory.forEach(l => {
-      const color = l.level === "ERROR" || l.level === "FATAL" ? "text-rose-400" : "text-amber-400";
-      html += `
-        <div class="text-[11px] p-1.5 rounded-lg bg-[#0e0f1a] border border-white/5 flex gap-2">
-          <span class="text-gray-500 font-bold">${l.time}</span>
-          <span class="${color} font-bold">[${l.level}]</span>
-          <span class="text-gray-300 truncate">${escapeHtml(l.msg)}</span>
-        </div>
-      `;
-    });
-  }
-
-  content.innerHTML = html;
-  document.getElementById("modalTechLogsViewer")?.classList.remove("hidden");
-};
-
-window.openFullImage = function (src) {
-  window.open(src, "_blank");
-};
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
 
 // 11. ПЕРВИЧНЫЙ ЗАПУСК
 checkAuth();
