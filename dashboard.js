@@ -161,6 +161,15 @@ window.switchEcoSubTab = function (subId) {
 // 4. СБОР И РЕНДЕР ДАННЫХ
 async function renderDashboard() {
   try {
+
+    const activeUser = sel ? sel.value : "katya";
+    const record = currentCloudData[activeUser] || {};
+    
+    // ЯВНО фиксируем feedback из облака в локальный кэш
+    if (Array.isArray(record.feedback)) {
+      localStorage.setItem("katya_master_feedback", JSON.stringify(record.feedback));
+    }
+    
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_API_KEY }
     });
@@ -678,7 +687,9 @@ window.renderKanbanBoard = function () {
     if (!item.category?.includes("Баг")) return;
 
     // Гарантируем наличие уникального id
-    if (!item.id) item.id = "bug_" + Math.random().toString(36).substring(2, 9);
+    if (!item.id) {
+      item.id = "bug_" + (item.date ? Date.parse(item.date) || Date.now() : Date.now());
+    }
 
     const status = item.status || "inbox";
     if (counts[status] !== undefined) counts[status]++;

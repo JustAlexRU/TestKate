@@ -1659,10 +1659,11 @@ window.submitFeedbackReport = async function () {
   } : null;
 
   const feedbackData = {
-    id: "fb_" + Date.now(),
+    id: "fb_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
     category: window.currentFeedbackCategory,
     rating: window.currentFeedbackRating,
     text: text,
+    status: "inbox", // Явный дефолтный статус
     petName: window.pet?.name || "Зефирка",
     petLevel: window.pet?.level || 1,
     coins: window.pet?.coins || 0,
