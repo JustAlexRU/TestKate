@@ -20,6 +20,9 @@
  * - window.updateJsonbinStatusBadge(isOnline, text) — индикация статуса подключения в шапке
  */
 
+window.DASHBOARD_VERSION = "2.4.0";
+window.DASHBOARD_BUILD = 240;
+
 // Базовые безопасные утилиты хранилища и рендеринга
 function safeParseJSON(str, fallback) {
   if (typeof str !== "string") return fallback;

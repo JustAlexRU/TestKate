@@ -1,0 +1,18 @@
+{
+  "name": "test-kate",
+  "version": "2.4.0",
+  "description": "Lex Labs Enterprise Pet Care Game & Mission Control Dashboard",
+  "main": "app.js",
+  "scripts": {
+    "check": "node --check app.js admin/dashboard_api.js admin/dashboard_chat.js admin/dashboard_economy.js admin/dashboard_kanban.js admin/dashboard_main.js game/cases.js game/casino.js game/games.js game/items.js game/renderMap.js",
+    "serve": "python -m http.server 8080",
+    "version": "node -e \"console.log(require('./version.json').version)\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JustAlexRU/TestKate.git"
+  },
+  "author": "Alex (Lex Labs)",
+  "license": "UNLICENSED",
+  "private": true
+}
