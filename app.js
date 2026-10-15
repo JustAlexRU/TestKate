@@ -389,8 +389,9 @@ function syncToCloud() {
 window.syncToCloud = syncToCloud;
 
 async function pullCloudSettings() {
-  if (isLocalExecution || isSyncInProgress) return;
-
+  // Если у игрока есть не отправленные локальные действия (таймер взведён) или идёт сохранение — не перезатираем
+  if (isLocalExecution || isSyncInProgress || cloudSyncTimer !== null) return;
+  
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_API_KEY }
@@ -418,13 +419,20 @@ async function pullCloudSettings() {
 
     const remoteUser = root[currentUser] || root["katya"];
 
-    // 2. Сверка питомца
-    if (remoteUser && remoteUser.pet) {
+// 2. Сверка питомца (с защитой от отката локального прогресса)
+    const lastLocalAction = parseInt(localStorage.getItem("katya_master_last_time"), 10) || 0;
+    const isRecentlyActive = (Date.now() - lastLocalAction) < 3000;
+
+    if (remoteUser && remoteUser.pet && !isRecentlyActive && cloudSyncTimer === null) {
       const rp = remoteUser.pet;
       const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean"];
 
       numericFields.forEach((f) => {
         if (typeof rp[f] === "number" && rp[f] !== window.pet[f]) {
+          // Если на клиенте значение больше (например, накликан опыт/счастье), не понижаем его пулом
+          if ((f === "xp" || f === "happy" || f === "coins") && window.pet[f] > rp[f]) {
+            return;
+          }
           window.pet[f] = rp[f];
           needUIUpdate = true;
         }
@@ -830,8 +838,12 @@ document.getElementById("catTapZone")?.addEventListener("click", (e) => {
   if (window.pet.isSleeping) return;
   if (window.sound?.purr) window.sound.purr();
   triggerHaptic();
+
+  // Фиксируем время действия игрока, чтобы pullCloudSettings не перетёр изменения
+  localStorage.setItem("katya_master_last_time", Date.now());
+
   window.pet.happy = Math.min(100, window.pet.happy + 2);
-  addXP(2);
+  
   const rect = document.getElementById("particlesLayer")?.getBoundingClientRect();
   const rx = rect ? e.clientX - rect.left - 15 : 100;
   const ry = rect ? e.clientY - rect.top - 20 : 80;
@@ -844,7 +856,9 @@ document.getElementById("catTapZone")?.addEventListener("click", (e) => {
     "«Муррр... Покрутишь рулетку вкусняшек?» 🍣"
   ];
   document.getElementById("catSpeechBubble").innerText = phrases[Math.floor(Math.random() * phrases.length)];
-  updatePetUI();
+  
+  // addXP(2) внутри себя вызовет updatePetUI() и поставит syncToCloud на дебаунс
+  addXP(2);
 });
 
 // Уложить спать / разбудить

@@ -45,24 +45,49 @@ const DEFAULT_ECONOMY = {
 };
 
 // Резервная база вероятностей и стоимости дропа для аудита RTP
+В дашборде отображаются: Карасик, Клубок ниток, Мышка, Ошейник с колокольчиком. А в игре в cases.js прописаны совершенно другие предметы: 20 🪙 в копилку, Сытный кошачий обед, Теплый синий шарф, Мешочек 60 🪙.
+
+Почему это произошло (рассинхрон)
+В dashboard.js в константу FALLBACK_ODDS_DATABASE для case_std, case_prem, case_blk попали дефолтные тестовые заглушки:
+
+JavaScript
+case_std: [
+  { id: "fish_common", name: "Карасик", ... },
+  { id: "yarn_ball", name: "Клубок ниток", ... }
+]
+А в самой игре (cases.js) лежат настоящие предметы с подарками в Таганрог, худи, кофе и купонами. Из-за этого:
+
+В дашборде ты настраиваешь проценты для предметов, которых даже нет в кейсе игры.
+
+В игре кейс крутит свои предметы и игнорирует настройки из облака (потому что их id не совпадают с std_coins_20, prem_coffee, blk_super_box и т.д.).
+
+Точечное исправление в dashboard.js
+Найди в самом начале dashboard.js блок const FALLBACK_ODDS_DATABASE = { ... } и замени в нём первые три кейса (case_std, case_prem, case_blk) на реальные предметы из игры.
+
+Вот корректный блок для dashboard.js:
+
+JavaScript
+// Резервная база вероятностей и стоимости дропа для аудита RTP
 const FALLBACK_ODDS_DATABASE = {
   case_std: [
-    { id: "fish_common", name: "Карасик", icon: "🐟", chance: 40, value: 20 },
-    { id: "yarn_ball", name: "Клубок ниток", icon: "🧶", chance: 30, value: 45 },
-    { id: "mouse_toy", name: "Мышка", icon: "🐁", chance: 20, value: 90 },
-    { id: "cat_collar", name: "Ошейник с колокольчиком", icon: "🔔", chance: 10, value: 250 }
+    { id: "std_coins_20", name: "20 🪙 в копилку", icon: "🪙", color: "#60a5fa", chance: 45, value: 20 },
+    { id: "std_food", name: "Сытный кошачий обед", icon: "🍱", color: "#60a5fa", chance: 35, value: 30 },
+    { id: "std_scarf", name: "Теплый синий шарф", icon: "🧣", color: "#c084fc", chance: 15, value: 120 },
+    { id: "std_gold", name: "Мешочек 60 🪙", icon: "💰", color: "#fbbf24", chance: 5, value: 60 }
   ],
   case_prem: [
-    { id: "tuna_can", name: "Элитный тунец", icon: "🥫", chance: 45, value: 60 },
-    { id: "cat_bed", name: "Мягкая лежанка", icon: "🛏️", chance: 30, value: 140 },
-    { id: "laser_pointer", name: "Лазерная указка", icon: "🔴", chance: 15, value: 280 },
-    { id: "cat_crown", name: "Корона принцессы", icon: "👑", chance: 10, value: 600 }
+    { id: "prem_coffee", name: "Сладкий кофе в Таганрог", icon: "☕", color: "#ef4444", chance: 12, value: 180 },
+    { id: "prem_hoodie", name: "Розовое оверсайз-худи", icon: "👗", color: "#f472b6", chance: 25, value: 250 },
+    { id: "prem_cinema", name: "Уютный Киновечер онлайн", icon: "🎬", color: "#f472b6", chance: 20, value: 150 },
+    { id: "prem_song", name: "Кавер/Трек от Алексея", icon: "🎵", color: "#c084fc", chance: 23, value: 200 },
+    { id: "prem_coins", name: "Мешок золота: 80 🪙", icon: "💰", color: "#c084fc", chance: 20, value: 80 }
   ],
   case_blk: [
-    { id: "black_card", name: "Black VIP Карта", icon: "💳", chance: 50, value: 150 },
-    { id: "diamond_fish", name: "Алмазная рыбка", icon: "💎", chance: 30, value: 350 },
-    { id: "cyber_shades", name: "Кибер-очки", icon: "🕶️", chance: 15, value: 700 },
-    { id: "gold_trophy", name: "Золотой кубок", icon: "🏆", chance: 5, value: 1800 }
+    { id: "blk_super_box", name: "★ СЕКРЕТНЫЙ БОКС В ТАГАНРОГ ★", icon: "⭐", color: "#fbbf24", chance: 5, value: 1500 },
+    { id: "blk_wish_coupon", name: "💌 СЕКРЕТНЫЙ КУПОН НА ЖЕЛАНИЕ", icon: "💌", color: "#fbbf24", chance: 10, value: 800 },
+    { id: "blk_argument", name: "Иммунитет в споре (Правота)", icon: "🛡️", color: "#f472b6", chance: 30, value: 350 },
+    { id: "blk_coffee_dessert", name: "Кофе + Бенто-торт в Таганрог", icon: "🍰", color: "#ef4444", chance: 25, value: 450 },
+    { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", color: "#c084fc", chance: 30, value: 150 }
   ],
   case_hw: [
     { id: "hw_pumpkin", name: "Тыквенный фонарик", icon: "🎃", chance: 40, value: 50 },
@@ -1134,10 +1159,22 @@ function calcOddsSum() {
 document.getElementById("btnSaveAllChances")?.addEventListener("click", async () => {
   if (!currentCloudData.allChances) currentCloudData.allChances = {};
   const updated = [];
-  document.querySelectorAll(".odds-chance-input").forEach((inp) => {
-    updated.push({ id: inp.dataset.oddsId, chance: parseFloat(inp.value) || 0 });
-  });
+  const refList = FALLBACK_ODDS_DATABASE[currentOddsTab] || [];
 
+  document.querySelectorAll(".odds-chance-input").forEach((inp) => {
+    const id = inp.dataset.oddsId;
+    const ref = refList.find(r => r.id === id) || {};
+    updated.push({
+      id: id,
+      name: ref.name || id,
+      icon: ref.icon || "🎁",
+      color: ref.color || "#60a5fa",
+      desc: ref.desc || "",
+      chance: parseFloat(inp.value) || 0,
+      value: ref.value || 0,
+      type: ref.type || "item"
+    });
+  });
   currentCloudData.allChances[currentOddsTab] = updated;
 
   const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
