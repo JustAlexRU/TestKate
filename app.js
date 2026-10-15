@@ -25,14 +25,12 @@ function pushClientLog(level, args) {
       msg: formattedArgs
     });
 
-    // Храним последние 25 событий, чтобы не раздувать память
     if (window.CLIENT_LOGS_BUFFER.length > 25) {
       window.CLIENT_LOGS_BUFFER.shift();
     }
   } catch (e) {}
 }
 
-// 1. Перехват console.error и console.warn
 const _origConsoleError = console.error;
 const _origConsoleWarn = console.warn;
 
@@ -46,7 +44,6 @@ console.warn = function (...args) {
   _origConsoleWarn.apply(console, args);
 };
 
-// 2. Глобальный перехват сбоев скриптов (window.onerror)
 window.addEventListener("error", function (e) {
   window.LAST_CAUGHT_ERROR = {
     message: e.message || "Unknown error",
@@ -59,7 +56,6 @@ window.addEventListener("error", function (e) {
   pushClientLog("FATAL", [`${e.message} at ${window.LAST_CAUGHT_ERROR.filename}:${e.lineno}`]);
 });
 
-// 3. Перехват упавших Promise (async/await)
 window.addEventListener("unhandledrejection", function (e) {
   const reason = e.reason instanceof Error ? e.reason.message : String(e.reason);
   window.LAST_CAUGHT_ERROR = {
@@ -284,10 +280,12 @@ if (window.analytics.date !== new Date().toDateString()) {
 window.analytics.sessionsCount++;
 localStorage.setItem("katya_master_analytics", JSON.stringify(window.analytics));
 
-function savePet() {
+function savePet(triggerCloud = true) {
   localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
   localStorage.setItem("katya_master_last_time", Date.now());
-  syncToCloud();
+  if (triggerCloud) {
+    syncToCloud();
+  }
 }
 window.savePet = savePet;
 
@@ -305,12 +303,11 @@ function logAuditEvent(text, icon = "📌") {
 window.logAuditEvent = logAuditEvent;
 
 /* -------------------------------------------------------------------------
- * 3. ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (АВТО-ОТПРАВКА + LIVE-СВЕРКА С JSONBIN)
+ * 3. ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ (БЕЗ ЗАТИРАНИЙ И БЕЗ БЕСКОНЕЧНЫХ ЦИКЛОВ)
  * ------------------------------------------------------------------------- */
 let cloudSyncTimer = null;
 let isSyncInProgress = false;
 
-// 1. ОТПРАВКА: Срабатывает при любом изменении в игре (дебаунс 1.5 сек)
 function syncToCloud() {
   if (isLocalExecution) return;
   clearTimeout(cloudSyncTimer);
@@ -320,33 +317,43 @@ function syncToCloud() {
     isSyncInProgress = true;
 
     try {
-      // Запрашиваем актуальный корень, чтобы не затереть глобальные конфиги дашборда
       const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
         headers: { "X-Master-Key": JSONBIN_API_KEY }
       });
       if (!res.ok) throw new Error("Fetch failed");
       const root = (await res.json()).record || {};
 
-      // Берем актуальный feedback из облака (где хранятся статусы из дашборда)
-      const cloudFeedback = root[currentUser]?.feedback || [];
+      const cloudFeedback = Array.isArray(root[currentUser]?.feedback) ? root[currentUser].feedback : [];
       const localFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
 
-      // Синхронизируем статусы: если в облаке статус уже изменился (done, in_progress), обновляем локально
+      // Полный честный merge: сохраняем статусы из облака и добавляем новые локальные отзывы
+      const mergedMap = new Map();
+      
+      // Сначала заносим облачные (у них приоритет по статусам разработки)
+      cloudFeedback.forEach(item => {
+        if (item && item.id) mergedMap.set(item.id, Object.assign({}, item));
+      });
+
+      // Дополняем локальными (если есть новые отчёты Кати)
       localFeedback.forEach(localItem => {
-        const cloudItem = cloudFeedback.find(c => c.id === localItem.id);
-        if (cloudItem) {
-          if (cloudItem.status) localItem.status = cloudItem.status;
-          if (cloudItem.devReport) localItem.devReport = cloudItem.devReport;
-          if (cloudItem.timeSpentSec) localItem.timeSpentSec = cloudItem.timeSpentSec;
-          if (cloudItem.rewardGranted) localItem.rewardGranted = cloudItem.rewardGranted;
+        if (!localItem || !localItem.id) return;
+        if (mergedMap.has(localItem.id)) {
+          const existing = mergedMap.get(localItem.id);
+          // Если задача закрыта в облаке, фиксируем локально
+          localItem.status = existing.status || localItem.status;
+          localItem.devReport = existing.devReport || localItem.devReport;
+          localItem.timeSpentSec = existing.timeSpentSec || localItem.timeSpentSec;
+          localItem.rewardGranted = existing.rewardGranted || localItem.rewardGranted;
+        } else {
+          // Новый отчёт — добавляем в облачный снимок
+          mergedMap.set(localItem.id, localItem);
         }
       });
-      localStorage.setItem("katya_master_feedback", JSON.stringify(localFeedback));
 
-      // Если в облаке есть данные, отдаем приоритет облачному массиву со статусами
-      const mergedFeedback = cloudFeedback.length > 0 ? cloudFeedback : localFeedback;
+      const finalFeedback = Array.from(mergedMap.values());
+      localStorage.setItem("katya_master_feedback", JSON.stringify(finalFeedback));
 
-      // Полный снимок состояния игрока
+      // Формируем чистый объект игрока
       root[currentUser] = {
         pet: window.pet,
         activeEquipment: window.activeEquipment,
@@ -355,9 +362,9 @@ function syncToCloud() {
         analytics: window.analytics,
         wishes: window.wishesVault,
         caseHistory: window.caseHistory,
-        feedback: mergedFeedback,
-        rewardNotifications: root[currentUser]?.rewardNotifications || [], // Не затираем награды из дашборда
-        devChangelog: root[currentUser]?.devChangelog || [],               // Не затираем лог разработки
+        feedback: finalFeedback,
+        rewardNotifications: root[currentUser]?.rewardNotifications || [],
+        devChangelog: root[currentUser]?.devChangelog || [],
         rouletteHistory: JSON.parse(localStorage.getItem("katya_master_roulette_history")) || [],
         audit: JSON.parse(localStorage.getItem("katya_master_audit_events")) || [],
         lastActive: new Date().toLocaleString("ru-RU"),
@@ -381,7 +388,6 @@ function syncToCloud() {
 }
 window.syncToCloud = syncToCloud;
 
-// 2. СВЕРКА: Раз в 15 секунд проверяет базу на предмет изменений из дашборда
 async function pullCloudSettings() {
   if (isLocalExecution || isSyncInProgress) return;
 
@@ -395,7 +401,7 @@ async function pullCloudSettings() {
 
     let needUIUpdate = false;
 
-    // А. Сверка экономики из дашборда
+    // 1. Сверка экономики
     if (root.economyConfig) {
       window.ACTIVE_ECONOMY = Object.assign(window.ACTIVE_ECONOMY, root.economyConfig);
       const lblStd = document.getElementById("labelCaseStandardCost");
@@ -406,14 +412,13 @@ async function pullCloudSettings() {
       if (lblBlk) lblBlk.innerText = `${window.ACTIVE_ECONOMY.caseCostBlack || 320} 🪙`;
     }
 
-    // Б. Сверка шансов выпадения
     if (root.wishChances) {
       window.ACTIVE_WISH_CHANCES = Object.assign(window.ACTIVE_WISH_CHANCES, root.wishChances);
     }
 
-    // В. ОБЪЯВЛЯЕМ remoteUser (из-за отсутствия этой строки падала ошибка)
     const remoteUser = root[currentUser] || root["katya"];
 
+    // 2. Сверка питомца
     if (remoteUser && remoteUser.pet) {
       const rp = remoteUser.pet;
       const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean"];
@@ -439,7 +444,12 @@ async function pullCloudSettings() {
       }
     }
 
-    // Г. Сверка вещей и комнат
+    // 3. Синхронизация статусов задач из облака в локальный кэш
+    if (remoteUser && Array.isArray(remoteUser.feedback)) {
+      localStorage.setItem("katya_master_feedback", JSON.stringify(remoteUser.feedback));
+    }
+
+    // 4. Сверка вещей и комнат
     if (remoteUser && Array.isArray(remoteUser.ownedItems)) {
       remoteUser.ownedItems.forEach((it) => {
         if (!window.ownedItems.includes(it)) {
@@ -460,45 +470,43 @@ async function pullCloudSettings() {
       localStorage.setItem("katya_master_rooms", JSON.stringify(window.ownedRooms));
     }
 
-    // Д. Сверка купонов желаний
-    if (remoteUser && Array.isArray(remoteUser.wishes)) {
-      if (JSON.stringify(remoteUser.wishes) !== JSON.stringify(window.wishesVault)) {
-        window.wishesVault = remoteUser.wishes;
-        localStorage.setItem("katya_master_wishes_vault", JSON.stringify(window.wishesVault));
-      }
-    }
-
-    // Е. Сверка уведомлений о наградах
+// 5. Сверка входящих наград за баги от разработчика
     if (remoteUser && Array.isArray(remoteUser.rewardNotifications)) {
-      const pendingThanks = remoteUser.rewardNotifications.find((r) => !r.claimed);
-      if (pendingThanks) {
-        window.currentPendingReward = pendingThanks;
-        const valEl = document.getElementById("thanksRewardCoinsVal");
-        const boxEl = document.getElementById("thanksRewardBox");
+      let localNotifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+      let hasNew = false;
 
-        if (pendingThanks.coins > 0) {
-          if (valEl) valEl.innerText = `+${pendingThanks.coins} 🪙`;
-          if (boxEl) boxEl.classList.remove("hidden");
-        } else {
-          if (boxEl) boxEl.classList.add("hidden");
+      remoteUser.rewardNotifications.forEach(remoteItem => {
+        const localMatch = localNotifications.find(l => l.id === remoteItem.id);
+        if (!localMatch) {
+          localNotifications.push(remoteItem);
+          hasNew = true;
+        } else if (localMatch.claimed !== remoteItem.claimed) {
+          localMatch.claimed = remoteItem.claimed;
         }
+      });
 
-        document.getElementById("modalProjectThanks")?.classList.remove("hidden");
-        if (window.sound?.win) window.sound.win();
-        if (typeof confetti === "function") confetti({ particleCount: 75, spread: 80 });
+      localStorage.setItem("katya_reward_notifications", JSON.stringify(localNotifications));
+      updateReportsHubBadge();
+
+      // Если прилетело новое уведомление — сразу открываем его карточку
+      if (hasNew) {
+        if (window.sound?.pop) window.sound.pop();
+        const latestUnclaimed = localNotifications.slice().reverse().find(r => !r.claimed);
+        if (latestUnclaimed) {
+          openReportDetailModal(latestUnclaimed.id);
+        }
       }
     }
 
     if (needUIUpdate) {
-      localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
-      updatePetUI();
+      savePet(false); // Сохраняем локально БЕЗ повторного сетевого триггера!
+      updatePetUI(false);
     }
   } catch (e) {
     console.warn("[CloudSync] Pull error:", e);
   }
 }
 
-// Первичный опрос и поллинг каждые 15 секунд
 pullCloudSettings();
 if (!isLocalExecution) {
   setInterval(pullCloudSettings, 15000);
@@ -643,7 +651,7 @@ function renderSvgSlot(slotElementId, itemId, category) {
 }
 window.updatePetLayers = updatePetLayers;
 
-function updatePetUI() {
+function updatePetUI(shouldSync = true) {
   document.getElementById("headerPetName").innerText = window.pet.name;
   document.getElementById("petNameLabel").innerText = window.pet.name;
   document.getElementById("headerCoins").innerText = window.pet.coins;
@@ -657,7 +665,6 @@ function updatePetUI() {
   document.getElementById("xpBar").style.width = xpPercent + "%";
   document.getElementById("xpText").innerText = `${window.pet.xp}/${maxXp}`;
 
-// Округляем до целых чисел перед выводом
   const hunger = Math.round(window.pet.hunger);
   const happy = Math.round(window.pet.happy);
   const energy = Math.round(window.pet.energy);
@@ -713,7 +720,7 @@ function updatePetUI() {
   applyRoomTheme(window.pet.activeRoom || "neon");
   updatePetLayers();
   renderPoops();
-  savePet();
+  savePet(shouldSync);
 }
 window.updatePetUI = updatePetUI;
 
@@ -726,18 +733,18 @@ function applyOfflineDecay() {
   const hours = (now - last) / (1000 * 60 * 60);
 
   if (hours > 0.05) {
-    window.pet.hunger = Math.max(5, Math.round(window.pet.hunger - hours * 12));
-    window.pet.clean = Math.max(5, Math.round(window.pet.clean - hours * 8));
-    window.pet.happy = Math.max(5, Math.round(window.pet.happy - hours * 9));
+    window.pet.hunger = Math.max(5, Math.round((window.pet.hunger || 80) - hours * 12));
+    window.pet.clean = Math.max(5, Math.round((window.pet.clean || 90) - hours * 8));
+    window.pet.happy = Math.max(5, Math.round((window.pet.happy || 75) - hours * 9));
 
     if (window.pet.isSleeping) {
-      window.pet.energy = Math.min(100, Math.round(window.pet.energy + hours * 25));
+      window.pet.energy = Math.min(100, Math.round((window.pet.energy || 65) + hours * 25));
       if (window.pet.energy >= 100) {
         window.pet.isSleeping = false;
         window.pet.lastWokeUpAt = now;
       }
     } else {
-      window.pet.energy = Math.max(5, Math.round(window.pet.energy - hours * 8));
+      window.pet.energy = Math.max(5, Math.round((window.pet.energy || 65) - hours * 8));
     }
     if (hours >= 2 && window.poops.length < 3) spawnPoop(false);
   }
@@ -1031,7 +1038,6 @@ function switchWardrobeTab(tabKey) {
   if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
 }
 
-// Слушатели клика по всем 4 вкладкам магазина
 document.getElementById("tabWardrobeOutfits")?.addEventListener("click", () => switchWardrobeTab("outfits"));
 document.getElementById("tabWardrobeAccs")?.addEventListener("click", () => switchWardrobeTab("accs"));
 document.getElementById("tabWardrobeRooms")?.addEventListener("click", () => switchWardrobeTab("rooms"));
@@ -1485,29 +1491,19 @@ document.getElementById("btnAddWheelItem")?.addEventListener("click", () => {
 });
 
 /* -------------------------------------------------------------------------
- * ПОЛНОЦЕННЫЙ САППОРТ / ОПРОСНИК (ГЛОБАЛЬНЫЕ ФУНКЦИИ В WINDOW С ЛОГАМИ)
+ * 10. ПОЛНОЦЕННЫЙ САППОРТ / ОПРОСНИК И БЛАГОДАРНОСТИ
  * ------------------------------------------------------------------------- */
 window.currentFeedbackCategory = "💖 Любовь";
 window.currentFeedbackRating = 5;
 window.attachedScreenshotBase64 = null;
 window.attachedScreenshotFile = null;
-window.claimTaskRewardModal = function () {
-  if (window.currentPendingReward) {
-    window.currentPendingReward.claimed = true;
-    logAuditEvent(`Получила компенсацию за закрытую задачу (+${window.currentPendingReward.coins} 🪙)`, "🎁");
-    window.currentPendingReward = null;
-    if (typeof syncToCloud === "function") syncToCloud();
-  }
-  document.getElementById("modalTaskReward")?.classList.add("hidden");
-  updatePetUI();
-};
 
 window.closeThanksModal = function () {
   if (window.currentPendingReward) {
     window.currentPendingReward.claimed = true;
     logAuditEvent(`Получила благодарность от разработчика (+${window.currentPendingReward.coins || 0} 🪙)`, "💖");
     window.currentPendingReward = null;
-    if (typeof syncToCloud === "function") syncToCloud();
+    syncToCloud();
   }
   document.getElementById("modalProjectThanks")?.classList.add("hidden");
   updatePetUI();
@@ -1530,10 +1526,8 @@ window.closeSupportModal = function () {
   document.getElementById("modalSupport")?.classList.add("hidden");
 };
 
-// Привязка кнопки на котике
 document.getElementById("btnOpenSupport")?.addEventListener("click", window.openSupportModal);
 
-// Переключение категории
 window.onFeedbackCat = function (cat) {
   window.currentFeedbackCategory = cat;
   const btnLove = document.getElementById("typeBtnLove");
@@ -1549,7 +1543,6 @@ window.onFeedbackCat = function (cat) {
   if (window.sound?.pop) window.sound.pop();
 };
 
-// Клик по звездам
 window.onStarClick = function (stars) {
   window.currentFeedbackRating = stars;
   const starElements = document.querySelectorAll("#supportRatingStars .star-item");
@@ -1559,7 +1552,6 @@ window.onStarClick = function (stars) {
   if (window.sound?.pop) window.sound.pop();
 };
 
-// Обработка загрузки файла
 window.onSupportFileChange = function (e) {
   if (e.target.files && e.target.files[0]) {
     window.processImageFile(e.target.files[0]);
@@ -1614,7 +1606,6 @@ window.resetSupportImage = function (e) {
   prompt?.classList.remove("hidden");
 };
 
-// Вставка из буфера обмена (Ctrl+V)
 window.addEventListener("paste", (e) => {
   if (document.getElementById("modalSupport")?.classList.contains("hidden")) return;
   const items = e.clipboardData?.items;
@@ -1627,13 +1618,12 @@ window.addEventListener("paste", (e) => {
   }
 });
 
-// Счетчик символов
 document.getElementById("supportMessageInput")?.addEventListener("input", (e) => {
   const counter = document.getElementById("supportCharCounter");
   if (counter) counter.innerText = `${e.target.value.length}/600`;
 });
 
-// Отправка отчёта: Telegram + JSONBin + Логи браузера (100% безопасные кавычки)
+// Отправка отчёта БЕЗ VPN: чисто через JSONBin
 window.submitFeedbackReport = async function () {
   const input = document.getElementById("supportMessageInput");
   const text = input ? input.value.trim() : "";
@@ -1650,7 +1640,6 @@ window.submitFeedbackReport = async function () {
     sendBtn.innerText = "ОТПРАВЛЯЕМ... ⏳";
   }
 
-  // Сбор телеметрии браузера (Чёрный ящик)
   const techLogs = attachLogs ? {
     userAgent: navigator.userAgent,
     screen: window.innerWidth + "x" + window.innerHeight,
@@ -1663,85 +1652,34 @@ window.submitFeedbackReport = async function () {
     category: window.currentFeedbackCategory,
     rating: window.currentFeedbackRating,
     text: text,
-    status: "inbox", // Явный дефолтный статус
+    status: "inbox",
     petName: window.pet?.name || "Зефирка",
     petLevel: window.pet?.level || 1,
     coins: window.pet?.coins || 0,
     hasImage: !!window.attachedScreenshotBase64,
     image: window.attachedScreenshotBase64 || null,
     techLogs: techLogs,
+    tgSent: false, // <--- Метка: дашборд увидит и перешлёт тебе в TG
     date: new Date().toLocaleString("ru-RU")
   };
 
-  // 1. Сохраняем в localStorage и отправляем в JSONBin для твоего дашборда
-  let storedFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
-  storedFeedback.unshift(feedbackData);
-  if (storedFeedback.length > 30) storedFeedback.pop();
-  localStorage.setItem("katya_master_feedback", JSON.stringify(storedFeedback));
-
-  // 2. Формируем текст для Telegram через безопасную склейку строк
-  const starsStr = "★".repeat(window.currentFeedbackRating) + "☆".repeat(5 - window.currentFeedbackRating);
-  
-  let techSummary = "";
-  if (attachLogs) {
-    if (window.LAST_CAUGHT_ERROR) {
-      const errFile = window.LAST_CAUGHT_ERROR.filename || "app.js";
-      const errLine = window.LAST_CAUGHT_ERROR.lineno || "?";
-      techSummary = "\n\n🚨 *КРИТИЧЕСКИЙ СБОЙ:*\n" + window.LAST_CAUGHT_ERROR.message + " (" + errFile + ":" + errLine + ")";
-    } else if (Array.isArray(window.CLIENT_LOGS_BUFFER) && window.CLIENT_LOGS_BUFFER.length > 0) {
-      const recentWarns = window.CLIENT_LOGS_BUFFER.slice(-3).map(l => "[" + l.time + " " + l.level + "] " + l.msg).join("\n");
-      techSummary = "\n\n📋 *Консоль браузера:*\n" + recentWarns;
-    } else {
-      techSummary = "\n\n✅ *Ошибок в консоли нет*";
-    }
-  }
-
-  const tgMessage = 
-"💌 *НОВОЕ ПОСЛАНИЕ ИЗ ТАМАГОЧИ!*\n\n" +
-"📌 *Тема:* " + window.currentFeedbackCategory + "\n" +
-"⭐ *Оценка:* " + starsStr + " (" + window.currentFeedbackRating + "/5)\n" +
-"🐱 *Котик:* " + feedbackData.petName + " (Ур. " + feedbackData.petLevel + ")\n" +
-"🪙 *Монет:* " + feedbackData.coins + "\n" +
-"📱 *Экран:* " + window.innerWidth + "x" + window.innerHeight + "\n" +
-"⏰ *Дата:* " + feedbackData.date + "\n\n" +
-"💬 *Сообщение:*\n" + text + techSummary;
-
   try {
-    if (window.attachedScreenshotFile) {
-      const formData = new FormData();
-      formData.append("chat_id", TELEGRAM_CHAT_ID);
-      formData.append("photo", window.attachedScreenshotFile);
-      // Лимит Telegram на подпись к фото - 1024 символа
-      const safeCaption = tgMessage.length > 1020 ? tgMessage.substring(0, 1017) + "..." : tgMessage;
-      formData.append("caption", safeCaption);
-      formData.append("parse_mode", "Markdown");
+    // 1. Сохраняем локально
+    let storedFeedback = JSON.parse(localStorage.getItem("katya_master_feedback")) || [];
+    storedFeedback.unshift(feedbackData);
+    if (storedFeedback.length > 50) storedFeedback.pop();
+    localStorage.setItem("katya_master_feedback", JSON.stringify(storedFeedback));
 
-      await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendPhoto", {
-        method: "POST",
-        body: formData
-      });
-    } else {
-      await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: tgMessage,
-          parse_mode: "Markdown"
-        })
-      });
-    }
-
-    if (typeof syncToCloud === "function") syncToCloud();
+    // 2. Отправляем в облако JSONBin
+    await syncToCloud();
 
     if (window.sound?.win) window.sound.win();
     if (typeof confetti === "function") confetti({ particleCount: 70, spread: 80 });
 
-    alert("Послание и технический отчёт успешно отправлены разработчику! 💖✨");
+    alert("Послание успешно сохранено и передано разработчику! 💖✨");
     window.closeSupportModal();
-    if (typeof logAuditEvent === "function") {
-      logAuditEvent("Отправила отзыв [" + window.currentFeedbackCategory + "]", "💌");
-    }
+    logAuditEvent("Отправила отзыв [" + window.currentFeedbackCategory + "]", "💌");
+
   } catch (err) {
     console.error("Feedback submit error:", err);
     alert("Сообщение сохранено в игре, разработчик увидит его в дашборде! 🐾");
@@ -1754,8 +1692,169 @@ window.submitFeedbackReport = async function () {
   }
 };
 
+/* =========================================================================
+ * ВХОДЯЩИЙ ЦЕНТР ОТЧЁТОВ И НАГРАД (VALORANT STYLE)
+ * ========================================================================= */
+window.activeViewingRewardId = null;
+
+// Открытие хаба по кнопке с прицелом 🎯 в шапке
+document.getElementById("btnOpenBugReportsHub")?.addEventListener("click", () => {
+  renderReportsHubList();
+  document.getElementById("modalReportsHub")?.classList.remove("hidden");
+});
+
+// Обновление бейджа на кнопке в шапке
+function updateReportsHubBadge() {
+  const badge = document.getElementById("badgePendingRewardsCount");
+  const localNotifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+  const pending = localNotifications.filter(r => !r.claimed);
+
+  if (badge) {
+    if (pending.length > 0) {
+      badge.innerText = pending.length;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  }
+}
+
+// Отрисовка списка тикетов в хабе
+function renderReportsHubList() {
+  const container = document.getElementById("reportsListContainer");
+  const totalCoinsEl = document.getElementById("reportsHubTotalCoins");
+  const btnClaimAll = document.getElementById("btnClaimAllReports");
+  if (!container) return;
+
+  const notifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+  container.innerHTML = "";
+
+  let unclaimedSum = 0;
+  const pendingCount = notifications.filter(r => !r.claimed).length;
+
+  if (notifications.length === 0) {
+    container.innerHTML = `<div class="text-center text-xs text-gray-500 py-10 font-mono">Все системы в норме. Инцидентов нет //</div>`;
+    if (totalCoinsEl) totalCoinsEl.innerText = "0 🪙";
+    if (btnClaimAll) btnClaimAll.disabled = true;
+    return;
+  }
+
+  notifications.slice().reverse().forEach((item) => {
+    if (!item.claimed) unclaimedSum += (item.coins || 0);
+    const isClaimed = item.claimed === true;
+
+    const itemCard = document.createElement("div");
+    itemCard.className = `p-3 rounded-2xl border ${isClaimed ? "bg-[#0b0d14]/60 border-white/5 opacity-60" : "bg-gradient-to-r from-cyan-950/40 via-[#101726] to-[#0a0f1a] border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]"} flex items-center justify-between gap-2.5 transition active:scale-[0.98] cursor-pointer`;
+
+    itemCard.onclick = () => openReportDetailModal(item.id);
+
+    itemCard.innerHTML = `
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl ${isClaimed ? "bg-gray-800 text-gray-400" : "bg-cyan-500/20 border border-cyan-400/50 text-cyan-300"} flex items-center justify-center text-sm font-mono font-bold flex-shrink-0">
+          ${isClaimed ? "✓" : "!"}
+        </div>
+        <div class="truncate text-left">
+          <div class="font-mono text-xs font-bold ${isClaimed ? "text-gray-300" : "text-cyan-200"} truncate">
+            ${item.humanTitle || "Инцидент рассмотрен"}
+          </div>
+          <div class="text-[10px] text-gray-500 font-mono mt-0.5">${item.date || ""}</div>
+        </div>
+      </div>
+      <div class="flex-shrink-0 text-right">
+        <span class="font-mono font-black text-xs ${isClaimed ? "text-gray-400 line-through" : "text-amber-300"}">+${item.coins || 0} 🪙</span>
+      </div>
+    `;
+
+    container.appendChild(itemCard);
+  });
+
+  if (totalCoinsEl) totalCoinsEl.innerText = `${unclaimedSum} 🪙`;
+  if (btnClaimAll) btnClaimAll.disabled = (pendingCount === 0);
+  updateReportsHubBadge();
+}
+
+// Открытие карточки одного тикета
+function openReportDetailModal(notifId) {
+  const notifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+  const item = notifications.find(n => n.id === notifId);
+  if (!item) return;
+
+  window.activeViewingRewardId = notifId;
+
+  document.getElementById("detailAlertTicketId").innerText = `#ID-${item.id.slice(-6)}`;
+  document.getElementById("detailAlertDevComment").innerText = item.humanMessage || item.devReport || "Баг успешно устранён!";
+  document.getElementById("detailAlertRewardVal").innerText = `+${item.coins || 0} 🪙`;
+
+  const claimBtn = document.getElementById("btnClaimSingleReport");
+  if (claimBtn) {
+    if (item.claimed) {
+      claimBtn.disabled = true;
+      claimBtn.innerText = "НАГРАДА УЖЕ ПОЛУЧЕНА ✓";
+      claimBtn.className = "w-full py-3 rounded-2xl bg-gray-800 text-gray-500 font-mono font-black text-xs cursor-not-allowed";
+    } else {
+      claimBtn.disabled = false;
+      claimBtn.innerText = "ПОДТВЕРДИТЬ И ЗАБРАТЬ 🪙";
+      claimBtn.className = "w-full py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white font-mono font-black text-xs active:scale-95 transition shadow-lg shadow-rose-500/30 cursor-pointer tracking-wider";
+    }
+  }
+
+  document.getElementById("modalReportDetailAlert")?.classList.remove("hidden");
+}
+
+// Забрать награду за один отчёт
+window.claimActiveDetailReward = function () {
+  if (!window.activeViewingRewardId) return;
+
+  let notifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+  const item = notifications.find(n => n.id === window.activeViewingRewardId);
+
+  if (item && !item.claimed) {
+    item.claimed = true;
+    window.pet.coins += (item.coins || 0);
+
+    localStorage.setItem("katya_reward_notifications", JSON.stringify(notifications));
+    logAuditEvent(`Забрала награду за баг-репорт (+${item.coins || 0} 🪙)`, "🎯");
+
+    if (window.sound?.win) window.sound.win();
+    if (typeof confetti === "function") confetti({ particleCount: 80, spread: 70 });
+
+    updatePetUI();
+    syncToCloud();
+  }
+
+  document.getElementById("modalReportDetailAlert")?.classList.add("hidden");
+  renderReportsHubList();
+};
+
+// Забрать все награды сразу
+window.claimAllBugRewards = function () {
+  let notifications = JSON.parse(localStorage.getItem("katya_reward_notifications")) || [];
+  let totalClaimed = 0;
+
+  notifications.forEach(item => {
+    if (!item.claimed) {
+      item.claimed = true;
+      totalClaimed += (item.coins || 0);
+    }
+  });
+
+  if (totalClaimed > 0) {
+    window.pet.coins += totalClaimed;
+    localStorage.setItem("katya_reward_notifications", JSON.stringify(notifications));
+    logAuditEvent(`Забрала все награды из Центра отчётов (+${totalClaimed} 🪙)`, "🎯");
+
+    if (window.sound?.epicWin) window.sound.epicWin();
+    if (typeof confetti === "function") confetti({ particleCount: 120, spread: 90 });
+
+    updatePetUI();
+    syncToCloud();
+  }
+
+  renderReportsHubList();
+};
+
 /* -------------------------------------------------------------------------
- * 10. ДЗЕН-КЛИКЕР (ASMR), DAILY БОНУС И СИСТЕМНЫЕ СЛУШАТЕЛИ
+ * 11. ДЗЕН-КЛИКЕР (ASMR), DAILY БОНУС И СИСТЕМНЫЕ СЛУШАТЕЛИ
  * ------------------------------------------------------------------------- */
 let zenClicks = 0;
 document.getElementById("btnZenClicker")?.addEventListener("click", () => {
@@ -1766,7 +1865,7 @@ document.getElementById("zenTapArea")?.addEventListener("pointerdown", () => {
   zenClicks++;
   if (window.sound?.purr) window.sound.purr();
   triggerHaptic();
-  window.pet.happy = Math.min(100, window.pet.happy + 0.1);
+  window.pet.happy = Math.min(100, Math.round(window.pet.happy + 1));
   const clickCountEl = document.getElementById("zenTotalClicks");
   if (clickCountEl) clickCountEl.innerText = zenClicks;
 
@@ -1846,12 +1945,11 @@ document.getElementById("btnCloseWishModal")?.addEventListener("click", () => {
   document.getElementById("modalSecretWish")?.classList.add("hidden");
 });
 
-// Периодическое уменьшение характеристик
+// Периодическое уменьшение характеристик (каждые 30 секунд)
 setInterval(() => {
   if (window.pet.isSleeping) {
-    window.pet.energy = Math.min(100, window.pet.energy + 3);
+    window.pet.energy = Math.min(100, (window.pet.energy || 0) + 3);
     
-    // Если котик полностью восстановил силы — просыпается сам
     if (window.pet.energy >= 100) {
       window.pet.isSleeping = false;
       window.pet.lastWokeUpAt = Date.now();
@@ -1859,10 +1957,10 @@ setInterval(() => {
       logAuditEvent("Котик полностью выспался и проснулся сам! ☀️", "⭐");
     }
   } else {
-    window.pet.hunger = Math.max(5, window.pet.hunger - 1);
-    window.pet.happy = Math.max(5, window.pet.happy - 1);
-    window.pet.energy = Math.max(5, window.pet.energy - 1);
-    window.pet.clean = Math.max(5, window.pet.clean - 1);
+    window.pet.hunger = Math.max(5, (window.pet.hunger || 0) - 1);
+    window.pet.happy = Math.max(5, (window.pet.happy || 0) - 1);
+    window.pet.energy = Math.max(5, (window.pet.energy || 0) - 1);
+    window.pet.clean = Math.max(5, (window.pet.clean || 0) - 1);
     if (window.pet.hunger > 35 && Math.random() < 0.12) {
       spawnPoop(true);
     }
@@ -1871,7 +1969,7 @@ setInterval(() => {
 }, 30000);
 
 /* -------------------------------------------------------------------------
- * 11. ПЕРВИЧНЫЙ ЗАПУСК
+ * 12. ПЕРВИЧНЫЙ ЗАПУСК
  * ------------------------------------------------------------------------- */
 applyOfflineDecay();
 updatePetUI();
