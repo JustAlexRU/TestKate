@@ -30,6 +30,11 @@
  * - window.crmRunSmartAction(actionKey) — запуск авто-сценариев помощи (синхронизация и т.д.)
  * - window.renderDeskWizardNode(nodeKey) — пошаговый мастер сценариев решения проблем
  * - window.deskResetWizard() — сброс мастера сценариев к начальному экрану
+ * - window.grantSupportCompensationCoins(amount, reason) — начисление компенсации с проводкой в 1С
+ * - window.grantManualWishCoupon(title, category) — ручная выдача купона желания
+ * - window.restorePetStatsSupport() — экспресс-восстановление показателей питомца на 100%
+ * - window.insertDeskCannedResponse(key) — быстрая вставка шаблонов ответов оператора
+ * - window.updateDeskCustomerCard() — обновление карточки игрока в модалке поддержки
  */
 
 const DASHBOARD_PIN = "1703";
@@ -227,89 +232,166 @@ window.savePetState = async function () {
   }
 };
 
-// Рендер дашборда
+// Рендер дашборда с защитой от сбоев и нормализацией данных
 window.renderDashboard = async function () {
-  const cloud = typeof window.fetchCloudData === "function" ? await window.fetchCloudData() : window.currentCloudData;
-  if (!cloud) return;
+  let cloud = window.currentCloudData;
+  if (typeof window.fetchCloudData === "function") {
+    try {
+      cloud = await window.fetchCloudData();
+    } catch (e) {
+      console.warn("[Dashboard] fetchCloudData error:", e);
+    }
+  }
+
+  if (!cloud || typeof cloud !== "object") {
+    cloud = typeof window.buildFallbackDataFromLocalStorage === "function"
+      ? window.buildFallbackDataFromLocalStorage()
+      : { katya: {} };
+    window.currentCloudData = cloud;
+  }
+
+  // Защитная нормализация: если pet на верхнем уровне, заворачиваем в { katya: { ... } }
+  if (cloud.pet && !cloud.katya) {
+    cloud = { katya: Object.assign({}, cloud) };
+    window.currentCloudData = cloud;
+  }
+  if (!cloud.katya || typeof cloud.katya !== "object") {
+    cloud.katya = {};
+  }
 
   const sel = document.getElementById("targetPlayerSelect");
-  const requestedUser = sel ? sel.value : "katya";
+  const requestedUser = sel ? (sel.value || "katya") : "katya";
   
   if (sel) {
     sel.innerHTML = "";
-    const systemKeys = ["economyConfig", "customFood", "customShop", "customRewards", "customCases", "wishChances", "caseSettings", "allChances"];
+    const systemKeys = ["economyConfig", "customFood", "customShop", "customRewards", "customCases", "wishChances", "caseSettings", "allChances", "irlBudgetConfig"];
+    
+    // Всегда первым делом добавляем 'katya'
+    const optKatya = document.createElement("option");
+    optKatya.value = "katya";
+    optKatya.innerText = "Катя (Таганрог)";
+    sel.appendChild(optKatya);
+
     Object.keys(cloud).forEach((k) => {
-      if (!systemKeys.includes(k)) {
+      if (k !== "katya" && !systemKeys.includes(k) && typeof cloud[k] === "object" && cloud[k] !== null) {
         const opt = document.createElement("option");
         opt.value = k;
-        opt.innerText = k === "katya" ? "Катя (Таганрог)" : `Игрок: ${k}`;
-        if (k === requestedUser) opt.selected = true;
+        opt.innerText = `Игрок: ${k}`;
         sel.appendChild(opt);
       }
     });
-    if (!sel.value && cloud.katya) sel.value = "katya";
+    sel.value = cloud[requestedUser] ? requestedUser : "katya";
   }
 
-  const activeUser = sel ? sel.value : "katya";
-  const record = cloud[activeUser] || {};
+  const activeUser = sel ? (sel.value || "katya") : "katya";
+  const record = cloud[activeUser] || cloud.katya || {};
+
+  // Защищенное извлечение сущностей с каскадным fallback на LocalStorage
+  const readFn = typeof window.readStorage === "function" ? window.readStorage : ((k, fb) => fb);
+  const pet = (record.pet && Object.keys(record.pet).length > 0)
+    ? record.pet
+    : readFn(`${activeUser}_master_pet_state`, readFn("katya_master_pet_state", readFn("pet_state", {}))) || {};
+  record.pet = pet;
+
+  const analytics = (record.analytics && Object.keys(record.analytics).length > 0)
+    ? record.analytics
+    : readFn(`${activeUser}_master_analytics`, readFn("katya_master_analytics", readFn("game_analytics", {}))) || {};
+  record.analytics = analytics;
+
+  const wishes = (Array.isArray(record.wishes) && record.wishes.length > 0)
+    ? record.wishes
+    : readFn(`${activeUser}_master_wishes_vault`, readFn("katya_master_wishes_vault", readFn("katya_wishes", []))) || [];
+  record.wishes = wishes;
+
+  const caseDrops = (Array.isArray(record.caseHistory) && record.caseHistory.length > 0)
+    ? record.caseHistory
+    : readFn(`${activeUser}_master_case_history`, readFn("katya_master_case_history", readFn("katya_case_history", []))) || [];
+  record.caseHistory = caseDrops;
+
+  const rouletteHistory = (Array.isArray(record.rouletteHistory) && record.rouletteHistory.length > 0)
+    ? record.rouletteHistory
+    : readFn(`${activeUser}_master_roulette_history`, readFn("katya_master_roulette_history", readFn("roulette_history", []))) || [];
+  record.rouletteHistory = rouletteHistory;
+
+  const audit = (Array.isArray(record.audit) && record.audit.length > 0)
+    ? record.audit
+    : readFn(`${activeUser}_master_audit_events`, readFn("katya_master_audit_events", readFn("katya_audit", []))) || [];
+  record.audit = audit;
+
+  const feedback = (Array.isArray(record.feedback) && record.feedback.length > 0)
+    ? record.feedback
+    : readFn(`${activeUser}_master_feedback`, readFn("katya_master_feedback", readFn("katya_feedback", []))) || [];
+  record.feedback = feedback;
 
   if (Array.isArray(record.feedback)) {
-    localStorage.setItem(`${activeUser}_master_feedback`, JSON.stringify(record.feedback));
-    localStorage.setItem("katya_master_feedback", JSON.stringify(record.feedback));
+    try {
+      localStorage.setItem(`${activeUser}_master_feedback`, JSON.stringify(record.feedback));
+      localStorage.setItem("katya_master_feedback", JSON.stringify(record.feedback));
+    } catch (e) {}
   }
-
-  const pet = record.pet || {};
-  const analytics = record.analytics || {};
-  const wishes = record.wishes || [];
-  const caseDrops = record.caseHistory || [];
-  const rouletteHistory = record.rouletteHistory || [];
-  const audit = record.audit || [];
 
   const lastSyncEl = document.getElementById("dashLastSyncTime");
-  if (lastSyncEl) lastSyncEl.innerText = record.lastActive || "Синхронизировано";
+  if (lastSyncEl) lastSyncEl.innerText = record.lastActive || new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 
   // KPI метрики
-  const kpiTotalTime = document.getElementById("kpiTotalTime");
-  if (kpiTotalTime) kpiTotalTime.innerText = `${Math.round((analytics.totalSecondsPlayed || 0) / 60)} м`;
-  const kpiSessions = document.getElementById("kpiSessions");
-  if (kpiSessions) kpiSessions.innerText = analytics.sessionsCount || 0;
-  const kpiSpentCoins = document.getElementById("kpiSpentCoins");
-  if (kpiSpentCoins) kpiSpentCoins.innerText = `${analytics.spentCoins || 0} 🪙`;
-  const kpiCasesOpened = document.getElementById("kpiCasesOpened");
-  if (kpiCasesOpened) kpiCasesOpened.innerText = analytics.casesOpened || 0;
-
-  // Инпуты состояния питомца (если присутствуют в верстке)
-  const petInputs = {
-    editPetName: pet.name || "",
-    editPetCoins: pet.coins ?? 0,
-    editPetLevel: pet.level ?? 1,
-    editPetXp: pet.xp ?? 0,
-    editPetHunger: pet.hunger ?? 0,
-    editPetHappy: pet.happy ?? 0,
-    editPetEnergy: pet.energy ?? 0,
-    editPetClean: pet.clean ?? 0
-  };
-  Object.entries(petInputs).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  });
-
-  // Модульный рендеринг
-  if (typeof window.renderEconomyInputs === "function") window.renderEconomyInputs();
-  if (typeof window.switchOddsMode === "function") window.switchOddsMode(window.currentOddsTab || "slots");
-  if (typeof window.renderWishesGrid === "function") window.renderWishesGrid(wishes);
-  if (typeof window.renderCaseDrops === "function") window.renderCaseDrops(caseDrops);
-  if (typeof window.renderRouletteHistory === "function") window.renderRouletteHistory(rouletteHistory);
-  if (typeof window.renderAuditLedger === "function") window.renderAuditLedger(audit);
-  if (typeof window.runComprehensiveAiEconomyAudit === "function") window.runComprehensiveAiEconomyAudit(pet, analytics, audit);
-
-  if (typeof window.updateUnreadBadges === "function") window.updateUnreadBadges();
-  if (currentMainTab === "kanban" && typeof window.renderKanbanBoard === "function") {
-    window.renderKanbanBoard();
+  try {
+    const kpiTotalTime = document.getElementById("kpiTotalTime");
+    if (kpiTotalTime) kpiTotalTime.innerText = `${Math.round((analytics.totalSecondsPlayed || 0) / 60)} м`;
+    const kpiSessions = document.getElementById("kpiSessions");
+    if (kpiSessions) kpiSessions.innerText = analytics.sessionsCount || 0;
+    const kpiSpentCoins = document.getElementById("kpiSpentCoins");
+    if (kpiSpentCoins) kpiSpentCoins.innerText = `${analytics.spentCoins || 0} 🪙`;
+    const kpiCasesOpened = document.getElementById("kpiCasesOpened");
+    if (kpiCasesOpened) kpiCasesOpened.innerText = analytics.casesOpened || 0;
+  } catch (e) {
+    console.error("[Dashboard] KPI render error:", e);
   }
-  if (currentMainTab === "inbox" && typeof window.renderFeedbackInbox === "function") {
-    window.renderFeedbackInbox();
+
+  // Инпуты состояния питомца
+  try {
+    const petInputs = {
+      editPetName: pet.name || "Зефирка",
+      editPetCoins: pet.coins ?? 0,
+      editPetLevel: pet.level ?? 1,
+      editPetXp: pet.xp ?? 0,
+      editPetHunger: pet.hunger ?? 0,
+      editPetHappy: pet.happy ?? 0,
+      editPetEnergy: pet.energy ?? 0,
+      editPetClean: pet.clean ?? 0
+    };
+    Object.entries(petInputs).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+  } catch (e) {
+    console.error("[Dashboard] Pet inputs render error:", e);
   }
+
+  // Модульный рендеринг панелей с индивидуальными try/catch
+  try { if (typeof window.renderEconomyInputs === "function") window.renderEconomyInputs(); } catch (e) { console.error("[Dashboard] renderEconomyInputs error:", e); }
+  try { if (typeof window.switchOddsMode === "function") window.switchOddsMode(window.currentOddsTab || "slots"); } catch (e) { console.error("[Dashboard] switchOddsMode error:", e); }
+  try { if (typeof window.renderWishesGrid === "function") window.renderWishesGrid(wishes); } catch (e) { console.error("[Dashboard] renderWishesGrid error:", e); }
+  try { if (typeof window.renderCaseDrops === "function") window.renderCaseDrops(caseDrops); } catch (e) { console.error("[Dashboard] renderCaseDrops error:", e); }
+  try { if (typeof window.renderRouletteHistory === "function") window.renderRouletteHistory(rouletteHistory); } catch (e) { console.error("[Dashboard] renderRouletteHistory error:", e); }
+  try { if (typeof window.renderAuditLedger === "function") window.renderAuditLedger(audit); } catch (e) { console.error("[Dashboard] renderAuditLedger error:", e); }
+  try { if (typeof window.runComprehensiveAiEconomyAudit === "function") window.runComprehensiveAiEconomyAudit(pet, analytics, audit); } catch (e) { console.error("[Dashboard] runComprehensiveAiEconomyAudit error:", e); }
+  try { if (typeof window.updateUnreadBadges === "function") window.updateUnreadBadges(); } catch (e) { console.error("[Dashboard] updateUnreadBadges error:", e); }
+
+  try {
+    if (currentMainTab === "kanban" && typeof window.renderKanbanBoard === "function") {
+      window.renderKanbanBoard();
+    }
+  } catch (e) { console.error("[Dashboard] renderKanbanBoard error:", e); }
+
+  try {
+    if (currentMainTab === "inbox" && typeof window.renderFeedbackInbox === "function") {
+      window.renderFeedbackInbox();
+    }
+  } catch (e) { console.error("[Dashboard] renderFeedbackInbox error:", e); }
+
+  try {
+    if (typeof updateDeskCustomerCard === "function") updateDeskCustomerCard();
+  } catch (e) {}
 };
 function renderDashboard() {
   return window.renderDashboard();
@@ -576,14 +658,261 @@ window.renderRouletteHistory = function (history) {
 };
 
 // =========================================================================
-// 4. ИЗОЛИРОВАННЫЙ РЕЖИМ ПОДДЕРЖКИ (ПЕРВАЯ ЛИНИЯ)
+// 4. ИЗОЛИРОВАННЫЙ РЕЖИМ ПОДДЕРЖКИ (SUPPORT DESK TIER-1 CRM)
 // =========================================================================
 window.activeDeskTicketId = null;
+
+/**
+ * Обновление карточки клиента в модалке Support Desk
+ */
+function updateDeskCustomerCard() {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
+  const pet = userRecord.pet || {};
+
+  const titleEl = document.getElementById("deskCardClientTitle");
+  if (titleEl) titleEl.innerText = targetUser === "katya" ? "Катя (Таганрог)" : `Игрок: ${targetUser}`;
+
+  const coinsEl = document.getElementById("deskCardCoinsVal");
+  if (coinsEl) coinsEl.innerText = `${pet.coins ?? 0} 🪙`;
+
+  const petNameEl = document.getElementById("deskCardPetName");
+  if (petNameEl) petNameEl.innerText = pet.name || "Зефирка";
+
+  const petLevelEl = document.getElementById("deskCardPetLevel");
+  if (petLevelEl) petLevelEl.innerText = String(pet.level ?? 1);
+}
+window.updateDeskCustomerCard = updateDeskCustomerCard;
+
+/**
+ * Вставка быстрых шаблонных ответов оператора (Canned Responses)
+ */
+window.insertDeskCannedResponse = function (key) {
+  const input = document.getElementById("deskChatInput");
+  if (!input) return;
+
+  const cannedMap = {
+    check_ok: "Привет! Проверил по базе данных — всё сработало корректно, никаких технических ошибок не зафиксировано ✨",
+    comp_given: "Привет! Проверил ситуацию и начислил на твой баланс монеты компенсации 🪙 Приятной игры!",
+    hotfix_deployed: "Привет! Хотфикс уже выкачен на прод 🚀 Пожалуйста, обнови страничку и проверь!",
+    pet_care: "Привет! Позаботился о Зефирке, накормил и приласкал 🐾 Все показатели на максимуме!"
+  };
+
+  const text = cannedMap[key] || "Привет! Чем могу помочь? ✨";
+  input.value = text;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+};
+
+/**
+ * Начисление компенсационных монет с проводкой в 1C Ledger и уведомлением в тикете
+ */
+window.grantSupportCompensationCoins = async function (amount, reason) {
+  const num = Number(amount) || 0;
+  if (num <= 0) return;
+
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+  if (!userRecord.pet) userRecord.pet = {};
+
+  userRecord.pet.coins = (Number(userRecord.pet.coins) || 0) + num;
+
+  const auditReason = reason || "Компенсация поддержки";
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT COMP] Компенсация оператора: +${num}🪙 (${auditReason})`,
+    icon: "🪙",
+    coinsChange: num,
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  // Уведомление в открытом тикете
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_comp_" + Date.now(),
+        author: "system",
+        text: `🎁 Начислена компенсация: +${num} 🪙 (${auditReason})`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_comp_" + Date.now(),
+        author: "alex",
+        text: `Я всё проверил и начислил на твой баланс компенсацию ${num} 🪙! Приятной игры ✨`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") {
+        await window.saveFeedbackListToCloud(list);
+      }
+      if (typeof window.renderDeskChatTimeline === "function") {
+        window.renderDeskChatTimeline(ticket);
+      }
+    }
+  }
+
+  updateDeskCustomerCard();
+  const editPetCoins = document.getElementById("editPetCoins");
+  if (editPetCoins) editPetCoins.value = userRecord.pet.coins;
+  if (typeof window.renderAuditLedger === "function") {
+    window.renderAuditLedger(userRecord.audit);
+  }
+
+  alert(`✅ Успешно начислена компенсация: +${num} 🪙 (${auditReason})`);
+};
+
+/**
+ * Ручная выдача купона желания игроку из Support Desk
+ */
+window.grantManualWishCoupon = async function (title, category) {
+  const wishTitle = (title || "").trim() || "Специальное желание от поддержки";
+  const wishCat = category || "medium";
+  const couponCode = "#WISH-MANUAL-" + Math.floor(1000 + Math.random() * 9000);
+
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+
+  if (!Array.isArray(userRecord.wishes)) userRecord.wishes = [];
+  userRecord.wishes.unshift({
+    id: "wish_desk_" + Date.now(),
+    title: wishTitle,
+    category: wishCat,
+    code: couponCode,
+    status: "active",
+    claimed: false,
+    source: "Support Desk (Ручная выдача)",
+    date: new Date().toLocaleDateString("ru-RU"),
+    timestamp: Date.now()
+  });
+
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT WISH] Выдан ручной купон желания: «${wishTitle}» (${couponCode})`,
+    icon: "🎁",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_wish_" + Date.now(),
+        author: "system",
+        text: `🎁 Выдан купон желания: «${wishTitle}» (${couponCode})`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_wish_" + Date.now(),
+        author: "alex",
+        text: `Подарил тебе купон желания: «${wishTitle}» (${couponCode})! Ты можешь активировать его в игре в любое удобное время 🎁✨`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") {
+        await window.saveFeedbackListToCloud(list);
+      }
+      if (typeof window.renderDeskChatTimeline === "function") {
+        window.renderDeskChatTimeline(ticket);
+      }
+    }
+  }
+
+  if (typeof window.renderWishesGrid === "function") {
+    window.renderWishesGrid(userRecord.wishes);
+  }
+  alert(`🎁 Купон «${wishTitle}» (${couponCode}) успешно отправлен игроку!`);
+};
+
+/**
+ * Экспресс-восстановление всех показателей питомца на 100%
+ */
+window.restorePetStatsSupport = async function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+  if (!userRecord.pet) userRecord.pet = {};
+
+  userRecord.pet.hunger = 100;
+  userRecord.pet.energy = 100;
+  userRecord.pet.happy = 100;
+  userRecord.pet.clean = 100;
+
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT PET] Восстановление показателей питомца на 100% (Забота поддержки)`,
+    icon: "🐾",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_pet_" + Date.now(),
+        author: "system",
+        text: `🐾 Забота поддержки: показатели Зефирки восстановлены на 100%`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_care_" + Date.now(),
+        author: "alex",
+        text: "Позаботился о Зефирке, все показатели восстановлены на 100% 🐾 Накормил, искупал и приласкал!",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") {
+        await window.saveFeedbackListToCloud(list);
+      }
+      if (typeof window.renderDeskChatTimeline === "function") {
+        window.renderDeskChatTimeline(ticket);
+      }
+    }
+  }
+
+  updateDeskCustomerCard();
+  if (typeof window.renderDashboard === "function") {
+    window.renderDashboard();
+  }
+  alert("🐾 Показатели Зефирки успешно восстановлены на 100%!");
+};
 
 window.openSupportDeskModal = function () {
   document.getElementById("modalSupportDesk")?.classList.remove("hidden");
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   const list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
@@ -602,6 +931,7 @@ window.openSupportDeskModal = function () {
   if (window.activeDeskTicketId) {
     selectDeskTicket(window.activeDeskTicketId);
   }
+  updateDeskCustomerCard();
   window.renderDeskWizardNode("root");
 };
 
@@ -615,7 +945,7 @@ function renderDeskTopActiveChatsBar(deskTickets, activeId) {
   bar.innerHTML = "";
 
   if (deskTickets.length === 0) {
-    bar.innerHTML = `<span class="text-xs text-gray-500 font-mono">Нет активных тикетов первой линии ✨</span>`;
+    bar.innerHTML = `<span class="text-xs text-slate-500 font-mono">Нет активных тикетов первой линии ✨</span>`;
     return;
   }
 
@@ -641,7 +971,7 @@ function renderDeskTopActiveChatsBar(deskTickets, activeId) {
 
     pill.innerHTML = `
       <span>${stBadge}</span>
-      <span class="font-bold">#${ticket.id ? ticket.id.slice(-4) : "????"}</span>
+      <span class="font-bold">#${ticket.id ? String(ticket.id).slice(-4) : "????"}</span>
       <span class="opacity-70 truncate max-w-[120px]">${safePreview}</span>
     `;
     bar.appendChild(pill);
@@ -651,7 +981,7 @@ function renderDeskTopActiveChatsBar(deskTickets, activeId) {
 function selectDeskTicket(ticketId) {
   window.activeDeskTicketId = ticketId;
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   let list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
@@ -666,77 +996,162 @@ function selectDeskTicket(ticketId) {
     }
   }
 
+  const topicEl = document.getElementById("deskChatTopic");
+  if (topicEl) {
+    const escapeFn = getEscapeHtml();
+    topicEl.innerText = `#${String(ticket.id).slice(-4)}: ${ticket.category || "Обращение"} — ${ticket.text ? ticket.text.slice(0, 35) + "..." : "Диалог"}`;
+  }
+
+  const statusSel = document.getElementById("deskStatusSelect");
+  if (statusSel) {
+    statusSel.value = ticket.status || "in_progress";
+  }
+
   renderDeskTopActiveChatsBar(list.filter(t => !(t.claimed === true && t.status === "done")), ticketId);
   if (typeof window.renderDeskChatTimeline === "function") {
     window.renderDeskChatTimeline(ticket);
   }
+  updateDeskCustomerCard();
 }
 
 window.renderDeskChatTimeline = function (ticket) {
   const area = document.getElementById("deskChatTimeline") || document.getElementById("deskChatMessagesArea");
-  if (!area) return;
+  if (!area || !ticket) return;
   area.innerHTML = "";
 
-  const msgs = Array.isArray(ticket?.messages) ? ticket.messages : [];
   const escapeFn = getEscapeHtml();
+  const sortFn = typeof window.normalizeAndSortMessages === "function" 
+    ? window.normalizeAndSortMessages 
+    : ((raw, txt, dt) => (Array.isArray(raw) ? raw : []));
+  const msgs = sortFn(ticket.messages, ticket.text, ticket.date);
 
   msgs.forEach(msg => {
+    // 1. Системные события
+    if (msg.system) {
+      const sysBubble = document.createElement("div");
+      sysBubble.className = "w-full flex justify-center my-1 select-text";
+      sysBubble.innerHTML = `
+        <div class="px-3 py-1 rounded-full text-[10px] font-mono bg-white/5 border border-white/10 text-slate-400 flex items-center gap-1.5 shadow-sm max-w-[85%] text-center leading-normal">
+          <span>${escapeFn(msg.text)}</span>
+          ${msg.time ? `<span class="opacity-50 text-[9px]">• ${escapeFn(msg.time)}</span>` : ""}
+        </div>
+      `;
+      area.appendChild(sysBubble);
+      return;
+    }
+
+    // 2. Пользовательские сообщения
     const isAlex = msg.author === "alex";
     const bubble = document.createElement("div");
     bubble.className = `flex flex-col ${isAlex ? "items-end" : "items-start"} gap-1 w-full`;
 
-    bubble.innerHTML = `
-      <div class="max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs">
-        <div class="text-[9px] font-mono opacity-60 mb-0.5">${isAlex ? "Алексей (Вы)" : "Катя"} ${msg.time ? "• " + escapeFn(msg.time) : ""}</div>
-        <div class="whitespace-pre-wrap leading-relaxed select-text">${escapeFn(msg.text || "")}</div>
-      </div>
+    const card = document.createElement("div");
+    card.className = `max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs flex flex-col gap-1`;
+
+    const safeText = escapeFn(msg.text);
+    const safeTime = msg.time ? escapeFn(msg.time) : "";
+    const authorLabel = isAlex ? "Алексей (Вы)" : "Катя";
+    const tickStatus = msg.sending ? "⏳" : "✓✓";
+
+    card.innerHTML = `
+      <div class="text-[9px] font-mono opacity-60 mb-0.5">${authorLabel}</div>
+      ${safeText ? `<div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>` : ""}
     `;
+
+    if (msg.image) {
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "mt-1 rounded-xl overflow-hidden border border-black/10 max-h-48 cursor-pointer relative group";
+      imgWrap.innerHTML = `
+        <img src="${msg.image}" alt="Вложение" class="w-full h-full max-h-48 object-cover rounded-xl transition hover:opacity-95 active:scale-[0.99]" />
+        <span class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-sm opacity-0 group-hover:opacity-100 transition">🔍 Увеличить</span>
+      `;
+      imgWrap.onclick = () => {
+        if (typeof window.openFullImage === "function") window.openFullImage(msg.image);
+      };
+      card.appendChild(imgWrap);
+    }
+
+    const footer = document.createElement("div");
+    footer.className = "text-[9px] font-mono opacity-60 self-end mt-0.5 flex items-center gap-1 justify-end";
+    footer.innerHTML = `<span>${safeTime}</span><span>${tickStatus}</span>`;
+    card.appendChild(footer);
+
+    bubble.appendChild(card);
     area.appendChild(bubble);
   });
 
-  setTimeout(() => {
-    area.scrollTop = area.scrollHeight;
-  }, 30);
+  if (typeof window.scrollChatToBottom === "function") {
+    window.scrollChatToBottom(area, true);
+  } else {
+    setTimeout(() => { area.scrollTop = area.scrollHeight; }, 30);
+  }
 };
 
 window.sendDeskMessage = async function () {
   const input = document.getElementById("deskChatInput");
+  const sendBtn = document.getElementById("btnSendDeskMessage");
   const text = input ? input.value.trim() : "";
   if (!text || !window.activeDeskTicketId) return;
 
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   let list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
   const ticket = list.find(t => t.id === window.activeDeskTicketId);
   if (!ticket) return;
 
-  if (!Array.isArray(ticket.messages)) ticket.messages = [];
-  ticket.messages.push({
-    id: "msg_desk_" + Date.now(),
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.classList.add("opacity-50", "pointer-events-none");
+  }
+  window.isChatSendingMessage = true;
+
+  const now = Date.now();
+  const optimisticMsg = {
+    id: "msg_desk_" + now,
     author: "alex",
     text: text,
-    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
-  });
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: now,
+    sending: true
+  };
+
+  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  ticket.messages.push(optimisticMsg);
 
   input.value = "";
   window.renderDeskChatTimeline(ticket);
 
   userRecord.feedback = list;
-  if (typeof window.saveFeedbackListToCloud === "function") {
-    await window.saveFeedbackListToCloud(list);
-  } else {
-    localStorage.setItem(`${targetUser}_master_feedback`, JSON.stringify(list));
-    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
-    if (typeof window.saveCloud === "function") await window.saveCloud();
+  try {
+    if (typeof window.saveFeedbackListToCloud === "function") {
+      await window.saveFeedbackListToCloud(list);
+    } else {
+      localStorage.setItem(`${targetUser}_master_feedback`, JSON.stringify(list));
+      localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+      if (typeof window.saveCloud === "function") await window.saveCloud();
+    }
+    optimisticMsg.sending = false;
+    window.renderDeskChatTimeline(ticket);
+  } catch (e) {
+    console.error("[SupportDesk] Send error:", e);
+    optimisticMsg.sending = false;
+    window.renderDeskChatTimeline(ticket);
+  } finally {
+    window.isChatSendingMessage = false;
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove("opacity-50", "pointer-events-none");
+    }
+    input?.focus();
   }
 };
 
 window.onDeskStatusChange = async function (newStatus) {
   if (!window.activeDeskTicketId) return;
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   let list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
@@ -745,15 +1160,31 @@ window.onDeskStatusChange = async function (newStatus) {
 
   ticket.status = newStatus;
 
+  const statusTitles = {
+    sent: "Новое 📥",
+    in_progress: "В работе ⚙️",
+    testing: "Тестирование 🧪",
+    done: "Выполнено ✅"
+  };
+
+  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  ticket.messages.push({
+    id: "sys_st_" + Date.now(),
+    author: "system",
+    text: `⚡ Статус обращения изменен на: «${statusTitles[newStatus] || newStatus}»`,
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
   if (newStatus === "done") {
     ticket.rewardGranted = true;
     ticket.rewardAmount = 35;
-    if (!Array.isArray(ticket.messages)) ticket.messages = [];
     ticket.messages.push({
       id: "survey_" + Date.now(),
-      author: "alex",
+      author: "system",
       text: "📋 [Системный опросник обслуживания]: Пожалуйста, оцени решение от 1 до 5 звёзд! После оценки на твой счёт поступит награда 🪙",
-      time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })
+      time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+      timestamp: Date.now() + 1
     });
   }
 
@@ -773,7 +1204,7 @@ window.onDeskStatusChange = async function (newStatus) {
 window.crmEscalateToDev = async function () {
   if (!window.activeDeskTicketId) return;
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   let list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
@@ -802,7 +1233,7 @@ window.crmRunSmartAction = async function (actionKey) {
   const input = deskInput || crmInput;
 
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   let list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
@@ -839,6 +1270,9 @@ window.crmRunSmartAction = async function (actionKey) {
   }
 };
 
+/**
+ * ИНТЕРАКТИВНЫЙ МАСТЕР СЦЕНАРИЕВ SUPPORT DESK (TIER-1 CRM DECISION TREE)
+ */
 window.renderDeskWizardNode = function (nodeKey) {
   const container = document.getElementById("deskWizardStepsContainer");
   const titleEl = document.getElementById("deskWizardHeaderTitle");
@@ -846,68 +1280,434 @@ window.renderDeskWizardNode = function (nodeKey) {
   if (!container) return;
 
   container.innerHTML = "";
+  const escapeFn = getEscapeHtml();
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
+  const pet = userRecord.pet || {};
+
+  // =========================================================================
+  // КОРНЕВОЕ МЕНЮ (4 НАПРАВЛЕНИЯ)
+  // =========================================================================
   if (nodeKey === "root") {
     backBtn?.classList.add("hidden");
     if (titleEl) titleEl.innerText = "🔍 Мастер сценариев (Шаг 1)";
-    
+
     const desc = document.createElement("div");
     desc.className = "text-[11px] text-amber-300 font-bold mb-1.5";
-    desc.innerText = "Выберите категорию сбоя:";
+    desc.innerText = "Выберите категорию обращения:";
     container.appendChild(desc);
 
-    [
-      { key: "coins", label: "🪙 Проблемы с монетами и 1С", icon: "🪙", next: "coins_branch" },
-      { key: "cases", label: "📦 Кейсы, рулетка и дропы", icon: "📦", next: "cases_branch" },
-      { key: "sync", label: "🌐 Облачная синхронизация", icon: "🌐", action: "smart_force_sync" }
-    ].forEach(opt => {
+    const categories = [
+      { key: "finances_step1", label: "🪙 Проблемы с монетами / 1C Ledger", icon: "🪙", desc: "Сверка баланса, возврат списаний, компенсации" },
+      { key: "drops_step1", label: "🎁 Кейсы, рулетка и купоны желаний", icon: "🎁", desc: "Дропы, фриспины, ручная выдача купона" },
+      { key: "tech_step1", label: "🛠️ Технический сбой и состояние питомца", icon: "🛠️", desc: "Экспресс-диагностика, 100% забота, эскалация" },
+      { key: "love_step1", label: "❤️ Вопросы уюта и тёплые пожелания", icon: "❤️", desc: "Искренние сообщения от Алексея + бонус" }
+    ];
+
+    categories.forEach(opt => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 transition flex items-center gap-2 cursor-pointer shadow-sm";
-      btn.innerHTML = `<span>${opt.icon}</span><span class="font-bold text-gray-200">${opt.label}</span>`;
-      btn.onclick = () => {
-        if (opt.next) window.renderDeskWizardNode(opt.next);
-        else if (opt.action && typeof window.crmRunSmartAction === "function") window.crmRunSmartAction(opt.action);
-      };
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex flex-col gap-1 cursor-pointer shadow-sm group";
+      btn.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-slate-200 group-hover:text-amber-300 transition">${opt.label}</span>
+          <span class="text-xs text-slate-500 font-mono">→</span>
+        </div>
+        <div class="text-[10px] text-slate-400">${opt.desc}</div>
+      `;
+      btn.onclick = () => window.renderDeskWizardNode(opt.key);
       container.appendChild(btn);
     });
+    return;
+  }
+
+  // =========================================================================
+  // НАВИГАЦИЯ НАЗАД
+  // =========================================================================
+  backBtn?.classList.remove("hidden");
+  if (nodeKey === "manual_wish_form" || nodeKey === "cases_recent") {
+    backBtn.onclick = () => window.renderDeskWizardNode("drops_step1");
+  } else if (nodeKey === "finances_step2") {
+    backBtn.onclick = () => window.renderDeskWizardNode("finances_step1");
   } else {
-    backBtn?.classList.remove("hidden");
     backBtn.onclick = () => window.renderDeskWizardNode("root");
-    if (titleEl) titleEl.innerText = "🔍 Выбор данных из БД (Шаг 2)";
+  }
+
+  // =========================================================================
+  // ВЕТКА A: ПРОБЛЕМЫ С МОНЕТАМИ И 1С LEDGER
+  // =========================================================================
+  if (nodeKey === "finances_step1") {
+    if (titleEl) titleEl.innerText = "🪙 Сверка 1C Ledger (Шаг 2)";
+
+    const auditList = Array.isArray(userRecord.audit) ? userRecord.audit : (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_audit_events`, window.readStorage("katya_master_audit_events", [])) : []);
+    const recent = auditList.slice(0, 5);
 
     const desc = document.createElement("div");
-    desc.className = "text-[11px] text-amber-300 font-bold mb-1.5";
-    desc.innerText = nodeKey === "coins_branch" ? "Выберите транзакцию из 1С Ledger:" : "Выберите кейс или выигрыш:";
+    desc.className = "text-[11px] text-amber-300 font-bold mb-1";
+    desc.innerText = "Последние 5 проводок по балансу игрока:";
     container.appendChild(desc);
 
-    const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-    const userRecord = window.currentCloudData?.[targetUser] || {};
-    const dataList = nodeKey === "coins_branch"
-      ? (userRecord.audit || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_audit_events`, window.readStorage("katya_master_audit_events", [])) : []))
-      : (userRecord.caseHistory || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_case_history`, window.readStorage("katya_case_history", [])) : []));
+    if (recent.length === 0) {
+      container.innerHTML += `<div class="text-xs text-slate-500 py-3 text-center">Записей проводок в 1С пока нет.</div>`;
+    } else {
+      const listDiv = document.createElement("div");
+      listDiv.className = "flex flex-col gap-1.5 mb-3";
 
-    if (dataList.length === 0) {
-      container.innerHTML += `<div class="text-xs text-gray-500 py-4">Записей в базе данных не найдено.</div>`;
+      recent.forEach((item, idx) => {
+        const itemBtn = document.createElement("button");
+        itemBtn.type = "button";
+        itemBtn.className = "w-full text-left p-2 rounded-lg bg-[#141624] hover:bg-[#1d2035] border border-white/5 transition flex items-center justify-between text-xs cursor-pointer";
+        const sign = item.coinsChange > 0 ? `+${item.coinsChange}` : (item.coinsChange ? String(item.coinsChange) : "");
+        const signColor = item.coinsChange > 0 ? "text-emerald-400" : (item.coinsChange < 0 ? "text-rose-400" : "text-slate-400");
+
+        itemBtn.innerHTML = `
+          <div class="truncate pr-2">
+            <span class="mr-1">${item.icon || "📄"}</span>
+            <span class="font-medium text-slate-200">${escapeFn(item.text || "Проводка")}</span>
+            <div class="text-[9px] text-slate-500 font-mono mt-0.5">${escapeFn(item.date || "")} ${escapeFn(item.time || "")}</div>
+          </div>
+          ${sign ? `<span class="font-mono font-bold text-[11px] ${signColor} shrink-0">${sign}🪙</span>` : ""}
+        `;
+        itemBtn.onclick = () => {
+          const input = document.getElementById("deskChatInput");
+          if (input) {
+            input.value = `Проверил проводку «${item.text}» (${item.date} ${item.time}). Списание проведено согласно механикам игры ✨`;
+            input.focus();
+          }
+        };
+        listDiv.appendChild(itemBtn);
+      });
+      container.appendChild(listDiv);
+    }
+
+    // Блок быстрых компенсаций в 1 клик
+    const compHeader = document.createElement("div");
+    compHeader.className = "text-[11px] text-slate-300 font-bold mb-1.5 flex items-center gap-1";
+    compHeader.innerHTML = `<span>⚡</span><span>Быстрая компенсация оператора:</span>`;
+    container.appendChild(compHeader);
+
+    const compGrid = document.createElement("div");
+    compGrid.className = "grid grid-cols-3 gap-1.5 mb-2";
+
+    [
+      { amount: 25, label: "+25 🪙", reason: "Сбой начисления" },
+      { amount: 50, label: "+50 🪙", reason: "Ошибка списания" },
+      { amount: 100, label: "+100 🪙", reason: "Критический сбой" }
+    ].forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "py-2 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 font-bold text-xs active:scale-95 transition cursor-pointer text-center";
+      b.innerText = c.label;
+      b.title = c.reason;
+      b.onclick = () => window.grantSupportCompensationCoins(c.amount, c.reason);
+      compGrid.appendChild(b);
+    });
+    container.appendChild(compGrid);
+
+    // Кнопка вежливого объяснения
+    const explainBtn = document.createElement("button");
+    explainBtn.type = "button";
+    explainBtn.className = "w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-medium active:scale-95 transition cursor-pointer text-left flex items-center gap-2";
+    explainBtn.innerHTML = `<span>💬</span><span>Списание корректно (отправить в чат)</span>`;
+    explainBtn.onclick = () => {
+      const input = document.getElementById("deskChatInput");
+      if (input) {
+        input.value = "Привет! Проверил все последние проводки в 1C Ledger. Списания прошли строго в рамках игровых правил, баланс актуален и корректен ✨";
+        input.focus();
+      }
+    };
+    container.appendChild(explainBtn);
+    return;
+  }
+
+  // =========================================================================
+  // ВЕТКА B: КЕЙСЫ, РУЛЕТКА И КУПОНЫ ЖЕЛАНИЙ
+  // =========================================================================
+  if (nodeKey === "drops_step1") {
+    if (titleEl) titleEl.innerText = "🎁 Кейсы и купоны (Шаг 2)";
+
+    const wishes = Array.isArray(userRecord.wishes) ? userRecord.wishes : [];
+    const activeWishes = wishes.filter(w => w.status === "active" && !w.claimed);
+    const caseDrops = Array.isArray(userRecord.caseHistory) ? userRecord.caseHistory : [];
+
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "p-2.5 rounded-xl bg-[#141624] border border-white/5 flex justify-between items-center text-xs mb-3";
+    statsDiv.innerHTML = `
+      <div>
+        <span class="text-slate-400 block text-[10px]">Активных купонов:</span>
+        <b class="text-amber-300 font-mono text-sm">${activeWishes.length} шт</b>
+      </div>
+      <div>
+        <span class="text-slate-400 block text-[10px]">Кейсов открыто:</span>
+        <b class="text-indigo-300 font-mono text-sm">${caseDrops.length} шт</b>
+      </div>
+    `;
+    container.appendChild(statsDiv);
+
+    // Действия
+    const actions = [
+      {
+        icon: "🎁",
+        title: "Выдать купон желания вручную",
+        desc: "Создать купон #WISH-MANUAL с гарантированным начислением",
+        onClick: () => window.renderDeskWizardNode("manual_wish_form")
+      },
+      {
+        icon: "🎰",
+        title: "Подарить спин рулетки (+25 🪙)",
+        desc: "Компенсировать стоимость вращения рулетки удачи",
+        onClick: () => window.grantSupportCompensationCoins(25, "Компенсация спина рулетки")
+      },
+      {
+        icon: "📦",
+        title: "Компенсация открытия кейса (+50 🪙)",
+        desc: "Возврат стоимости кейса при неудачной анимации",
+        onClick: () => window.grantSupportCompensationCoins(50, "Компенсация открытия кейса")
+      },
+      {
+        icon: "📜",
+        title: "История открытий кейсов",
+        desc: "Посмотреть список выпавших предметов",
+        onClick: () => window.renderDeskWizardNode("cases_recent")
+      }
+    ];
+
+    actions.forEach(a => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2";
+      btn.innerHTML = `
+        <span class="text-base shrink-0">${a.icon}</span>
+        <div>
+          <div class="font-bold text-xs text-slate-200">${a.title}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${a.desc}</div>
+        </div>
+      `;
+      btn.onclick = a.onClick;
+      container.appendChild(btn);
+    });
+    return;
+  }
+
+  // =========================================================================
+  // МИНИ-ФОРМА ВЫДАЧИ КУПОНА ЖЕЛАНИЯ
+  // =========================================================================
+  if (nodeKey === "manual_wish_form") {
+    if (titleEl) titleEl.innerText = "🎁 Выдача купона желания";
+
+    const desc = document.createElement("div");
+    desc.className = "text-[11px] text-amber-300 font-bold mb-2";
+    desc.innerText = "Выберите готовый пресет или введите текст:";
+    container.appendChild(desc);
+
+    const presets = [
+      { title: "☕ Вкусный кофе / Десерт", cat: "small" },
+      { title: "💆‍♀️ Массаж / Релакс-вечер", cat: "medium" },
+      { title: "🍕 Киновечер с пиццей", cat: "medium" },
+      { title: "🍷 Романтический ужин", cat: "large" },
+      { title: "✨ Спонтанное желание", cat: "special" }
+    ];
+
+    const presetWrap = document.createElement("div");
+    presetWrap.className = "flex flex-wrap gap-1.5 mb-3";
+    presets.forEach(p => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] text-slate-200 transition active:scale-95 cursor-pointer";
+      chip.innerText = p.title;
+      chip.onclick = () => {
+        const inp = document.getElementById("manualWishInput");
+        const sel = document.getElementById("manualWishCatSelect");
+        if (inp) inp.value = p.title;
+        if (sel) sel.value = p.cat;
+      };
+      presetWrap.appendChild(chip);
+    });
+    container.appendChild(presetWrap);
+
+    const formWrap = document.createElement("div");
+    formWrap.className = "flex flex-col gap-2";
+    formWrap.innerHTML = `
+      <input type="text" id="manualWishInput" placeholder="Название желания..." class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400 transition" />
+      <select id="manualWishCatSelect" class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none cursor-pointer">
+        <option value="small">Категория Small (~400 ₽: кофе, вкусняшка)</option>
+        <option value="medium" selected>Категория Medium (~1 200 ₽: доставка, кино)</option>
+        <option value="large">Категория Large (~2 500 ₽: свидание, ресторан)</option>
+        <option value="special">Категория Special (~3 500 ₽: поездка, мечта)</option>
+      </select>
+      <button type="button" id="btnSubmitManualWish" class="py-2.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer text-center mt-1">
+        🎁 Отправить купон игроку
+      </button>
+    `;
+    container.appendChild(formWrap);
+
+    setTimeout(() => {
+      document.getElementById("btnSubmitManualWish")?.addEventListener("click", async () => {
+        const inp = document.getElementById("manualWishInput");
+        const sel = document.getElementById("manualWishCatSelect");
+        const title = inp ? inp.value.trim() : "";
+        const cat = sel ? sel.value : "medium";
+        if (!title) {
+          alert("Пожалуйста, введите название купона!");
+          return;
+        }
+        await window.grantManualWishCoupon(title, cat);
+        window.renderDeskWizardNode("drops_step1");
+      });
+    }, 50);
+    return;
+  }
+
+  // =========================================================================
+  // ИСТОРИЯ КЕЙСОВ
+  // =========================================================================
+  if (nodeKey === "cases_recent") {
+    if (titleEl) titleEl.innerText = "📦 Последние открытия кейсов";
+    const caseDrops = Array.isArray(userRecord.caseHistory) ? userRecord.caseHistory : [];
+    const recentCases = caseDrops.slice(0, 6);
+
+    if (recentCases.length === 0) {
+      container.innerHTML = `<div class="text-xs text-slate-500 py-6 text-center">Игрок еще не открывал кейсы.</div>`;
       return;
     }
 
-    const escapeFn = getEscapeHtml();
-    dataList.slice().reverse().slice(0, 8).forEach(item => {
+    recentCases.forEach(drop => {
+      const card = document.createElement("div");
+      card.className = "p-2 rounded-xl bg-[#141624] border border-white/5 flex items-center justify-between text-xs mb-1.5";
+      card.innerHTML = `
+        <div class="truncate pr-2">
+          <span class="font-bold text-slate-200">${escapeFn(drop.name || drop.item || "Предмет")}</span>
+          <div class="text-[9px] text-slate-500 font-mono">${escapeFn(drop.time || drop.date || "")}</div>
+        </div>
+        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">${escapeFn(drop.rarity || "Обычный")}</span>
+      `;
+      container.appendChild(card);
+    });
+
+    const compBtn = document.createElement("button");
+    compBtn.type = "button";
+    compBtn.className = "w-full py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-bold text-xs mt-2 transition cursor-pointer active:scale-95";
+    compBtn.innerText = "🪙 Компенсировать открытие кейса (+50 🪙)";
+    compBtn.onclick = () => window.grantSupportCompensationCoins(50, "Компенсация открытия кейса");
+    container.appendChild(compBtn);
+    return;
+  }
+
+  // =========================================================================
+  // ВЕТКА C: ТЕХНИЧЕСКИЙ СБОЙ И ПИТОМЕЦ
+  // =========================================================================
+  if (nodeKey === "tech_step1") {
+    if (titleEl) titleEl.innerText = "🛠️ Диагностика питомца и системы";
+
+    const diagHeader = document.createElement("div");
+    diagHeader.className = "text-[11px] text-amber-300 font-bold mb-2";
+    diagHeader.innerText = "Экспресс-диагностика состояния Зефирки:";
+    container.appendChild(diagHeader);
+
+    const statsGrid = document.createElement("div");
+    statsGrid.className = "grid grid-cols-2 gap-2 mb-3";
+
+    const items = [
+      { label: "Сытость", val: pet.hunger ?? 0, icon: "🍗", col: "text-amber-300" },
+      { label: "Энергия", val: pet.energy ?? 0, icon: "⚡", col: "text-indigo-300" },
+      { label: "Счастье", val: pet.happy ?? 0, icon: "💖", col: "text-pink-300" },
+      { label: "Чистота", val: pet.clean ?? 0, icon: "🧼", col: "text-cyan-300" }
+    ];
+
+    items.forEach(st => {
+      const card = document.createElement("div");
+      card.className = "p-2 rounded-lg bg-[#141624] border border-white/5 flex items-center justify-between";
+      card.innerHTML = `
+        <span class="text-xs text-slate-300 flex items-center gap-1">
+          <span>${st.icon}</span>
+          <span>${st.label}</span>
+        </span>
+        <span class="font-mono font-bold text-xs ${st.col}">${st.val}%</span>
+      `;
+      statsGrid.appendChild(card);
+    });
+    container.appendChild(statsGrid);
+
+    // Действия техподдержки
+    const actions = [
+      {
+        icon: "🐾",
+        title: "Восстановить питомца на 100% (Забота поддержки)",
+        desc: "Выставить сытость, энергию, счастье и чистоту на максимум",
+        btnClass: "bg-pink-500/15 hover:bg-pink-500/25 border-pink-500/30 text-pink-300",
+        onClick: () => window.restorePetStatsSupport()
+      },
+      {
+        icon: "🌐",
+        title: "Принудительный Cloud Sync",
+        desc: "Перезаписать состояние в облако и снять блокировки",
+        btnClass: "bg-indigo-500/15 hover:bg-indigo-500/25 border-indigo-500/30 text-indigo-300",
+        onClick: () => window.crmRunSmartAction("smart_force_sync")
+      },
+      {
+        icon: "🚀",
+        title: "Эскалировать баг во 2-ю линию (Канбан)",
+        desc: "Передать тикет Алексею на исправление в коде",
+        btnClass: "bg-rose-500/15 hover:bg-rose-500/25 border-rose-500/30 text-rose-300",
+        onClick: () => window.crmEscalateToDev()
+      }
+    ];
+
+    actions.forEach(act => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "w-full text-left p-2 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-amber-500/30 transition flex flex-col gap-0.5 cursor-pointer";
+      btn.className = `w-full text-left p-2.5 rounded-xl border ${act.btnClass} transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2 active:scale-95`;
       btn.innerHTML = `
-        <div class="font-bold text-amber-300 text-[11px] truncate">${escapeFn(item.text || item.name || "")}</div>
-        <div class="text-[9px] text-gray-400 font-mono">${escapeFn(item.date || item.time || "")}</div>
+        <span class="text-base shrink-0">${act.icon}</span>
+        <div>
+          <div class="font-bold text-xs">${act.title}</div>
+          <div class="text-[10px] opacity-80 mt-0.5">${act.desc}</div>
+        </div>
       `;
-      btn.onclick = () => {
+      btn.onclick = act.onClick;
+      container.appendChild(btn);
+    });
+    return;
+  }
+
+  // =========================================================================
+  // ВЕТКА D: УЮТ И ТЁПЛЫЕ ПОЖЕЛАНИЯ
+  // =========================================================================
+  if (nodeKey === "love_step1") {
+    if (titleEl) titleEl.innerText = "❤️ Уют и тёплые пожелания";
+
+    const desc = document.createElement("div");
+    desc.className = "text-[11px] text-pink-300 font-bold mb-1.5";
+    desc.innerText = "Искренние послания от Алексея для поднятия настроения:";
+    container.appendChild(desc);
+
+    const warmMessages = [
+      { text: "Ты самая лучшая, улыбнись! Люблю тебя ❤️", bonus: 20, icon: "💖" },
+      { text: "Отвлекись на минутку и выпей чашечку ароматного чая ☕", bonus: 20, icon: "🍵" },
+      { text: "Отправляю лучи бесконечного тепла и самых мягких обнимашек 🐱", bonus: 20, icon: "🐾" },
+      { text: "Зефирка мурлычет и передаёт, что очень соскучилась! ✨", bonus: 20, icon: "⭐" }
+    ];
+
+    warmMessages.forEach(wm => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "w-full text-left p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 transition flex items-start gap-2.5 cursor-pointer active:scale-95 mb-2 group";
+      card.innerHTML = `
+        <span class="text-base shrink-0">${wm.icon}</span>
+        <div class="flex-1">
+          <div class="text-xs font-semibold text-slate-100 group-hover:text-pink-200 transition leading-relaxed">${escapeFn(wm.text)}</div>
+          <div class="text-[10px] text-pink-400 font-mono mt-1 font-bold">+${wm.bonus} 🪙 уютный бонус лакомства</div>
+        </div>
+      `;
+      card.onclick = async () => {
         const input = document.getElementById("deskChatInput");
         if (input) {
-          input.value = `Привет! Проверил данные по базе: «${item.text || item.name || ""}». Всё работает корректно! ✨`;
+          input.value = wm.text;
           input.focus();
         }
+        await window.grantSupportCompensationCoins(wm.bonus, "Уютный бонус любви");
       };
-      container.appendChild(btn);
+      container.appendChild(card);
     });
   }
 };
@@ -927,9 +1727,14 @@ document.getElementById("deskChatInput")?.addEventListener("keydown", (e) => {
   }
 });
 
-document.getElementById("targetPlayerSelect")?.addEventListener("change", () => {
+document.getElementById("targetPlayerSelect")?.addEventListener("change", async () => {
   if (typeof window.renderDashboard === "function") {
-    window.renderDashboard();
+    await window.renderDashboard();
+  }
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
+  if (typeof window.runComprehensiveAiEconomyAudit === "function") {
+    window.runComprehensiveAiEconomyAudit(userRecord.pet, userRecord.analytics, userRecord.audit);
   }
 });
 

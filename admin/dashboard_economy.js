@@ -20,7 +20,62 @@
  * - window.applyAiAutoFix(fixId) — точечное применение рекомендации AI-Советника
  * - window.applyAllAiFixes() — пакетное применение всех рекомендаций балансировки
  * - window.runComprehensiveAiEconomyAudit(pet, analytics, audit) — расчет метрик RTP и рисков
+ * - window.saveIrlBudgetConfig() — сохранение месячного лимита реальных рублей
+ * - window.lowerWishChancesInCloud() — экстренная заморозка дропа купонов желаний
  */
+
+const DEFAULT_IRL_BUDGET_CONFIG = {
+  monthlyBudgetRub: 5000,
+  wishCostEstimates: {
+    small: 400,
+    medium: 1200,
+    epic: 2500,
+    default: 700
+  }
+};
+
+const ECONOMY_CAPS = {
+  betSlots: { min: 10, max: 50, targetRtp: 88, rtpMin: 84, rtpMax: 92 },
+  betCrash: { min: 5, max: 30, targetRtp: 88, rtpMin: 84, rtpMax: 92 },
+  betDice: { min: 5, max: 25, targetRtp: 88, rtpMin: 84, rtpMax: 92 },
+  scratchTrio: { min: 15, max: 60, targetRtp: 88, rtpMin: 84, rtpMax: 92 },
+  caseCostStandard: { min: 50, max: 120, targetRtp: 78, rtpMin: 75, rtpMax: 82 },
+  caseCostPremium: { min: 120, max: 250, targetRtp: 78, rtpMin: 75, rtpMax: 82 },
+  caseCostBlack: { min: 250, max: 500, targetRtp: 78, rtpMin: 75, rtpMax: 82 },
+  food: { min: 5, max: 25, normMin: 8, normMax: 20 }
+};
+
+window.DEFAULT_IRL_BUDGET_CONFIG = DEFAULT_IRL_BUDGET_CONFIG;
+window.ECONOMY_CAPS = ECONOMY_CAPS;
+
+function estimateWishRubCost(wish, estimates) {
+  const est = estimates || DEFAULT_IRL_BUDGET_CONFIG.wishCostEstimates;
+  if (!wish) return est.default || 700;
+  if (wish.rubCost && typeof wish.rubCost === "number") return wish.rubCost;
+
+  const text = `${wish.title || ""} ${wish.name || ""} ${wish.desc || ""} ${wish.category || ""}`.toLowerCase();
+  
+  if (text.includes("бокс") || text.includes("подарок") || text.includes("свидание") || text.includes("эпик") || text.includes("супер")) {
+    return est.epic || 2500;
+  }
+  if (text.includes("суши") || text.includes("кино") || text.includes("доставка") || text.includes("пицца") || text.includes("торт") || text.includes("ужин") || text.includes("кавер") || text.includes("трек")) {
+    return est.medium || 1200;
+  }
+  if (text.includes("кофе") || text.includes("десерт") || text.includes("вкусняшка") || text.includes("прогулк") || text.includes("чай") || text.includes("сладост")) {
+    return est.small || 400;
+  }
+  return est.default || 700;
+}
+window.estimateWishRubCost = estimateWishRubCost;
+
+function calculateBoundedAdjustment(currentVal, idealVal, minCap, maxCap, maxStepPercent = 0.15) {
+  const diff = idealVal - currentVal;
+  const maxStep = currentVal * maxStepPercent;
+  const clampedStep = Math.max(-maxStep, Math.min(maxStep, diff));
+  let newVal = Math.round(currentVal + clampedStep);
+  newVal = Math.max(minCap, Math.min(maxCap, newVal));
+  return newVal;
+}
 
 const DEFAULT_ECONOMY = {
   caseCostStandard: 80,
@@ -569,6 +624,82 @@ window.saveEconomyConfig = async function () {
   }
 };
 
+window.saveIrlBudgetConfig = async function () {
+  const inp = document.getElementById("irlMonthlyBudgetInput");
+  const newBudget = Math.max(500, parseFloat(inp?.value) || 5000);
+
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData.irlBudgetConfig) {
+    window.currentCloudData.irlBudgetConfig = Object.assign({}, DEFAULT_IRL_BUDGET_CONFIG);
+  }
+  window.currentCloudData.irlBudgetConfig.monthlyBudgetRub = newBudget;
+
+  const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData[sel]) window.currentCloudData[sel] = {};
+  if (!Array.isArray(window.currentCloudData[sel].audit)) window.currentCloudData[sel].audit = [];
+  window.currentCloudData[sel].audit.push({
+    text: `[IRL GUARD] Обновил месячный бюджет реальных желаний: ${newBudget.toLocaleString("ru-RU")} ₽`,
+    icon: "💳",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU"),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+  alert(`Месячный лимит расходов установлен: ${newBudget.toLocaleString("ru-RU")} ₽`);
+  if (typeof window.runComprehensiveAiEconomyAudit === "function") {
+    window.runComprehensiveAiEconomyAudit();
+  }
+};
+
+window.lowerWishChancesInCloud = async function () {
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData.allChances) {
+    window.currentCloudData.allChances = Object.assign({}, FALLBACK_ODDS_DATABASE);
+  }
+  const chances = window.currentCloudData.allChances;
+
+  let modified = false;
+  if (Array.isArray(chances.case_blk)) {
+    chances.case_blk.forEach(item => {
+      if (item.id === "blk_wish_coupon" || item.id === "blk_super_box") {
+        item.chance = Math.min(item.chance, 0.5);
+        modified = true;
+      }
+    });
+  }
+  if (Array.isArray(chances.case_prem)) {
+    chances.case_prem.forEach(item => {
+      if (item.id === "prem_coffee" || item.id === "prem_cinema") {
+        item.chance = Math.min(item.chance, 1.0);
+        modified = true;
+      }
+    });
+  }
+
+  if (modified) {
+    const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
+    if (!window.currentCloudData[sel]) window.currentCloudData[sel] = {};
+    if (!Array.isArray(window.currentCloudData[sel].audit)) window.currentCloudData[sel].audit = [];
+    window.currentCloudData[sel].audit.push({
+      text: `[IRL GUARD] Дроп реальных желаний снижен до минимума (< 1%) из-за лимита бюджета`,
+      icon: "🛑",
+      date: new Date().toLocaleDateString("ru-RU"),
+      time: new Date().toLocaleTimeString("ru-RU"),
+      timestamp: Date.now()
+    });
+    if (typeof window.saveCloud === "function") {
+      await window.saveCloud();
+    }
+    alert("Дроп купонов желаний заморожен и снижен до минимума (< 1%)!");
+    if (typeof window.runComprehensiveAiEconomyAudit === "function") {
+      window.runComprehensiveAiEconomyAudit();
+    }
+  }
+};
+
 window.generatedAdvisorEdits = [];
 
 window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
@@ -580,12 +711,89 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
 
   const eco = Object.assign({}, DEFAULT_ECONOMY, window.currentCloudData?.economyConfig || {});
   const chances = window.currentCloudData?.allChances || {};
+  const irlConfig = Object.assign({}, DEFAULT_IRL_BUDGET_CONFIG, window.currentCloudData?.irlBudgetConfig || {});
+  const monthlyBudgetRub = Math.max(500, parseFloat(irlConfig.monthlyBudgetRub) || 5000);
 
   window.generatedAdvisorEdits = [];
   let riskScore = 8;
   let breakdownReports = [];
 
-  // АУДИТ 1: СЛОТЫ 777
+  // МОДУЛЬ: IRL WALLET GUARD
+  const wishesList = userRecord.wishes || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_wishes`, null) || window.readStorage("katya_master_wishes", []) : []) || [];
+  const activeWishes = wishesList.filter(w => w.status !== "used");
+  let activeWishesRub = 0;
+  activeWishes.forEach(w => {
+    activeWishesRub += estimateWishRubCost(w, irlConfig.wishCostEstimates);
+  });
+  const burnRatePercent = Math.round((activeWishesRub / monthlyBudgetRub) * 100);
+  const isWishLimitReached = burnRatePercent >= 75;
+
+  // Обновление UI Финансового Щита
+  const irlInput = document.getElementById("irlMonthlyBudgetInput");
+  if (irlInput && !irlInput.matches(":focus")) irlInput.value = monthlyBudgetRub;
+
+  const irlSpentEl = document.getElementById("irlBudgetSpentText");
+  if (irlSpentEl) irlSpentEl.innerText = `${activeWishesRub.toLocaleString("ru-RU")} ₽ / ${monthlyBudgetRub.toLocaleString("ru-RU")} ₽`;
+
+  const irlCountEl = document.getElementById("irlActiveWishesCount");
+  if (irlCountEl) irlCountEl.innerText = `${activeWishes.length} шт (${activeWishesRub.toLocaleString("ru-RU")} ₽)`;
+
+  const irlLimitLabel = document.getElementById("irlBudgetLimitLabel");
+  if (irlLimitLabel) irlLimitLabel.innerText = `Максимум: ${monthlyBudgetRub.toLocaleString("ru-RU")} ₽`;
+
+  const irlBar = document.getElementById("irlBudgetProgressBar");
+  if (irlBar) {
+    irlBar.style.width = `${Math.min(100, burnRatePercent)}%`;
+    if (burnRatePercent >= 75) {
+      irlBar.className = "h-full rounded-full transition-all duration-500 bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]";
+    } else if (burnRatePercent >= 50) {
+      irlBar.className = "h-full rounded-full transition-all duration-500 bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
+    } else {
+      irlBar.className = "h-full rounded-full transition-all duration-500 bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]";
+    }
+  }
+
+  const irlBadge = document.getElementById("irlBudgetStatusBadge");
+  if (irlBadge) {
+    if (burnRatePercent >= 75) {
+      irlBadge.innerText = `СТОП-ЛИМИТ (${burnRatePercent}%)`;
+      irlBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse";
+    } else if (burnRatePercent >= 50) {
+      irlBadge.innerText = `Нагрузка растет (${burnRatePercent}%)`;
+      irlBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30";
+    } else {
+      irlBadge.innerText = `Безопасно (${burnRatePercent}%)`;
+      irlBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+    }
+  }
+
+  const irlBannerText = document.getElementById("irlGuardBannerText");
+  if (irlBannerText) {
+    if (burnRatePercent >= 75) {
+      irlBannerText.innerHTML = `<b class="text-rose-300">ВНИМАНИЕ!</b> Нагрузка бюджета достигла <b>${burnRatePercent}%</b>: активных купонов на <b>${activeWishesRub.toLocaleString("ru-RU")} ₽</b> из <b>${monthlyBudgetRub.toLocaleString("ru-RU")} ₽</b>. Дроп реальных желаний заморожен, удешевление кейсов с желаниями заблокировано.`;
+    } else {
+      irlBannerText.innerText = `Выбитые купоны обеспечены реальными деньгами из личного бюджета. При достижении нагрузки 75% советник автоматически блокирует удешевление кейсов с желаниями и замораживает дроп купонов.`;
+    }
+  }
+
+  if (isWishLimitReached) {
+    riskScore += 35;
+    breakdownReports.push(`⚠️ Финансовая нагрузка: ${activeWishesRub.toLocaleString("ru-RU")} ₽ из ${monthlyBudgetRub.toLocaleString("ru-RU")} ₽ (${burnRatePercent}%). Дроп реальных желаний приостановлен во избежание перерасхода.`);
+    window.generatedAdvisorEdits.push({
+      key: "irl_guard_freeze",
+      isActionOnly: true,
+      title: `🛡️ IRL Wallet Guard: Заморозка дропа желаний (${burnRatePercent}% бюджета)`,
+      desc: `На руках активных купонов на ${activeWishesRub.toLocaleString("ru-RU")} ₽ из ${monthlyBudgetRub.toLocaleString("ru-RU")} ₽. Снизить шанс выпадения купонов в кейсах до минимума (< 1%) и перенаправить вероятность в редкие скины.`,
+      newVal: 0,
+      unit: "₽",
+      actionBtnText: "Заморозить дроп желаний",
+      onApply: () => {
+        window.lowerWishChancesInCloud();
+      }
+    });
+  }
+
+  // АУДИТ 1: СЛОТЫ 777 (Целевой RTP 88%, коридор 84-92%, границы [10, 50])
   const slotBet = eco.betSlots || 20;
   const slotsList = chances.slots || FALLBACK_ODDS_DATABASE.slots;
   let evSlots = 0;
@@ -594,20 +802,37 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
     evSlots += ((item.chance || 0) / 100) * (slotBet * mult);
   });
   const rtpSlots = slotBet > 0 ? Math.round((evSlots / slotBet) * 100) : 0;
+  const capsSlots = ECONOMY_CAPS.betSlots;
 
-  if (rtpSlots > 95) {
-    riskScore += 25;
-    const targetBet = Math.ceil(evSlots / 0.88 / 5) * 5;
-    breakdownReports.push(`🚨 Слоты: RTP завышен до ${rtpSlots}% (Норма 85-90%). Казино работает в убыток.`);
-    window.generatedAdvisorEdits.push({
-      key: "betSlots",
-      title: `🎰 Нормализация Слотов 777 (Текущий RTP: ${rtpSlots}%)`,
-      desc: `Повысить ставку с ${slotBet} до ${targetBet} 🪙 для фиксации целевого возврата 88%.`,
-      newVal: targetBet
-    });
+  if (rtpSlots > capsSlots.rtpMax) {
+    riskScore += 20;
+    const targetBet = calculateBoundedAdjustment(slotBet, evSlots / 0.88, capsSlots.min, capsSlots.max);
+    if (targetBet > slotBet) {
+      breakdownReports.push(`🚨 Слоты: RTP завышен до ${rtpSlots}% (Норма 84–92%). Казино работает в убыток.`);
+      window.generatedAdvisorEdits.push({
+        key: "betSlots",
+        title: `🎰 Нормализация Слотов 777 (Текущий RTP: ${rtpSlots}%)`,
+        desc: `Повысить ставку с ${slotBet} до ${targetBet} 🪙 (шаг не более +15%) для фиксации целевого возврата 88%.`,
+        newVal: targetBet
+      });
+    }
+  } else if (rtpSlots < capsSlots.rtpMin) {
+    riskScore += 10;
+    const targetBet = calculateBoundedAdjustment(slotBet, evSlots / 0.88, capsSlots.min, capsSlots.max);
+    if (targetBet < slotBet) {
+      breakdownReports.push(`⚠️ Слоты: RTP занижен до ${rtpSlots}% (Норма 84–92%). Риск оттока игрока.`);
+      window.generatedAdvisorEdits.push({
+        key: "betSlots",
+        title: `🎰 Поддержка отдачи Слотов 777 (Текущий RTP: ${rtpSlots}%)`,
+        desc: `Снизить ставку с ${slotBet} до ${targetBet} 🪙 (шаг не более -15%) для защиты от быстрого проигрыша.`,
+        newVal: targetBet
+      });
+    }
+  } else {
+    breakdownReports.push(`✅ Слоты 777: RTP ${rtpSlots}% (в коридоре нормы 84–92%). Оптимально.`);
   }
 
-  // АУДИТ 2: СКРЕТЧ-КАРТЫ
+  // АУДИТ 2: СКРЕТЧ-КАРТЫ (Целевой RTP 88%, коридор 84-92%, границы [15, 60])
   const scrCost = eco.scratchTrio || 30;
   const scrList = chances.scratch || FALLBACK_ODDS_DATABASE.scratch;
   let evScratch = 0;
@@ -616,54 +841,92 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
     evScratch += ((item.chance || 0) / 100) * (scrCost * mult);
   });
   const rtpScratch = scrCost > 0 ? Math.round((evScratch / scrCost) * 100) : 0;
+  const capsScratch = ECONOMY_CAPS.scratchTrio;
 
-  if (rtpScratch > 90) {
-    riskScore += 20;
-    const targetTicketCost = Math.ceil(evScratch / 0.80 / 5) * 5;
-    breakdownReports.push(`🎟️ Скретч-карты: RTP ${rtpScratch}%. Риск быстрого вымывания монетного фонда.`);
-    window.generatedAdvisorEdits.push({
-      key: "scratchTrio",
-      title: `🎟️ Баланс билетов Скретч (RTP: ${rtpScratch}%)`,
-      desc: `Скорректировать цену билета с ${scrCost} до ${targetTicketCost} 🪙.`,
-      newVal: targetTicketCost
-    });
+  if (rtpScratch > capsScratch.rtpMax) {
+    riskScore += 15;
+    const targetTicketCost = calculateBoundedAdjustment(scrCost, evScratch / 0.88, capsScratch.min, capsScratch.max);
+    if (targetTicketCost > scrCost) {
+      breakdownReports.push(`🚨 Скретч-карты: RTP ${rtpScratch}% (Норма 84–92%). Риск вымывания фонда.`);
+      window.generatedAdvisorEdits.push({
+        key: "scratchTrio",
+        title: `🎟️ Баланс билетов Скретч (RTP: ${rtpScratch}%)`,
+        desc: `Повысить цену билета с ${scrCost} до ${targetTicketCost} 🪙 (шаг не более +15%).`,
+        newVal: targetTicketCost
+      });
+    }
+  } else if (rtpScratch < capsScratch.rtpMin) {
+    riskScore += 8;
+    const targetTicketCost = calculateBoundedAdjustment(scrCost, evScratch / 0.88, capsScratch.min, capsScratch.max);
+    if (targetTicketCost < scrCost) {
+      breakdownReports.push(`⚠️ Скретч-карты: RTP ${rtpScratch}% (Норма 84–92%). Заниженная отдача.`);
+      window.generatedAdvisorEdits.push({
+        key: "scratchTrio",
+        title: `🎟️ Повышение отдачи Скретч (RTP: ${rtpScratch}%)`,
+        desc: `Снизить цену билета с ${scrCost} до ${targetTicketCost} 🪙 (шаг не более -15%).`,
+        newVal: targetTicketCost
+      });
+    }
+  } else {
+    breakdownReports.push(`✅ Скретч-карты: RTP ${rtpScratch}% (в коридоре нормы 84–92%). Оптимально.`);
   }
 
-  // АУДИТ 3: КЕЙСЫ
-  const auditCase = (caseKey, costVal, defKey) => {
+  // АУДИТ 3: КЕЙСЫ (Целевая окупаемость 75–82%)
+  const auditCase = (caseKey, costVal, defKey, caps) => {
     const drops = chances[caseKey] || FALLBACK_ODDS_DATABASE[caseKey] || [];
     let expectedDropValue = 0;
     drops.forEach(d => {
       expectedDropValue += ((d.chance || 0) / 100) * (d.value || 40);
     });
     const caseRtp = costVal > 0 ? Math.round((expectedDropValue / costVal) * 100) : 0;
-    if (caseRtp > 105) {
-      riskScore += 15;
-      const targetCaseCost = Math.ceil(expectedDropValue / 0.85 / 10) * 10;
-      breakdownReports.push(`📦 Кейс [${caseKey}]: Дроп окупается в среднем на ${caseRtp}% (Сверхдоходность).`);
-      window.generatedAdvisorEdits.push({
-        key: defKey,
-        title: `📦 Ребаланс цены открытия кейса [${caseKey}]`,
-        desc: `Поднять стоимость открытия с ${costVal} до ${targetCaseCost} 🪙.`,
-        newVal: targetCaseCost
-      });
+    const hasRealWishes = caseKey === "case_blk" || caseKey === "case_prem";
+
+    if (caseRtp > caps.rtpMax) {
+      riskScore += 12;
+      const targetCaseCost = calculateBoundedAdjustment(costVal, expectedDropValue / 0.78, caps.min, caps.max);
+      if (targetCaseCost > costVal) {
+        breakdownReports.push(`🚨 Кейс [${caseKey}]: Окупаемость завышена (${caseRtp}%, норма 75–82%). Сверхдоходность.`);
+        window.generatedAdvisorEdits.push({
+          key: defKey,
+          title: `📦 Ребаланс цены открытия кейса [${caseKey}]`,
+          desc: `Поднять стоимость открытия с ${costVal} до ${targetCaseCost} 🪙 (шаг не более +15%) для окупаемости 78%.`,
+          newVal: targetCaseCost
+        });
+      }
+    } else if (caseRtp < caps.rtpMin) {
+      if (hasRealWishes && isWishLimitReached) {
+        breakdownReports.push(`🔒 Кейс [${caseKey}]: Окупаемость ${caseRtp}%, но снижение цены заблокировано щитом IRL Wallet Guard (лимит бюджета желаний).`);
+      } else {
+        const targetCaseCost = calculateBoundedAdjustment(costVal, expectedDropValue / 0.78, caps.min, caps.max);
+        if (targetCaseCost < costVal) {
+          riskScore += 6;
+          breakdownReports.push(`⚠️ Кейс [${caseKey}]: Окупаемость занижена (${caseRtp}%, норма 75–82%).`);
+          window.generatedAdvisorEdits.push({
+            key: defKey,
+            title: `📦 Доступность кейса [${caseKey}]`,
+            desc: `Снизить стоимость открытия с ${costVal} до ${targetCaseCost} 🪙 (шаг не более -15%) для защиты от разочарования.`,
+            newVal: targetCaseCost
+          });
+        }
+      }
+    } else {
+      breakdownReports.push(`✅ Кейс [${caseKey}]: Окупаемость ${caseRtp}% (в коридоре нормы 75–82%). Оптимально.`);
     }
   };
 
-  auditCase("case_std", eco.caseCostStandard || 80, "caseCostStandard");
-  auditCase("case_prem", eco.caseCostPremium || 160, "caseCostPremium");
-  auditCase("case_blk", eco.caseCostBlack || 320, "caseCostBlack");
+  auditCase("case_std", eco.caseCostStandard || 80, "caseCostStandard", ECONOMY_CAPS.caseCostStandard);
+  auditCase("case_prem", eco.caseCostPremium || 160, "caseCostPremium", ECONOMY_CAPS.caseCostPremium);
+  auditCase("case_blk", eco.caseCostBlack || 320, "caseCostBlack", ECONOMY_CAPS.caseCostBlack);
 
-  // АУДИТ 4: БАЛАНС МАКРОЭКОНОМИКИ
-  const minFoodCost = 8;
-  const avgMiniGameReward = ((eco.maxRunner || 25) + (eco.maxTetris || 25) + (eco.maxFishing || 40)) / 3;
-  if (avgMiniGameReward > minFoodCost * 5) {
-    riskScore += 10;
-    breakdownReports.push(`⚠️ Гиперинфляция: За одну мини-игру питомец окупает 5+ приёмов пищи. Рекомендуется ребаланс.`);
+  // АУДИТ 4: БАЛАНС МАКРОЭКОНОМИКИ И ЕДЫ (Коридор еды 8–20 🪙)
+  const avgMiniGameReward = ((eco.maxRunner || 25) + (eco.maxTetris || 25) + (eco.maxFishing || 40) + (eco.maxMemory || 30)) / 4;
+  if (avgMiniGameReward > 20 * 2.5) {
+    riskScore += 8;
+    breakdownReports.push(`⚠️ Бытовые расходы: Средняя награда за аркады (${Math.round(avgMiniGameReward)} 🪙) превышает стоимость еды в 2.5+ раза. Рекомендуется удерживать цены еды в коридоре 8–20 🪙.`);
   }
 
   // Отображение индикаторов риска
-  riskScore = Math.min(100, riskScore);
+  riskScore = Math.min(100, Math.max(5, riskScore));
   const pBadge = document.getElementById("churnRiskPercentBadge");
   if (pBadge) {
     pBadge.innerText = `${riskScore}% (${riskScore > 50 ? "КРИТИЧЕСКИЙ РИСК" : riskScore > 25 ? "ТРЕБУЕТ ВНИМАНИЯ" : "БАЛАНС СТАБИЛЕН"})`;
@@ -674,9 +937,7 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
 
   const detEl = document.getElementById("churnRiskDetails");
   if (detEl) {
-    detEl.innerHTML = breakdownReports.length > 0 
-      ? breakdownReports.join("<br>") 
-      : `Все модули казино сбалансированы: Слоты RTP <b>${rtpSlots}%</b>, Скретч RTP <b>${rtpScratch}%</b>. Эмиссия валюты под контролем.`;
+    detEl.innerHTML = breakdownReports.join("<br>");
   }
 
   const container = document.getElementById("advisorFormList");
@@ -684,19 +945,32 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
   container.innerHTML = "";
 
   if (window.generatedAdvisorEdits.length === 0) {
-    container.innerHTML = `<div class="text-center text-emerald-400 py-8 font-semibold text-xs">✨ Текущая экономическая модель и математика казино функционируют стабильно! Отклонений не зафиксировано.</div>`;
+    container.innerHTML = `<div class="text-center text-emerald-400 py-8 font-semibold text-xs">✨ Все параметры экономики, RTP казино (84–92%) и окупаемость кейсов (75–82%) находятся в оптимальном коридоре! Отклонений не зафиксировано.</div>`;
   } else {
     window.generatedAdvisorEdits.forEach((it, idx) => {
-      container.innerHTML += `
-        <div class="bg-[#12131f] border border-white/5 p-3.5 rounded-xl flex items-center justify-between gap-3 hover:border-white/10 transition">
-          <div class="min-w-0 flex-1">
-            <div class="font-semibold text-xs text-gray-200 truncate">${it.title}</div>
-            <div class="text-[11px] text-gray-400 mt-0.5">${it.desc}</div>
-          </div>
+      let actionControl = "";
+      if (it.isActionOnly) {
+        actionControl = `
+          <button type="button" onclick="window.lowerWishChancesInCloud()" class="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-bold text-xs active:scale-95 transition cursor-pointer whitespace-nowrap shadow-sm">
+            🛑 ${it.actionBtnText || 'Заморозить дроп'}
+          </button>
+        `;
+      } else {
+        actionControl = `
           <div class="flex items-center gap-2 shrink-0">
             <input type="number" id="advInput_${idx}" value="${it.newVal}" class="w-24 bg-[#0a0a0f] border border-indigo-500/50 rounded-lg px-2.5 py-1 text-center font-mono font-bold text-amber-300 outline-none transition">
-            <span class="text-xs text-gray-400 font-mono">🪙</span>
+            <span class="text-xs text-gray-400 font-mono">${it.unit || '🪙'}</span>
           </div>
+        `;
+      }
+
+      container.innerHTML += `
+        <div class="bg-[#12131f] border border-white/5 p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/10 transition">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold text-xs text-gray-200">${it.title}</div>
+            <div class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">${it.desc}</div>
+          </div>
+          ${actionControl}
         </div>
       `;
     });
@@ -711,16 +985,25 @@ window.applyAdvisorPackage = async function () {
     window.currentCloudData.economyConfig = Object.assign({}, DEFAULT_ECONOMY);
   }
 
+  let appliedCount = 0;
   (window.generatedAdvisorEdits || []).forEach((it, idx) => {
+    if (it.isActionOnly && typeof it.onApply === "function") {
+      it.onApply();
+      appliedCount++;
+      return;
+    }
     const inp = document.getElementById(`advInput_${idx}`);
-    if (inp) window.currentCloudData.economyConfig[it.key] = parseFloat(inp.value) || it.newVal;
+    if (inp && it.key) {
+      window.currentCloudData.economyConfig[it.key] = parseFloat(inp.value) || it.newVal;
+      appliedCount++;
+    }
   });
 
   const sel = document.getElementById("targetPlayerSelect")?.value || "katya";
   if (!window.currentCloudData[sel]) window.currentCloudData[sel] = {};
   if (!Array.isArray(window.currentCloudData[sel].audit)) window.currentCloudData[sel].audit = [];
   window.currentCloudData[sel].audit.push({
-    text: `[AI-ADVISOR] Применил сбалансированный пакет экономики`,
+    text: `[AI-ADVISOR] Применил сбалансированный пакет экономики (применено: ${appliedCount} правил)`,
     icon: "🧠",
     date: new Date().toLocaleDateString("ru-RU"),
     time: new Date().toLocaleTimeString("ru-RU"),
@@ -822,6 +1105,7 @@ window.toggleWishStatus = async function (idx) {
 function initEconomyEventListeners() {
   document.getElementById("btnSaveAllChances")?.addEventListener("click", window.saveAllChances);
   document.getElementById("btnApplyAdvisorPackage")?.addEventListener("click", window.applyAdvisorPackage);
+  document.getElementById("btnSaveIrlBudget")?.addEventListener("click", window.saveIrlBudgetConfig);
 }
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initEconomyEventListeners);

@@ -196,8 +196,10 @@
         <div class="flex items-center gap-3">
           <!-- Статус синхронизации и сетевой задержки -->
           <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#131522] border border-white/5 text-[11px] font-mono text-slate-400">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            <span>JSONBin: <b class="text-emerald-400 font-medium">38ms</b></span>
+            <span id="jsonbinStatusBadge" class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>JSONBin: <b class="text-emerald-400 font-medium">Online</b></span>
+            </span>
             <span class="text-white/20">•</span>
             <span>Синхронизация: <span id="dashLastSyncTime" class="text-slate-300 font-medium">...</span></span>
             <span class="text-white/20">•</span>
@@ -513,6 +515,59 @@
         <!-- ВКЛАДКА 5: ИИ-СОВЕТНИК (RTP)                                          -->
         <!-- ===================================================================== -->
         <section id="pane_advisor" class="dashboard-pane hidden flex-col gap-5">
+          <!-- БЛОК: ФИНАНСОВЫЙ ЩИТ (IRL WALLET GUARD) -->
+          <div class="bg-[#12131f] border border-white/5 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+                  🛡️
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-bold text-slate-200">Финансовый щит (IRL Wallet Guard)</h3>
+                    <span id="irlBudgetStatusBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Безопасно (0%)</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-0.5">Ограничение бюджета на реальные подарки и свидания (лимит 5 000 ₽/мес)</p>
+                </div>
+              </div>
+
+              <!-- Форма редактирования лимита -->
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="flex items-center gap-1.5 bg-[#0a0a0f] border border-white/10 rounded-xl px-3 py-1.5 focus-within:border-amber-400/60 transition">
+                  <span class="text-xs text-slate-400">Лимит:</span>
+                  <input type="number" id="irlMonthlyBudgetInput" value="5000" min="500" step="500" class="w-20 bg-transparent text-sm font-mono font-bold text-amber-300 outline-none text-right">
+                  <span class="text-xs font-bold text-amber-400">₽</span>
+                </div>
+                <button type="button" id="btnSaveIrlBudget" onclick="window.saveIrlBudgetConfig()" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 hover:text-white font-semibold text-xs active:scale-95 transition cursor-pointer whitespace-nowrap">
+                  💾 Сохранить
+                </button>
+              </div>
+            </div>
+
+            <!-- Прогресс-бар финансовой нагрузки -->
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-slate-400">Нагрузка по активным купонам на руках: <b id="irlActiveWishesCount" class="text-slate-200 font-semibold font-mono">0 шт (0 ₽)</b></span>
+                <span id="irlBudgetSpentText" class="font-mono font-bold text-slate-200">0 ₽ / 5 000 ₽</span>
+              </div>
+              <div class="w-full h-3 bg-[#0a0a0f] rounded-full overflow-hidden border border-white/5 relative p-0.5">
+                <div id="irlBudgetProgressBar" class="h-full rounded-full transition-all duration-500 bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.4)]" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between items-center text-[10px] text-slate-400">
+                <span>0 ₽ (0%)</span>
+                <span>Порог предупреждения: 3 750 ₽ (75%)</span>
+                <span id="irlBudgetLimitLabel">Максимум: 5 000 ₽</span>
+              </div>
+            </div>
+
+            <!-- Информационный баннер защиты -->
+            <div id="irlGuardBanner" class="p-3 rounded-xl bg-white/5 border border-white/5 text-xs text-slate-300 flex items-start gap-2.5">
+              <span class="text-base shrink-0">💡</span>
+              <span id="irlGuardBannerText">Выбитые купоны обеспечены реальными деньгами из личного бюджета. При достижении нагрузки 75% советник автоматически блокирует удешевление кейсов с желаниями и замораживает дроп купонов.</span>
+            </div>
+          </div>
+
+          <!-- БЛОК: ИИ-СОВЕТНИК МАКРОБАЛАНСА -->
           <div class="bg-[#12131f] border border-white/5 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
             
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/5 pb-3">
@@ -725,7 +780,7 @@
               <input type="file" id="crmChatFileInput" accept="image/*" class="hidden" onchange="crmOnChatFileSelected(event)">
             </label>
             <input type="text" id="crmChatTextInput" placeholder="Сообщение Кате (Enter)..." class="flex-1 bg-[#141622] border border-white/10 focus:border-indigo-500 rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none min-w-0 transition">
-            <button type="button" onclick="crmSendOperatorMessage()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs active:scale-95 transition cursor-pointer shrink-0">Отправить</button>
+            <button type="button" id="btnSendCrmMsg" onclick="crmSendOperatorMessage()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs active:scale-95 transition cursor-pointer shrink-0">Отправить</button>
           </div>
         </div>
       </div>
@@ -794,9 +849,26 @@
             <div class="text-center text-xs text-slate-500 py-12">Выберите тикет для просмотра переписки</div>
           </div>
 
+          <!-- Панель быстрых ответов (Canned Responses / Smart Chips) -->
+          <div class="px-3 pt-2 pb-1.5 bg-[#0f111d] border-t border-white/5 flex items-center gap-1.5 overflow-x-auto custom-scrollbar shrink-0">
+            <span class="text-[10px] text-slate-400 font-bold shrink-0">⚡ Быстрые ответы:</span>
+            <button type="button" onclick="window.insertDeskCannedResponse('check_ok')" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white whitespace-nowrap active:scale-95 transition cursor-pointer">
+              Проверил по базе всё чисто ✨
+            </button>
+            <button type="button" onclick="window.insertDeskCannedResponse('comp_given')" class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/25 text-[11px] text-amber-300 hover:text-amber-200 whitespace-nowrap active:scale-95 transition cursor-pointer">
+              Начислил компенсацию 🪙
+            </button>
+            <button type="button" onclick="window.insertDeskCannedResponse('hotfix_deployed')" class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 text-[11px] text-indigo-300 hover:text-indigo-200 whitespace-nowrap active:scale-95 transition cursor-pointer">
+              Хотфикс выкачен, обнови страничку 🚀
+            </button>
+            <button type="button" onclick="window.insertDeskCannedResponse('pet_care')" class="px-2.5 py-1 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/25 text-[11px] text-pink-300 hover:text-pink-200 whitespace-nowrap active:scale-95 transition cursor-pointer">
+              Зефирка накормлена заботой 🐾
+            </button>
+          </div>
+
           <div class="p-3 bg-[#11131f] border-t border-white/5 flex items-center gap-2 shrink-0">
             <input type="text" id="deskChatInput" placeholder="Ответить игроку (Enter)..." class="flex-1 bg-[#141622] border border-white/10 focus:border-amber-400 rounded-lg px-3.5 py-2 text-xs text-slate-100 outline-none min-w-0 transition">
-            <button type="button" onclick="window.sendDeskMessage()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 hover:opacity-90 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer shrink-0">
+            <button type="button" id="btnSendDeskMessage" onclick="window.sendDeskMessage()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 hover:opacity-90 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer shrink-0">
               Отправить
             </button>
           </div>
@@ -858,6 +930,14 @@
       <div class="mt-4 pt-3 border-t border-white/5 flex justify-end">
         <button type="button" onclick="document.getElementById('modalTechLogsViewer').classList.add('hidden')" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-semibold">Закрыть</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТРЩИК КАРТИНОК (LIGHTBOX) -->
+  <div id="modalChatLightbox" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-3 select-none" onclick="if(event.target===this) window.closeFullImage()">
+    <div class="relative max-w-2xl max-h-[90vh] flex flex-col items-center">
+      <button type="button" onclick="window.closeFullImage()" class="absolute -top-10 right-0 w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-sm cursor-pointer transition">✕</button>
+      <img id="lightboxFullImage" src="" alt="Full view" class="max-w-full max-h-[85vh] object-contain rounded-2xl border border-white/20 shadow-2xl">
     </div>
   </div>
 

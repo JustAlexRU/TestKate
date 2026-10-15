@@ -87,7 +87,7 @@ window.renderKanbanBoard = function () {
     
     card.onclick = () => window.openBugDetailModal(item.id);
 
-    const safeText = typeof window.escapeHtml === "function" ? window.escapeHtml(item.text) : escapeHtml(item.text);
+    const safeText = typeof window.escapeHtml === "function" ? window.escapeHtml(item.text) : (item.text || "");
 
     card.innerHTML = `
       <div class="flex justify-between items-center text-[10px]">
@@ -412,20 +412,6 @@ window.saveBugDetailModal = async function () {
   }
 };
 
-function escapeHtml(str) {
-  if (typeof window.escapeHtml === "function") return window.escapeHtml(str);
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-if (typeof window.escapeHtml !== "function") {
-  window.escapeHtml = escapeHtml;
-}
-
 window.copyAiDebugPromptById = function (bugId) {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = window.currentCloudData?.[targetUser] || {};
@@ -481,7 +467,7 @@ window.viewTechLogsById = function (bugId) {
   if (!item || !item.techLogs) return;
 
   const logs = item.techLogs;
-  const safeEscape = typeof window.escapeHtml === "function" ? window.escapeHtml : escapeHtml;
+  const safeEscape = typeof window.escapeHtml === "function" ? window.escapeHtml : (str => str || "");
 
   let modal = document.getElementById("modalTechLogsViewer");
   let content = document.getElementById("techLogsContent");

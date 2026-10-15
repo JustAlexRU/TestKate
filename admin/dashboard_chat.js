@@ -5,24 +5,120 @@
  * @description
  * Зона ответственности (Single Responsibility):
  * Мессенджер оператора с игроком, хронологическая сортировка сообщений,
- * сжатие и прикрепление скриншотов через Canvas/FileReader, полноэкранный просмотр.
+ * сжатие и прикрепление скриншотов через Canvas/FileReader, полноэкранный Lightbox-просмотр,
+ * оптимистичный UI и защита от race conditions.
  *
  * @exports
  * - window.currentOpenBugId — ID текущего открытого тикета в диалоге разработчика
  * - window.crmChatActiveBase64 — Base64-данные прикрепленного скриншота
  * - window.crmOnChatFileSelected(event) — загрузка и сжатие выбранного изображения
  * - window.crmClearChatImage() — сброс прикрепленного скриншота и превью
- * - window.openFullImage(src) — открытие скриншота в модальном окне во весь экран
+ * - window.openFullImage(src) — открытие скриншота в модальном окне LightBox
+ * - window.closeFullImage() — закрытие модального окна LightBox
+ * - window.scrollChatToBottom(container, smooth) — надежный автоскролл ленты вниз
+ * - window.normalizeAndSortMessages(rawMsgs, fallbackText, fallbackDate) — дедупликация и хронологическая сортировка
  * - window.renderCrmChatTimeline(bug) — хронологический рендер сообщений чата тикета
- * - window.crmSendOperatorMessage() — отправка ответа оператора с синхронизацией в Cloud
+ * - window.crmSendOperatorMessage() — оптимистичная отправка ответа оператора с защитой от спама
  */
 
 if (window.currentOpenBugId === undefined) {
   window.currentOpenBugId = null;
 }
 window.crmChatActiveBase64 = null;
+window.isChatSendingMessage = false;
 
-// Утилиты работы со скриншотами и полноэкранным просмотром
+/**
+ * Надежный автоскролл к последнему сообщению в ленте чата
+ */
+function scrollChatToBottom(container, smooth = true) {
+  if (!container) return;
+  const doScroll = () => {
+    container.scrollTop = container.scrollHeight;
+    if (container.lastElementChild) {
+      container.lastElementChild.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
+    }
+  };
+
+  doScroll();
+  requestAnimationFrame(doScroll);
+  setTimeout(doScroll, 80);
+  setTimeout(doScroll, 200);
+
+  // Если в сообщениях есть картинки, докручиваем после их загрузки
+  const imgs = container.querySelectorAll("img");
+  imgs.forEach(img => {
+    if (!img.complete) {
+      img.addEventListener("load", doScroll, { once: true });
+      img.addEventListener("error", doScroll, { once: true });
+    }
+  });
+}
+window.scrollChatToBottom = scrollChatToBottom;
+
+/**
+ * Дедупликация по msg.id и строгая хронологическая сортировка сообщений (старые сверху, новые снизу)
+ */
+function normalizeAndSortMessages(rawMsgs, fallbackText, fallbackDate) {
+  const map = new Map();
+
+  // Если массив пуст, но есть изначальный текст тикета
+  if ((!Array.isArray(rawMsgs) || rawMsgs.length === 0) && fallbackText) {
+    const initId = "m_init";
+    map.set(initId, {
+      id: initId,
+      author: "katya",
+      text: fallbackText,
+      time: fallbackDate ? (fallbackDate.split(",")[1] || "").trim() : "",
+      timestamp: fallbackDate ? (Date.parse(fallbackDate) || 0) : 0,
+      sending: false,
+      system: false
+    });
+  }
+
+  if (Array.isArray(rawMsgs)) {
+    rawMsgs.forEach(m => {
+      if (!m) return;
+      const id = m.id || ("msg_" + Math.random().toString(36).substring(2, 9));
+      let ts = m.timestamp;
+      if (!ts) {
+        const match = id.match(/\d{10,}/);
+        if (match) ts = parseInt(match[0], 10);
+        else if (m.time) {
+          const parsed = Date.parse((fallbackDate ? fallbackDate.split(",")[0] : "") + " " + m.time);
+          ts = !isNaN(parsed) ? parsed : Date.now();
+        } else {
+          ts = Date.now();
+        }
+      }
+
+      const isSys = m.author === "system" ||
+        (typeof m.text === "string" && (
+          m.text.startsWith("⚡") ||
+          m.text.startsWith("🎁") ||
+          m.text.startsWith("🐾") ||
+          m.text.startsWith("📋") ||
+          m.text.startsWith("[SUPPORT") ||
+          m.text.startsWith("⭐")
+        ));
+
+      map.set(id, {
+        id: id,
+        author: isSys ? "system" : (m.author || "katya"),
+        text: m.text || "",
+        image: m.image || null,
+        time: m.time || "",
+        timestamp: ts,
+        sending: !!m.sending,
+        system: isSys
+      });
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+}
+window.normalizeAndSortMessages = normalizeAndSortMessages;
+
+// Утилиты работы со скриншотами и полноэкранным просмотром (Lightbox)
 window.crmOnChatFileSelected = function (e) {
   const file = e?.target?.files?.[0];
   if (!file) return;
@@ -63,155 +159,221 @@ window.crmClearChatImage = function () {
   document.getElementById("crmChatImgPreviewBox")?.classList.add("hidden");
 };
 
+/**
+ * Открытие изображения во встроенном модальном окне Lightbox
+ */
 window.openFullImage = function (src) {
   if (!src) return;
-  window.open(src, "_blank");
+  const modal = document.getElementById("modalChatLightbox");
+  const img = document.getElementById("lightboxFullImage");
+  if (modal && img) {
+    img.src = src;
+    modal.classList.remove("hidden");
+  } else {
+    window.open(src, "_blank");
+  }
 };
 
-// Рендеринг ленты сообщений
+/**
+ * Закрытие модального окна Lightbox
+ */
+window.closeFullImage = function () {
+  const modal = document.getElementById("modalChatLightbox");
+  if (modal) modal.classList.add("hidden");
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    window.closeFullImage();
+  }
+});
+
+/**
+ * Хронологический рендеринг ленты сообщений (Kanban Bug Detail Dialog)
+ */
 function renderCrmChatTimeline(bug) {
   const area = document.getElementById("crmChatMessagesArea");
-  if (!area) return;
+  if (!area || !bug) return;
   area.innerHTML = "";
 
-  const msgs = Array.isArray(bug.messages) ? bug.messages : [];
-  if (msgs.length === 0 && bug.text) {
-    msgs.push({
-      id: "m_init",
-      author: "katya",
-      text: bug.text,
-      image: bug.image || null,
-      time: bug.date ? bug.date.split(",")[1] || "" : "",
-      timestamp: bug.date ? Date.parse(bug.date) || 0 : 0
-    });
-  }
+  const escapeFn = typeof window.escapeHtml === "function" ? window.escapeHtml : (str => str || "");
+  const sortedMsgs = normalizeAndSortMessages(bug.messages, bug.text, bug.date);
 
-  msgs.forEach(msg => {
+  sortedMsgs.forEach(msg => {
+    // 1. Системные события (центрированные бейджи)
+    if (msg.system) {
+      const sysBubble = document.createElement("div");
+      sysBubble.className = "w-full flex justify-center my-1 select-text";
+      sysBubble.innerHTML = `
+        <div class="px-3 py-1 rounded-full text-[10px] font-mono bg-white/5 border border-white/10 text-slate-400 flex items-center gap-1.5 shadow-sm max-w-[85%] text-center leading-normal">
+          <span>${escapeFn(msg.text)}</span>
+          ${msg.time ? `<span class="opacity-50 text-[9px]">• ${escapeFn(msg.time)}</span>` : ""}
+        </div>
+      `;
+      area.appendChild(sysBubble);
+      return;
+    }
+
+    // 2. Пользовательские сообщения
     const isAlex = msg.author === "alex";
     const bubble = document.createElement("div");
     bubble.className = `flex flex-col ${isAlex ? "items-end" : "items-start"} gap-1 w-full`;
 
-    const safeText = typeof window.escapeHtml === "function" ? window.escapeHtml(msg.text) : (msg.text || "");
-    const safeTime = msg.time ? "• " + (typeof window.escapeHtml === "function" ? window.escapeHtml(msg.time) : msg.time) : "";
+    const safeText = escapeFn(msg.text);
+    const safeTime = msg.time ? escapeFn(msg.time) : "";
     const authorLabel = isAlex ? "Алексей (Вы)" : "Катя";
+    const tickStatus = msg.sending ? "⏳" : "✓✓";
 
     const card = document.createElement("div");
-    card.className = `max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs`;
+    card.className = `max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs flex flex-col gap-1`;
 
     card.innerHTML = `
-      <div class="text-[9px] font-mono opacity-60 mb-0.5">${authorLabel} ${safeTime}</div>
-      <div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>
+      <div class="text-[9px] font-mono opacity-60 mb-0.5">${authorLabel}</div>
+      ${safeText ? `<div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>` : ""}
     `;
 
+    // Медиа-вложение
     if (msg.image) {
-      const imgEl = document.createElement("img");
-      imgEl.src = msg.image;
-      imgEl.className = "max-h-36 rounded-xl border border-white/10 cursor-pointer object-contain mt-1";
-      imgEl.onclick = () => {
-        if (typeof window.openFullImage === "function") {
-          window.openFullImage(msg.image);
-        }
-      };
-      card.appendChild(imgEl);
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "mt-1 rounded-xl overflow-hidden border border-black/10 max-h-48 cursor-pointer relative group";
+      imgWrap.innerHTML = `
+        <img src="${msg.image}" alt="Скриншот" class="w-full h-full max-h-48 object-cover rounded-xl transition hover:opacity-95 active:scale-[0.99]" />
+        <span class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-sm opacity-0 group-hover:opacity-100 transition">🔍 Увеличить</span>
+      `;
+      imgWrap.onclick = () => window.openFullImage(msg.image);
+      card.appendChild(imgWrap);
     }
+
+    // Нижний бар баббла: время и статус доставки
+    const footer = document.createElement("div");
+    footer.className = `text-[9px] font-mono opacity-60 self-end mt-0.5 flex items-center gap-1 justify-end`;
+    footer.innerHTML = `<span>${safeTime}</span><span>${tickStatus}</span>`;
+    card.appendChild(footer);
 
     bubble.appendChild(card);
     area.appendChild(bubble);
   });
 
-  setTimeout(() => {
-    area.scrollTop = area.scrollHeight;
-  }, 30);
+  scrollChatToBottom(area, true);
 }
 window.renderCrmChatTimeline = renderCrmChatTimeline;
 
-// Безопасная отправка сообщения оператора с глубоким слиянием (Deep Merge) по ID
+/**
+ * Оптимистичная отправка сообщения оператора с предотвращением спам-кликов и конфликтов
+ */
 window.crmSendOperatorMessage = async function () {
   const input = document.getElementById("crmChatTextInput");
+  const sendBtn = document.getElementById("btnSendCrmMsg");
   const text = input ? input.value.trim() : "";
   const img = window.crmChatActiveBase64;
   const bugId = window.currentOpenBugId;
 
   if (!text && !img) return;
+  if (!bugId) return;
 
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const now = Date.now();
   
-  const newMsg = {
+  const optimisticMsg = {
     id: "msg_alex_" + now + "_" + Math.random().toString(36).substring(2, 5),
     author: "alex",
     text: text,
     image: img || null,
     time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
-    timestamp: now
+    timestamp: now,
+    sending: true
   };
 
+  // 1. Блокируем кнопку отправки и фоновый опрос на время отправки
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.classList.add("opacity-50", "pointer-events-none");
+  }
+  window.isChatSendingMessage = true;
+
+  // 2. Оптимистичное локальное обновление UI
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  if (!Array.isArray(window.currentCloudData[targetUser].feedback)) {
+    window.currentCloudData[targetUser].feedback = typeof window.readStorage === "function"
+      ? window.readStorage("katya_master_feedback", [])
+      : [];
+  }
+
+  const list = window.currentCloudData[targetUser].feedback;
+  let targetBug = list.find(b => b.id === bugId);
+  if (!targetBug) {
+    const localList = typeof window.readStorage === "function" ? window.readStorage("katya_master_feedback", []) : [];
+    targetBug = localList.find(b => b.id === bugId);
+    if (targetBug) list.push(targetBug);
+  }
+
+  if (targetBug) {
+    if (!Array.isArray(targetBug.messages)) targetBug.messages = [];
+    targetBug.messages.push(optimisticMsg);
+    renderCrmChatTimeline(targetBug);
+  }
+
+  // Очищаем инпут и превью
+  if (input) input.value = "";
+  window.crmClearChatImage();
+
   try {
-    // 1. Сначала скачиваем актуальное состояние из облака
-    const cloudRoot = await fetchCloudData();
-    if (!cloudRoot) return;
-
-    if (!cloudRoot[targetUser]) cloudRoot[targetUser] = {};
-    if (!Array.isArray(cloudRoot[targetUser].feedback)) cloudRoot[targetUser].feedback = [];
-
-    let cloudList = cloudRoot[targetUser].feedback;
-    let cloudBug = cloudList.find(b => b.id === bugId);
-
-    if (!cloudBug) {
-      // Если тикета нет в облаке, берем его из локального состояния или хранилища
-      const localList = window.currentCloudData?.[targetUser]?.feedback || 
-        (typeof window.readStorage === "function" ? window.readStorage("katya_master_feedback", []) : []);
-      cloudBug = localList.find(b => b.id === bugId);
-      if (cloudBug) cloudList.push(cloudBug);
-    }
+    // 3. Сохранение в облако с дедупликацией
+    const cloudRoot = typeof window.fetchCloudData === "function" ? await window.fetchCloudData() : window.currentCloudData;
+    const currentList = cloudRoot?.[targetUser]?.feedback || list;
+    const cloudBug = currentList.find(b => b.id === bugId);
 
     if (cloudBug) {
       if (!Array.isArray(cloudBug.messages)) cloudBug.messages = [];
-      
-      // Сливаем старые сообщения с новым по уникальному ID, исключая дубли
       const msgMap = new Map();
       cloudBug.messages.forEach(m => { if (m && m.id) msgMap.set(m.id, m); });
-      msgMap.set(newMsg.id, newMsg); // добавляем наше свежее сообщение
+      optimisticMsg.sending = false;
+      msgMap.set(optimisticMsg.id, optimisticMsg);
 
-      // Хронологическая сортировка (по timestamp или дате создания)
-      cloudBug.messages = Array.from(msgMap.values()).sort((a, b) => {
-        const tA = a.timestamp || (a.id === "m_init" ? 0 : parseInt((a.id || "").match(/\d{10,}/)?.[0] || 0, 10));
-        const tB = b.timestamp || (b.id === "m_init" ? 0 : parseInt((b.id || "").match(/\d{10,}/)?.[0] || 0, 10));
-        return tA - tB;
-      });
+      cloudBug.messages = Array.from(msgMap.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
     }
 
-    window.currentCloudData = cloudRoot;
+    if (typeof window.saveCloud === "function") {
+      await window.saveCloud();
+    }
 
-    // 2. Отправляем обратно в JSONBin
-    await saveCloud();
-
-    // 3. Чистим поле ввода и мгновенно обновляем интерфейс
-    if (input) input.value = "";
-    window.crmClearChatImage();
-    if (cloudBug) renderCrmChatTimeline(cloudBug);
-
+    if (cloudBug) {
+      renderCrmChatTimeline(cloudBug);
+    }
   } catch (e) {
     console.error("[Chat] Operator send error:", e);
+    optimisticMsg.sending = false;
+    if (targetBug) renderCrmChatTimeline(targetBug);
+  } finally {
+    window.isChatSendingMessage = false;
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove("opacity-50", "pointer-events-none");
+    }
+    input?.focus();
   }
 };
 
-// Отправка по Enter
+// Отправка по Enter (Shift+Enter для новой строки)
 document.getElementById("crmChatTextInput")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
     window.crmSendOperatorMessage();
   }
 });
 
-// Фоновый опрос для синхронизации чата каждые 10 секунд с защитой от наложения и неактивных вкладок
+// Фоновый опрос для синхронизации чата каждые 10 секунд с защитой от наложения и гонок
 let isPolling = false;
+let lastRenderedChatHash = "";
+
 setInterval(async () => {
   if (document.hidden || document.visibilityState !== "visible") return;
-  if (!window.currentOpenBugId || isPolling) return;
+  if (!window.currentOpenBugId || isPolling || window.isChatSendingMessage) return;
   
   isPolling = true;
   try {
-    const cloudRoot = typeof fetchCloudData === "function" ? await fetchCloudData() : null;
+    const cloudRoot = typeof window.fetchCloudData === "function" ? await window.fetchCloudData() : null;
     if (!cloudRoot) return;
 
     let targetBug = null;
@@ -226,10 +388,17 @@ setInterval(async () => {
     }
 
     if (targetBug) {
-      renderCrmChatTimeline(targetBug);
+      const msgs = Array.isArray(targetBug.messages) ? targetBug.messages : [];
+      const currentHash = `${targetBug.status}_${msgs.length}_${msgs.length > 0 ? msgs[msgs.length - 1].id : ""}`;
+      
+      // Перерисовываем только если действительно появились новые сообщения или сменился статус!
+      if (currentHash !== lastRenderedChatHash) {
+        lastRenderedChatHash = currentHash;
+        renderCrmChatTimeline(targetBug);
+      }
     }
   } catch (e) {
   } finally {
     isPolling = false;
   }
-}, 10000);
+}, 10000);

@@ -25,3 +25,14 @@ node_modules/
 .env
 .env.local
 .env.*.local
+
+# AI Agents & Assistant Tooling
+.agents/
+.claude/
+agent/
+.scratch/
+skills-lock.json
+AGENTS.md
+docs/
+.gemini/
+

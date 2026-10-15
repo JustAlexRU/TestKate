@@ -1068,12 +1068,12 @@ function switchWardrobeTab(tabKey) {
     if (!btn || !sec) return;
 
     if (t.key === tabKey) {
-      btn.className = "flex-1 py-1.5 rounded-lg bg-pink-500 text-white font-bold transition text-[11px] shadow-sm";
+      btn.className = "flex-1 py-1.5 rounded-xl bg-pink-500 text-white font-extrabold transition-all text-[11px] shadow-sm cursor-pointer";
       sec.classList.remove("hidden");
       sec.classList.add("grid");
       t.render();
     } else {
-      btn.className = "flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition text-[11px]";
+      btn.className = "flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer";
       sec.classList.add("hidden");
       sec.classList.remove("grid");
     }
@@ -1089,43 +1089,134 @@ document.getElementById("tabWardrobeRooms")?.addEventListener("click", () => swi
 document.getElementById("tabWardrobeColors")?.addEventListener("click", () => switchWardrobeTab("colors"));
 
 function getRarityBadge(rarityKey) {
-  const r = window.ITEM_RARITIES?.[rarityKey] || window.ITEM_RARITIES?.common || {
-    name: "Обычный",
-    badgeBg: "bg-slate-800 text-slate-300 border-slate-600/50"
-  };
-  return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-mono font-black border ${r.badgeBg}">${r.name}</span>`;
+  switch (rarityKey) {
+    case "rare":
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-purple-950/70 text-purple-300 border border-purple-500/40">Редкий</span>`;
+    case "epic":
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-fuchsia-950/70 text-fuchsia-300 border border-fuchsia-500/40">Эпический</span>`;
+    case "legendary":
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-amber-950/80 text-amber-300 border border-amber-400/60 shadow-[0_0_8px_rgba(251,191,36,0.25)]">Легендарный</span>`;
+    case "mythic":
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-rose-950/80 text-rose-300 border border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.3)]">★ Мифический</span>`;
+    case "halloween":
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-orange-950/80 text-orange-300 border border-orange-500/40">🎃 Хеллоуин</span>`;
+    case "common":
+    default:
+      return `<span class="text-[9px] px-1.5 py-0.5 rounded-md font-bold bg-slate-800/80 text-slate-300 border border-slate-600/40">Обычный</span>`;
+  }
+}
+
+function renderUnifiedWardrobeCard({
+  name,
+  subtitle,
+  rarityKey,
+  previewHtml,
+  isEquipped,
+  isOwned,
+  isCaseExclusive,
+  caseName,
+  cost,
+  equipAction,
+  unequipAction,
+  buyAction,
+  activeLabel = "Надето",
+  equipLabel = "Надеть"
+}) {
+  const badgeHtml = getRarityBadge(rarityKey);
+
+  let actionHtml = "";
+  if (isEquipped) {
+    if (unequipAction) {
+      actionHtml = `
+        <button onclick="${unequipAction}" class="w-full py-1.5 px-2 rounded-xl bg-emerald-500/15 hover:bg-rose-500/15 border border-emerald-500/30 hover:border-rose-500/40 text-emerald-300 hover:text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all cursor-pointer group/act" title="Надето (нажмите, чтобы снять)">
+          <span class="group-hover/act:hidden flex items-center gap-1"><span>✓</span> ${activeLabel}</span>
+          <span class="hidden group-hover/act:inline">Снять ✕</span>
+        </button>`;
+    } else {
+      actionHtml = `
+        <div class="w-full py-1.5 px-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold flex items-center justify-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+          <span>✓</span> ${activeLabel}
+        </div>`;
+    }
+  } else if (isOwned) {
+    actionHtml = `
+      <button onclick="${equipAction}" class="w-full py-1.5 px-2 rounded-xl bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/40 hover:border-pink-500 text-pink-200 hover:text-white text-[11px] font-bold active:scale-95 transition-all shadow-sm cursor-pointer">
+        ${equipLabel}
+      </button>`;
+  } else if (isCaseExclusive) {
+    actionHtml = `
+      <span class="w-full py-1.5 px-2 rounded-xl bg-slate-800/80 border border-amber-500/30 text-amber-300 text-[10px] font-bold block truncate text-center" title="${caseName || 'Кейс'}">
+        📦 ${caseName || 'Кейс'}
+      </span>`;
+  } else {
+    actionHtml = `
+      <button onclick="${buyAction}" class="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-[11px] font-extrabold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-[0_2px_8px_rgba(245,158,11,0.25)] cursor-pointer">
+        <span>${cost}</span> <span class="text-xs">🪙</span>
+      </button>`;
+  }
+
+  const borderClass = isEquipped
+    ? "border-emerald-500/45 bg-gradient-to-b from-emerald-950/25 via-[#131528] to-[#131528] shadow-[0_0_15px_rgba(16,185,129,0.12)]"
+    : "border-white/10 hover:border-white/20 bg-[#131528]/90 hover:bg-[#181a32]";
+
+  return `
+    <div class="relative ${borderClass} border rounded-2xl p-2.5 flex flex-col justify-between items-center text-center transition-all duration-200 group">
+      <div class="w-full flex items-center justify-between gap-1 mb-1">
+        ${badgeHtml}
+        ${isEquipped ? `<span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse" title="Активно"></span>` : ''}
+      </div>
+
+      ${previewHtml}
+
+      <div class="w-full my-1.5 min-h-[34px] flex flex-col items-center justify-center text-center">
+        <span class="text-xs font-bold text-slate-100 line-clamp-1 leading-tight w-full" title="${name}">${name}</span>
+        ${subtitle ? `<span class="text-[10px] text-slate-400 line-clamp-1 leading-tight mt-0.5 w-full" title="${subtitle}">${subtitle}</span>` : ''}
+      </div>
+
+      <div class="w-full mt-auto">
+        ${actionHtml}
+      </div>
+    </div>
+  `;
 }
 
 function renderWardrobeCategory(slotType, containerId) {
   const container = document.getElementById(containerId);
-  if (!container || !window.GAME_ITEMS_DB?.[slotType]) return;
+  if (!container || !window.GAME_ITEMS_DB) return;
   container.innerHTML = "";
 
-  window.GAME_ITEMS_DB[slotType].forEach((item) => {
-    const isOwned = item.id === "none" || window.ownedItems.includes(item.id);
-    const isEquipped = window.activeEquipment[slotType] === item.id;
-    const rarity = window.ITEM_RARITIES?.[item.rarity] || window.ITEM_RARITIES?.common;
-    const isCaseExclusive = item.source === "case";
+  const slotsToRender = slotType === "body" ? ["body", "legs"] : [slotType];
 
-    let btnHtml = "";
-    if (isEquipped) {
-      btnHtml = `<span class="text-[10px] text-pink-400 font-extrabold mt-1">Надето ✓</span>`;
-    } else if (isOwned) {
-      btnHtml = `<button onclick="equipSlot('${slotType}', '${item.id}')" class="w-full mt-1 py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95 transition">Надеть</button>`;
-    } else if (isCaseExclusive) {
-      btnHtml = `<span class="w-full mt-1 py-1 rounded-lg bg-gray-800 border border-amber-500/40 text-amber-300 text-[9px] font-bold block truncate" title="${item.caseName || 'Кейс'}">📦 ${item.caseName || 'Кейс'}</span>`;
-    } else {
-      btnHtml = `<button onclick="buyShopItem('${item.id}', ${item.cost}, '${slotType}')" class="w-full mt-1 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-black active:scale-95 transition">${item.cost} 🪙</button>`;
-    }
+  slotsToRender.forEach((slot) => {
+    (window.GAME_ITEMS_DB[slot] || []).forEach((item) => {
+      if (item.id === "none") return;
+      const isOwned = window.ownedItems.includes(item.id);
+      const isEquipped = window.activeEquipment?.[slot] === item.id;
+      const rarity = window.ITEM_RARITIES?.[item.rarity] || window.ITEM_RARITIES?.common;
+      const isCaseExclusive = item.source === "case";
 
-    container.innerHTML += `
-      <div class="bg-[#181825] border-2 ${isEquipped ? "border-pink-500" : rarity.borderClass} ${rarity.glowClass} p-2 rounded-2xl flex flex-col items-center justify-between text-center relative overflow-hidden">
-        <div class="w-full flex justify-between items-center mb-0.5">${getRarityBadge(item.rarity)}</div>
-        <span class="text-3xl my-1 select-none" style="filter: ${rarity.auraEffect}">${item.icon}</span>
-        <span class="text-xs font-bold text-gray-200 truncate w-full" title="${item.name}">${item.name}</span>
-        ${btnHtml}
-      </div>
-    `;
+      const previewHtml = `
+        <div class="w-14 h-14 rounded-2xl bg-[#0e101f] border border-white/5 flex items-center justify-center text-3xl my-1 group-hover:scale-105 transition-transform duration-200 select-none relative overflow-hidden" style="filter: ${rarity?.auraEffect || 'none'}">
+          <span>${item.icon}</span>
+        </div>`;
+
+      container.innerHTML += renderUnifiedWardrobeCard({
+        name: item.name,
+        subtitle: item.desc || (slot === "body" ? "Верх" : "Низ"),
+        rarityKey: item.rarity,
+        previewHtml,
+        isEquipped,
+        isOwned,
+        isCaseExclusive,
+        caseName: item.caseName,
+        cost: item.cost,
+        equipAction: `equipSlot('${slot}', '${item.id}')`,
+        unequipAction: `equipSlot('${slot}', 'none')`,
+        buyAction: `buyShopItem('${item.id}', ${item.cost}, '${slot}')`,
+        activeLabel: "Надето",
+        equipLabel: "Надеть"
+      });
+    });
   });
 }
 
@@ -1135,32 +1226,34 @@ function renderWardrobeAccs() {
   box.innerHTML = "";
 
   ["head", "eyes"].forEach((slot) => {
-    window.GAME_ITEMS_DB[slot].forEach((item) => {
+    (window.GAME_ITEMS_DB[slot] || []).forEach((item) => {
       if (item.id === "none") return;
       const isOwned = window.ownedItems.includes(item.id);
-      const isEquipped = window.activeEquipment[slot] === item.id;
+      const isEquipped = window.activeEquipment?.[slot] === item.id;
       const rarity = window.ITEM_RARITIES?.[item.rarity] || window.ITEM_RARITIES?.common;
       const isCaseExclusive = item.source === "case";
 
-      let btn = "";
-      if (isEquipped) {
-        btn = `<span class="text-[10px] text-pink-400 font-extrabold mt-1">Надето ✓</span>`;
-      } else if (isOwned) {
-        btn = `<button onclick="equipSlot('${slot}', '${item.id}')" class="w-full mt-1 py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95">Надеть</button>`;
-      } else if (isCaseExclusive) {
-        btn = `<span class="w-full mt-1 py-1 rounded-lg bg-gray-800 border border-amber-500/40 text-amber-300 text-[9px] font-bold block truncate">📦 Кейс</span>`;
-      } else {
-        btn = `<button onclick="buyShopItem('${item.id}', ${item.cost}, '${slot}')" class="w-full mt-1 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-black active:scale-95">${item.cost} 🪙</button>`;
-      }
+      const previewHtml = `
+        <div class="w-14 h-14 rounded-2xl bg-[#0e101f] border border-white/5 flex items-center justify-center text-3xl my-1 group-hover:scale-105 transition-transform duration-200 select-none relative overflow-hidden" style="filter: ${rarity?.auraEffect || 'none'}">
+          <span>${item.icon}</span>
+        </div>`;
 
-      box.innerHTML += `
-        <div class="bg-[#181825] border-2 ${isEquipped ? "border-pink-500" : rarity.borderClass} ${rarity.glowClass} p-2 rounded-2xl flex flex-col items-center justify-between text-center relative">
-          <div class="w-full flex justify-between items-center mb-0.5">${getRarityBadge(item.rarity)}</div>
-          <span class="text-3xl my-1 select-none" style="filter: ${rarity.auraEffect}">${item.icon}</span>
-          <span class="text-xs font-bold text-gray-200 truncate w-full">${item.name}</span>
-          ${btn}
-        </div>
-      `;
+      box.innerHTML += renderUnifiedWardrobeCard({
+        name: item.name,
+        subtitle: item.desc || (slot === "head" ? "Шляпа" : "Очки"),
+        rarityKey: item.rarity,
+        previewHtml,
+        isEquipped,
+        isOwned,
+        isCaseExclusive,
+        caseName: item.caseName,
+        cost: item.cost,
+        equipAction: `equipSlot('${slot}', '${item.id}')`,
+        unequipAction: `equipSlot('${slot}', 'none')`,
+        buyAction: `buyShopItem('${item.id}', ${item.cost}, '${slot}')`,
+        activeLabel: "Надето",
+        equipLabel: "Надеть"
+      });
     });
   });
 }
@@ -1172,35 +1265,31 @@ function renderWardrobeRooms() {
 
   window.GAME_ITEMS_DB.room.forEach((r) => {
     const isOwned = r.id === "neon" || window.ownedRooms.includes(r.id);
-    const isAct = window.pet.activeRoom === r.id;
-    const rarity = window.ITEM_RARITIES?.[r.rarity] || window.ITEM_RARITIES?.common;
+    const isAct = window.pet?.activeRoom === r.id;
+    const isCaseExclusive = r.source === "case";
 
-    let btn = "";
-    if (isAct) {
-      btn = `<span class="text-[10px] text-pink-400 font-extrabold">Включено ✓</span>`;
-    } else if (isOwned) {
-      btn = `<button onclick="window.pet.activeRoom='${r.id}'; sound.pop(); updatePetUI(); renderWardrobeRooms();" class="px-3 py-1 rounded-lg bg-pink-500 text-white text-[10px] font-bold active:scale-95">Включить</button>`;
-    } else if (r.source === "case") {
-      btn = `<span class="px-2 py-1 rounded-lg bg-gray-800 border border-amber-500/40 text-amber-300 text-[9px] font-bold">📦 Кейс</span>`;
-    } else {
-      btn = `<button onclick="buyRoomTheme('${r.id}', ${r.cost})" class="px-3 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-black active:scale-95">${r.cost} 🪙</button>`;
-    }
+    const previewHtml = `
+      <div class="w-full h-14 rounded-2xl ${r.class || 'bg-[#0e101f]'} border border-white/10 flex items-center justify-center text-2xl my-1 group-hover:scale-105 transition-transform duration-200 select-none relative overflow-hidden shadow-inner">
+        <span class="z-10 drop-shadow-md select-none">${r.icon}</span>
+        <div class="absolute inset-0 bg-black/25 pointer-events-none"></div>
+      </div>`;
 
-    box.innerHTML += `
-      <div class="bg-[#181825] border-2 ${isAct ? "border-pink-500" : rarity.borderClass} ${rarity.glowClass} p-2.5 rounded-2xl flex items-center justify-between text-xs">
-        <div class="flex items-center gap-2.5">
-          <span class="text-2xl">${r.icon}</span>
-          <div class="text-left">
-            <div class="flex items-center gap-1.5 font-bold text-gray-200">
-              <span>${r.name}</span>
-              ${getRarityBadge(r.rarity)}
-            </div>
-            <div class="text-[10px] text-gray-400">${r.desc || ""}</div>
-          </div>
-        </div>
-        ${btn}
-      </div>
-    `;
+    box.innerHTML += renderUnifiedWardrobeCard({
+      name: r.name,
+      subtitle: r.desc || "",
+      rarityKey: r.rarity,
+      previewHtml,
+      isEquipped: isAct,
+      isOwned,
+      isCaseExclusive,
+      caseName: r.caseName,
+      cost: r.cost,
+      equipAction: `window.pet.activeRoom='${r.id}'; sound.pop(); updatePetUI(); renderWardrobeRooms();`,
+      unequipAction: null,
+      buyAction: `buyRoomTheme('${r.id}', ${r.cost})`,
+      activeLabel: "Включено",
+      equipLabel: "Включить"
+    });
   });
 }
 
@@ -1210,43 +1299,46 @@ function renderColorShop() {
   box.innerHTML = "";
 
   window.GAME_ITEMS_DB.color.forEach((c) => {
-    const isCurrent = window.pet.color === c.id;
+    const isCurrent = window.pet?.color === c.id;
     const isOwned = c.id === "pink" || window.ownedItems.includes("color_" + c.id);
-    const rarity = window.ITEM_RARITIES?.[c.rarity] || window.ITEM_RARITIES?.common;
+    const isCaseExclusive = c.source === "case";
 
-    let btn = "";
-    if (isCurrent) {
-      btn = `<span class="text-[10px] text-pink-400 font-extrabold">Выбрано ✓</span>`;
-    } else if (isOwned) {
-      btn = `<button class="px-3 py-1 rounded-lg bg-[#313244] hover:bg-pink-500 text-[10px] font-bold text-white transition active:scale-95" onclick="window.pet.color='${c.id}'; sound.pop(); updatePetUI(); renderColorShop();">Выбрать</button>`;
-    } else if (c.source === "case") {
-      btn = `<span class="px-2 py-1 rounded-lg bg-gray-800 border border-amber-500/40 text-amber-300 text-[9px] font-bold">📦 Кейс</span>`;
-    } else {
-      btn = `<button class="px-3 py-1 rounded-lg bg-amber-500 text-black text-[10px] font-black active:scale-95" onclick="buyShopItem('color_${c.id}', ${c.cost}, 'color')">${c.cost} 🪙</button>`;
-    }
-
-    box.innerHTML += `
-      <div class="p-2.5 rounded-2xl flex items-center justify-between border-2 ${isCurrent ? "bg-pink-950/40 border-pink-500" : rarity.borderClass} ${rarity.glowClass} bg-[#181825]">
-        <div class="flex items-center gap-2.5">
-          <div class="w-6 h-6 rounded-full border-2 border-white/60 shadow" style="background-color: ${c.hex}"></div>
-          <div class="text-left">
-            <span class="text-xs font-bold text-gray-200">${c.name}</span>
-            <span class="ml-1">${getRarityBadge(c.rarity)}</span>
-          </div>
+    const previewHtml = `
+      <div class="w-14 h-14 rounded-2xl bg-[#0e101f] border border-white/5 flex items-center justify-center my-1 group-hover:scale-105 transition-transform duration-200 select-none relative">
+        <div class="w-9 h-9 rounded-full border-2 border-white/70 shadow-md flex items-center justify-center" style="background-color: ${c.hex}">
+          <span class="text-xs select-none">🐾</span>
         </div>
-        ${btn}
-      </div>
-    `;
+      </div>`;
+
+    box.innerHTML += renderUnifiedWardrobeCard({
+      name: c.name,
+      subtitle: "Окрас шерстки",
+      rarityKey: c.rarity,
+      previewHtml,
+      isEquipped: isCurrent,
+      isOwned,
+      isCaseExclusive,
+      caseName: c.caseName,
+      cost: c.cost,
+      equipAction: `window.pet.color='${c.id}'; sound.pop(); updatePetUI(); renderColorShop();`,
+      unequipAction: null,
+      buyAction: `buyShopItem('color_${c.id}', ${c.cost}, 'color')`,
+      activeLabel: "Выбрано",
+      equipLabel: "Выбрать"
+    });
   });
 }
 
 window.equipSlot = function (slot, id) {
+  if (!window.activeEquipment) window.activeEquipment = {};
   window.activeEquipment[slot] = id;
   localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
   if (window.sound?.pop) window.sound.pop();
   updatePetUI();
   renderWardrobeCategory("body", "wardrobeOutfitsSection");
   renderWardrobeAccs();
+  const coinsEl = document.getElementById("shopCoinsVal");
+  if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
 };
 
 window.buyShopItem = function (id, cost, slot) {
@@ -1271,6 +1363,10 @@ window.buyShopItem = function (id, cost, slot) {
   updatePetUI();
   renderWardrobeCategory("body", "wardrobeOutfitsSection");
   renderWardrobeAccs();
+  renderColorShop();
+
+  const coinsEl = document.getElementById("shopCoinsVal");
+  if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
 };
 
 window.buyRoomTheme = function (id, cost) {
@@ -1287,11 +1383,30 @@ window.buyRoomTheme = function (id, cost) {
   if (window.sound?.win) window.sound.win();
   updatePetUI();
   renderWardrobeRooms();
+
+  const coinsEl = document.getElementById("shopCoinsVal");
+  if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
+};
+
+// Алиасы для совместимости с внешними вызовами
+window.buyItem = window.buyShopItem;
+window.equipItem = window.equipSlot;
+window.unequipAll = function () {
+  if (typeof window.unequipAllCosmetics === "function") {
+    window.unequipAllCosmetics();
+  } else {
+    window.activeEquipment = { head: "none", eyes: "none", body: "none", legs: "none" };
+    localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
+    updatePetUI();
+  }
+  renderWardrobeCategory("body", "wardrobeOutfitsSection");
+  renderWardrobeAccs();
 };
 
 document.getElementById("btnRemoveAllOutfits")?.addEventListener("click", () => {
   window.activeEquipment = { head: "none", eyes: "none", body: "none", legs: "none" };
   localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
+  if (window.sound?.pop) window.sound.pop();
   updatePetUI();
   renderWardrobeCategory("body", "wardrobeOutfitsSection");
   renderWardrobeAccs();
@@ -1849,9 +1964,13 @@ function renderTicketListView() {
   });
 }
 
+let isPlayerChatPolling = false;
+let lastPlayerChatHash = "";
+
 // 2. Открытие чата конкретного тикета
 function openTicketChat(ticketId) {
   window.activeChatTicketId = ticketId;
+  lastPlayerChatHash = "";
   supportShowScreen("chat");
 
   const list = readStorage("katya_master_feedback", []);
@@ -1891,70 +2010,246 @@ function openTicketChat(ticketId) {
     claimBtn?.classList.add("hidden");
   }
 
+  // Интерактивный блок CSAT при закрытом тикете
+  const csatBox = document.getElementById("chatCsatContainer");
+  if (csatBox) {
+    if (isDone) {
+      csatBox.classList.remove("hidden");
+      if (ticket.csatRating) {
+        csatBox.innerHTML = `
+          <div class="py-1 text-center text-xs font-bold text-pink-300 flex items-center justify-center gap-1.5">
+            <span>⭐ Твоя оценка: ${ticket.csatRating}/5</span>
+            <span class="text-slate-400">• Спасибо за отзыв! ❤️</span>
+          </div>
+        `;
+      } else {
+        updateCsatStarsUI(5);
+      }
+    } else {
+      csatBox.classList.add("hidden");
+    }
+  }
+
   renderChatTimeline(ticket);
+}
+
+window.currentCsatSelected = 5;
+
+window.setChatCsatRating = function (val) {
+  window.currentCsatSelected = val;
+  updateCsatStarsUI(val);
+};
+
+function updateCsatStarsUI(score) {
+  const lbl = document.getElementById("csatCurrentScoreLabel");
+  if (lbl) lbl.innerText = `${score} / 5`;
+  document.querySelectorAll("#csatStarsRow .csat-star").forEach((btn, idx) => {
+    if (idx < score) {
+      btn.className = "csat-star text-amber-400 hover:scale-125 transition cursor-pointer";
+    } else {
+      btn.className = "csat-star text-slate-600 hover:scale-125 transition cursor-pointer";
+    }
+  });
+}
+
+window.submitQuickCsat = async function (comment) {
+  const ticketId = window.activeChatTicketId;
+  if (!ticketId) return;
+  let list = readStorage("katya_master_feedback", []);
+  const ticket = list.find(t => t.id === ticketId);
+  if (!ticket) return;
+
+  const rating = window.currentCsatSelected || 5;
+  ticket.csatRating = rating;
+  ticket.csatComment = comment || "";
+
+  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  const sysMsg = {
+    id: "csat_" + Date.now(),
+    author: "system",
+    text: `⭐ Катя оценила решение на ${rating}/5: «${comment || "Всё отлично!"}»`,
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  };
+  ticket.messages.push(sysMsg);
+  localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+
+  const csatBox = document.getElementById("chatCsatContainer");
+  if (csatBox) {
+    csatBox.innerHTML = `
+      <div class="py-1 text-center text-xs font-bold text-pink-300">
+        Спасибо за оценку (${rating}/5)! Твой отзыв очень важен ❤️
+      </div>
+    `;
+  }
+
+  renderChatTimeline(ticket);
+  syncToCloud();
+};
+
+// Хронологическая нормализация и дедупликация сообщений
+function normalizeAndSortPlayerMessages(rawMsgs, fallbackText, fallbackDate) {
+  const map = new Map();
+
+  if ((!Array.isArray(rawMsgs) || rawMsgs.length === 0) && fallbackText) {
+    const initId = "m_init";
+    map.set(initId, {
+      id: initId,
+      author: "katya",
+      text: fallbackText,
+      time: fallbackDate ? (fallbackDate.split(",")[1] || "").trim() : "",
+      timestamp: fallbackDate ? (Date.parse(fallbackDate) || 0) : 0,
+      sending: false,
+      system: false
+    });
+  }
+
+  if (Array.isArray(rawMsgs)) {
+    rawMsgs.forEach(m => {
+      if (!m) return;
+      const id = m.id || ("msg_" + Math.random().toString(36).substring(2, 9));
+      let ts = m.timestamp;
+      if (!ts) {
+        const match = id.match(/\d{10,}/);
+        if (match) ts = parseInt(match[0], 10);
+        else if (m.time) {
+          const parsed = Date.parse((fallbackDate ? fallbackDate.split(",")[0] : "") + " " + m.time);
+          ts = !isNaN(parsed) ? parsed : Date.now();
+        } else {
+          ts = Date.now();
+        }
+      }
+
+      const isSys = m.author === "system" ||
+        (typeof m.text === "string" && (
+          m.text.startsWith("⚡") ||
+          m.text.startsWith("🎁") ||
+          m.text.startsWith("🐾") ||
+          m.text.startsWith("📋") ||
+          m.text.startsWith("[SUPPORT") ||
+          m.text.startsWith("⭐")
+        ));
+
+      map.set(id, {
+        id: id,
+        author: isSys ? "system" : (m.author || "katya"),
+        text: m.text || "",
+        image: m.image || null,
+        time: m.time || "",
+        timestamp: ts,
+        sending: !!m.sending,
+        system: isSys
+      });
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 }
 
 // 3. Отрисовка пузырей переписки
 function renderChatTimeline(ticket) {
   const box = document.getElementById("chatMessagesTimeline");
-  if (!box) return;
+  if (!box || !ticket) return;
   box.innerHTML = "";
 
-  const msgs = Array.isArray(ticket.messages) ? ticket.messages : [];
+  const sortedMsgs = normalizeAndSortPlayerMessages(ticket.messages, ticket.text, ticket.date);
 
-  if (msgs.length === 0 && ticket.text) {
-    msgs.push({
-      id: "m_init",
-      author: "katya",
-      text: ticket.text,
-      image: ticket.image || null,
-      time: ticket.date ? ticket.date.split(",")[1] || "" : ""
-    });
-  }
+  sortedMsgs.forEach(msg => {
+    // Системные события (по центру)
+    if (msg.system) {
+      const sysBubble = document.createElement("div");
+      sysBubble.className = "w-full flex justify-center my-1 select-text";
+      sysBubble.innerHTML = `
+        <div class="px-3 py-1 rounded-full text-[10px] font-mono bg-white/5 border border-white/10 text-slate-300 flex items-center gap-1.5 shadow-sm max-w-[85%] text-center leading-normal">
+          <span>${escapeHtml(msg.text)}</span>
+          ${msg.time ? `<span class="opacity-50 text-[9px]">• ${escapeHtml(msg.time)}</span>` : ""}
+        </div>
+      `;
+      box.appendChild(sysBubble);
+      return;
+    }
 
-msgs.forEach(msg => {
-    // У Кати: если автор "katya" — это она сама, выравниваем ПО ПРАВОМУ краю. Если "alex" — слева.
     const isKatya = msg.author === "katya";
     const bubble = document.createElement("div");
     bubble.className = `flex flex-col ${isKatya ? "items-end" : "items-start"} gap-1 w-full`;
 
-    bubble.innerHTML = `
-      <div class="max-w-[85%] rounded-2xl ${isKatya ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-tr-sm' : 'bg-[#181a30] border border-cyan-500/30 text-gray-200 rounded-tl-sm'} p-3 text-xs shadow-md">
-        <div class="text-[9px] font-mono opacity-70 mb-1">${isKatya ? "Вы (Катя)" : "🛠️ Алексей (Разработчик)"} ${msg.time ? "• " + msg.time : ""}</div>
-        <div class="whitespace-pre-wrap leading-relaxed select-text">${escapeHtml(msg.text)}</div>
-      </div>
+    const card = document.createElement("div");
+    card.className = `max-w-[85%] rounded-2xl ${isKatya ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-tr-sm' : 'bg-[#181a30] border border-cyan-500/30 text-gray-200 rounded-tl-sm'} p-3 text-xs shadow-md flex flex-col gap-1`;
+
+    const authorLabel = isKatya ? "Вы (Катя)" : "🛠️ Алексей (Разработчик)";
+    const safeText = escapeHtml(msg.text);
+    const safeTime = msg.time ? escapeHtml(msg.time) : "";
+    const tickStatus = msg.sending ? "⏳" : "✓✓";
+
+    card.innerHTML = `
+      <div class="text-[9px] font-mono opacity-70 mb-0.5">${authorLabel}</div>
+      ${safeText ? `<div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>` : ""}
     `;
+
+    // Отображение прикрепленного изображения
+    if (msg.image) {
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "mt-1 rounded-xl overflow-hidden border border-white/20 max-h-48 cursor-pointer relative group";
+      imgWrap.innerHTML = `
+        <img src="${msg.image}" alt="Вложение" class="w-full h-full max-h-48 object-cover rounded-xl transition hover:opacity-95 active:scale-[0.99]" />
+        <span class="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-mono backdrop-blur-sm opacity-0 group-hover:opacity-100 transition">🔍 Увеличить</span>
+      `;
+      imgWrap.onclick = () => window.openFullImage(msg.image);
+      card.appendChild(imgWrap);
+    }
+
+    // Нижний колонтитул со временем и статусом отправки
+    const footer = document.createElement("div");
+    footer.className = "text-[9px] font-mono opacity-65 self-end mt-0.5 flex items-center gap-1 justify-end";
+    footer.innerHTML = `<span>${safeTime}</span><span>${tickStatus}</span>`;
+    card.appendChild(footer);
+
+    bubble.appendChild(card);
     box.appendChild(bubble);
   });
 
-  box.scrollTop = box.scrollHeight;
+  if (typeof window.scrollChatToBottom === "function") {
+    window.scrollChatToBottom(box, true);
+  } else {
+    box.scrollTop = box.scrollHeight;
+  }
 }
 
-// Надежная отправка сообщения от Каты с мгновенным обновлением облака
+// Надежная оптимистичная отправка сообщения от Кати
 window.sendPlayerChatMessage = async function () {
   const input = document.getElementById("chatTextInput");
+  const sendBtn = document.getElementById("btnSendPlayerChat");
   const text = input ? input.value.trim() : "";
   const img = window.chatAttachedBase64;
   const ticketId = window.activeChatTicketId;
   if (!text && !img) return;
+  if (!ticketId) return;
 
   let list = readStorage("katya_master_feedback", []);
   const ticket = list.find(t => t.id === ticketId);
   if (!ticket) return;
 
-  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.classList.add("opacity-50", "pointer-events-none");
+  }
+  window.isChatSendingMessage = true;
 
-  const newMsg = {
-    id: "msg_" + Date.now() + "_" + Math.random().toString(36).substring(2, 5),
-    author: "katya", // <--- Строго "katya", чтобы дашборд видел это как сообщение игрока слева
+  const now = Date.now();
+  const optimisticMsg = {
+    id: "msg_" + now + "_" + Math.random().toString(36).substring(2, 5),
+    author: "katya",
     text: text,
     image: img || null,
     time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
-    tgSent: false
+    timestamp: now,
+    sending: true
   };
 
-  ticket.messages.push(newMsg);
+  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  ticket.messages.push(optimisticMsg);
   localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+
   if (input) input.value = "";
   clearChatAttachment();
   renderChatTimeline(ticket);
@@ -1973,9 +2268,11 @@ window.sendPlayerChatMessage = async function () {
       
       if (cloudTicket) {
         if (!Array.isArray(cloudTicket.messages)) cloudTicket.messages = [];
-        if (!cloudTicket.messages.some(m => m.id === newMsg.id)) {
-          cloudTicket.messages.push(newMsg);
-        }
+        const msgMap = new Map();
+        cloudTicket.messages.forEach(m => { if (m && m.id) msgMap.set(m.id, m); });
+        optimisticMsg.sending = false;
+        msgMap.set(optimisticMsg.id, optimisticMsg);
+        cloudTicket.messages = Array.from(msgMap.values()).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
       } else {
         cloudList.unshift(ticket);
       }
@@ -1988,8 +2285,20 @@ window.sendPlayerChatMessage = async function () {
         body: JSON.stringify(root)
       });
     }
+    optimisticMsg.sending = false;
+    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+    renderChatTimeline(ticket);
   } catch (e) {
     console.warn("Player chat sync error:", e);
+    optimisticMsg.sending = false;
+    renderChatTimeline(ticket);
+  } finally {
+    window.isChatSendingMessage = false;
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove("opacity-50", "pointer-events-none");
+    }
+    input?.focus();
   }
 };
 // 5. Забрать награду за закрытый баг (без дюпа)
@@ -2151,13 +2460,62 @@ window.clearChatAttachment = function () {
 };
 
 window.openFullImage = function (src) {
-  window.open(src, "_blank");
+  if (!src) return;
+  const modal = document.getElementById("modalChatLightbox");
+  const img = document.getElementById("lightboxFullImage");
+  if (modal && img) {
+    img.src = src;
+    modal.classList.remove("hidden");
+  } else {
+    window.open(src, "_blank");
+  }
 };
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+window.closeFullImage = function () {
+  const modal = document.getElementById("modalChatLightbox");
+  if (modal) modal.classList.add("hidden");
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    window.closeFullImage();
+  }
+});
+
+function scrollChatToBottom(container, smooth = true) {
+  if (!container) return;
+  const doScroll = () => {
+    container.scrollTop = container.scrollHeight;
+    if (container.lastElementChild) {
+      container.lastElementChild.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
+    }
+  };
+
+  doScroll();
+  requestAnimationFrame(doScroll);
+  setTimeout(doScroll, 80);
+  setTimeout(doScroll, 200);
+
+  const imgs = container.querySelectorAll("img");
+  imgs.forEach(img => {
+    if (!img.complete) {
+      img.addEventListener("load", doScroll, { once: true });
+      img.addEventListener("error", doScroll, { once: true });
+    }
+  });
 }
+window.scrollChatToBottom = scrollChatToBottom;
+
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+window.escapeHtml = escapeHtml;
 
 /* -------------------------------------------------------------------------
  * 11. ДЗЕН-КЛИКЕР (ASMR), DAILY БОНУС И СИСТЕМНЫЕ СЛУШАТЕЛИ
@@ -2429,10 +2787,14 @@ document.addEventListener("DOMContentLoaded", () => {
   updatePlayerSupportBadge();
 });
 
-// Автоматическое подтягивание новых сообщений от разработчика каждые 3 секунды
+// Автоматическое подтягивание новых сообщений от разработчика каждые 5 секунд с защитой от наложения и дерганья
 setInterval(async () => {
   if (document.hidden || document.visibilityState !== "visible") return;
   if (!window.activeChatTicketId) return;
+  if (window.isChatSendingMessage) return;
+  if (isPlayerChatPolling) return;
+  isPlayerChatPolling = true;
+
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_API_KEY }
@@ -2445,11 +2807,20 @@ setInterval(async () => {
       localStorage.setItem("katya_master_feedback", JSON.stringify(remoteUser.feedback));
       const ticket = remoteUser.feedback.find(t => t.id === window.activeChatTicketId);
       if (ticket) {
-        renderChatTimeline(ticket);
+        const msgs = ticket.messages || [];
+        const lastMsgId = msgs.length > 0 ? (msgs[msgs.length - 1].id || msgs[msgs.length - 1].timestamp || "") : "";
+        const currentHash = `${ticket.id}_${ticket.status}_${msgs.length}_${lastMsgId}_${ticket.claimed}`;
+        if (currentHash !== lastPlayerChatHash) {
+          lastPlayerChatHash = currentHash;
+          renderChatTimeline(ticket);
+        }
       }
     }
-  } catch (e) {}
-}, 3000);
+  } catch (e) {
+  } finally {
+    isPlayerChatPolling = false;
+  }
+}, 5000);
 
 
 /* -------------------------------------------------------------------------
