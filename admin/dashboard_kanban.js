@@ -1,7 +1,27 @@
-/* =========================================================================
- * LEX LABS ENTERPRISE: KANBAN & BUG TRACKER MODULE
- * Файл: dashboard_kanban.js
- * ========================================================================= */
+/**
+ * @fileoverview LEX LABS ENTERPRISE: KANBAN & BUG TRACKER MODULE (TIER-2)
+ * @module admin/dashboard_kanban
+ * 
+ * @description
+ * Зона ответственности (Single Responsibility):
+ * Канбан-доска разработки (Входящие, В работе, Тестирование, Выполнено),
+ * учет времени (таймер задачи), просмотр технических логов/консоли ошибки,
+ * генерация AI-промптов для отладки и оформление devReport.
+ *
+ * @exports
+ * - window.activeTimerInterval — интервал активного таймера решения задачи
+ * - window.timerRunning — статус работы таймера
+ * - window.closeBugDetailModal() — закрытие модального окна бага с очисткой таймера
+ * - window.renderKanbanBoard() — отрисовка колонок и карточек задач канбана
+ * - window.openBugDetailModal(bugId) — открытие детальной карточки дефекта
+ * - window.saveBugDetailModal() — сохранение статуса, времени и отчета разработчика
+ * - window.saveFeedbackListToCloud(list) — синхронизация списка обращений в Cloud
+ * - window.toggleBugTimer() — старт / пауза секундомера выполнения
+ * - window.addManualMinutes(mins) — ручное добавление минут к времени решения
+ * - window.copyAiDebugPromptById(bugId) — сбор стека ошибки и копирование промпта для AI
+ * - window.viewTechLogsById(bugId) — просмотр контекста ошибки и логов консоли
+ * - window.generateHumanFixReport() — генерация понятного отчета для игрока
+ */
 
 window.activeTimerInterval = null;
 window.timerRunning = false;

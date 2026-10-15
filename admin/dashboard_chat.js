@@ -1,7 +1,21 @@
-/* =========================================================================
- * LEX LABS ENTERPRISE: CRM CHAT MODULE
- * Файл: dashboard_chat.js
- * ========================================================================= */
+/**
+ * @fileoverview LEX LABS ENTERPRISE: CRM CHAT & ATTACHMENTS MODULE
+ * @module admin/dashboard_chat
+ * 
+ * @description
+ * Зона ответственности (Single Responsibility):
+ * Мессенджер оператора с игроком, хронологическая сортировка сообщений,
+ * сжатие и прикрепление скриншотов через Canvas/FileReader, полноэкранный просмотр.
+ *
+ * @exports
+ * - window.currentOpenBugId — ID текущего открытого тикета в диалоге разработчика
+ * - window.crmChatActiveBase64 — Base64-данные прикрепленного скриншота
+ * - window.crmOnChatFileSelected(event) — загрузка и сжатие выбранного изображения
+ * - window.crmClearChatImage() — сброс прикрепленного скриншота и превью
+ * - window.openFullImage(src) — открытие скриншота в модальном окне во весь экран
+ * - window.renderCrmChatTimeline(bug) — хронологический рендер сообщений чата тикета
+ * - window.crmSendOperatorMessage() — отправка ответа оператора с синхронизацией в Cloud
+ */
 
 if (window.currentOpenBugId === undefined) {
   window.currentOpenBugId = null;
@@ -77,17 +91,31 @@ function renderCrmChatTimeline(bug) {
     const bubble = document.createElement("div");
     bubble.className = `flex flex-col ${isAlex ? "items-end" : "items-start"} gap-1 w-full`;
 
-    let imgTag = msg.image ? `<img src="${msg.image}" onclick="window.openFullImage('${msg.image}')" class="max-h-36 rounded-xl border border-white/10 cursor-pointer object-contain mt-1">` : "";
-
     const safeText = typeof window.escapeHtml === "function" ? window.escapeHtml(msg.text) : (msg.text || "");
+    const safeTime = msg.time ? "• " + (typeof window.escapeHtml === "function" ? window.escapeHtml(msg.time) : msg.time) : "";
+    const authorLabel = isAlex ? "Алексей (Вы)" : "Катя";
 
-    bubble.innerHTML = `
-      <div class="max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs">
-        <div class="text-[9px] font-mono opacity-60 mb-0.5">${isAlex ? "Алексей (Вы)" : "Катя"} ${msg.time ? "• " + msg.time : ""}</div>
-        <div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>
-        ${imgTag}
-      </div>
+    const card = document.createElement("div");
+    card.className = `max-w-[80%] rounded-2xl ${isAlex ? 'bg-amber-400 text-black font-medium rounded-tr-sm shadow-md' : 'bg-[#1b1d30] border border-white/10 text-gray-100 rounded-tl-sm shadow'} p-3 text-xs`;
+
+    card.innerHTML = `
+      <div class="text-[9px] font-mono opacity-60 mb-0.5">${authorLabel} ${safeTime}</div>
+      <div class="whitespace-pre-wrap leading-relaxed select-text">${safeText}</div>
     `;
+
+    if (msg.image) {
+      const imgEl = document.createElement("img");
+      imgEl.src = msg.image;
+      imgEl.className = "max-h-36 rounded-xl border border-white/10 cursor-pointer object-contain mt-1";
+      imgEl.onclick = () => {
+        if (typeof window.openFullImage === "function") {
+          window.openFullImage(msg.image);
+        }
+      };
+      card.appendChild(imgEl);
+    }
+
+    bubble.appendChild(card);
     area.appendChild(bubble);
   });
 
@@ -175,12 +203,15 @@ document.getElementById("crmChatTextInput")?.addEventListener("keydown", (e) => 
   }
 });
 
-// Фоновый опрос для синхронизации чата каждые 3 секунды
+// Фоновый опрос для синхронизации чата каждые 10 секунд с защитой от наложения и неактивных вкладок
+let isPolling = false;
 setInterval(async () => {
-  if (!window.currentOpenBugId) return;
+  if (document.hidden || document.visibilityState !== "visible") return;
+  if (!window.currentOpenBugId || isPolling) return;
   
+  isPolling = true;
   try {
-    const cloudRoot = await fetchCloudData();
+    const cloudRoot = typeof fetchCloudData === "function" ? await fetchCloudData() : null;
     if (!cloudRoot) return;
 
     let targetBug = null;
@@ -197,5 +228,8 @@ setInterval(async () => {
     if (targetBug) {
       renderCrmChatTimeline(targetBug);
     }
-  } catch (e) {}
-}, 3000);
+  } catch (e) {
+  } finally {
+    isPolling = false;
+  }
+}, 10000);

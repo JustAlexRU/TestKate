@@ -434,6 +434,7 @@ function syncToCloud() {
 window.syncToCloud = syncToCloud;
 
 async function pullCloudSettings() {
+  if (document.hidden || document.visibilityState !== "visible") return;
   // Если у игрока есть не отправленные локальные действия (таймер взведён) или идёт сохранение — не перезатираем
   if (isLocalExecution || isSyncInProgress || cloudSyncTimer !== null) return;
 
@@ -1834,7 +1835,7 @@ function renderTicketListView() {
       <div class="flex justify-between items-center text-[10px]">
         <div class="flex items-center gap-1.5">
           <span class="px-2 py-0.5 rounded-full font-mono font-bold ${badgeClass}">${badgeText}</span>
-          <span class="text-pink-300 font-bold">${ticket.category || "Обращение"}</span>
+          <span class="text-pink-300 font-bold">${escapeHtml(ticket.category || "Обращение")}</span>
         </div>
         <span class="text-gray-500 font-mono">${ticket.date ? ticket.date.split(",")[0] : ""}</span>
       </div>
@@ -2430,6 +2431,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Автоматическое подтягивание новых сообщений от разработчика каждые 3 секунды
 setInterval(async () => {
+  if (document.hidden || document.visibilityState !== "visible") return;
   if (!window.activeChatTicketId) return;
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {

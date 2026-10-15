@@ -1,7 +1,22 @@
-/* =========================================================================
- * LEX LABS ENTERPRISE: DASHBOARD API GATEWAY
- * Файл: dashboard_api.js
- * ========================================================================= */
+/**
+ * @fileoverview LEX LABS ENTERPRISE: DASHBOARD API GATEWAY & DATA UTILS
+ * @module admin/dashboard_api
+ * 
+ * @description
+ * Зона ответственности (Single Responsibility):
+ * Сетевой шлюз Cloud API (JSONBin), локальный кэш и базовые безопасные утилиты
+ * парсинга данных, чтения LocalStorage и санитайзинга HTML-разметки.
+ *
+ * @exports
+ * - window.safeParseJSON(str, fallback) — безопасный парсинг JSON без исключений
+ * - window.readStorage(key, fallback) — безопасное чтение LocalStorage с защитой от повреждений
+ * - window.escapeHtml(str) — XSS-санитайзер строк перед выводом в innerHTML
+ * - window.currentCloudData — глобальное хранилище последнего снимка облачных данных
+ * - window.fetchCloudData() — получение актуального снапшота из JSONBin
+ * - window.saveCloud(data) — сохранение состояния в JSONBin с проверкой res.ok
+ * - window.saveLocal() — экстренное сохранение в локальное хранилище браузера
+ * - window.forceManualSync() — принудительная синхронизация стейта по кнопке UI
+ */
 
 // Базовые безопасные утилиты хранилища и рендеринга
 function safeParseJSON(str, fallback) {

@@ -1,9 +1,48 @@
-/* =========================================================================
- * LEX LABS ENTERPRISE: MAIN DASHBOARD CONTROLLER & LEDGER
- * Файл: dashboard_main.js
- * ========================================================================= */
+/**
+ * @fileoverview LEX LABS ENTERPRISE: MAIN DASHBOARD CONTROLLER & SUPPORT DESK
+ * @module admin/dashboard_main
+ * 
+ * @description
+ * Зона ответственности (Single Responsibility):
+ * Авторизация оператора (PIN-код), переключение вкладок, оркестрация общего
+ * состояния дашборда (KPI и данные питомца), бухгалтерский учет 1C Ledger,
+ * ящик предложений (Inbox), бейджи непрочитанного, история открытий кейсов/рулетки
+ * и первая линия клиентской поддержки (Support Desk Tier-1) с мастером сценариев.
+ *
+ * @exports
+ * - window.checkAuth() — проверка авторизации оператора в sessionStorage
+ * - window.switchMainTab(tabId) — переключение основных экранов админки
+ * - window.switchDashboardTab(tabId) — алиас переключения вкладок
+ * - window.renderDashboard() — общая синхронизация и оркестрация рендеринга всех панелей
+ * - window.setAuditTimeFilter(periodKey) — фильтрация 1C Ledger по периодам
+ * - window.renderAuditLedger(audit) — расчет сальдо/дебета/кредита и вывод проводок
+ * - window.renderFeedbackInbox() — вывод входящих предложений и отзывов игроков
+ * - window.updateUnreadBadges() — подсчет непрочитанных тикетов и ошибок на бейджах
+ * - window.renderCaseDrops(drops) — таблица последних дропов из кейсов
+ * - window.renderRouletteHistory(history) — история вращений рулетки удачи
+ * - window.activeDeskTicketId — ID открытого обращения в Support Desk
+ * - window.openSupportDeskModal() — открытие интерфейса первой линии поддержки
+ * - window.closeSupportDeskModal() — закрытие интерфейса первой линии поддержки
+ * - window.renderDeskChatTimeline(ticket) — лента сообщений в тикете Support Desk
+ * - window.sendDeskMessage() — отправка сообщения оператора в тикет поддержки
+ * - window.onDeskStatusChange(newStatus) — смену статуса обращения с авто-опросником
+ * - window.crmEscalateToDev() — эскалация тикета из первой линии в Канбан разработки
+ * - window.crmRunSmartAction(actionKey) — запуск авто-сценариев помощи (синхронизация и т.д.)
+ * - window.renderDeskWizardNode(nodeKey) — пошаговый мастер сценариев решения проблем
+ * - window.deskResetWizard() — сброс мастера сценариев к начальному экрану
+ */
 
 const DASHBOARD_PIN = "1703";
+const EMPLOYEE_PINS = {
+  alex: "1703",       // Алексей (Lead Dev / Architect)
+  lead: "1703",
+  architect: "1703",
+  developer: "1703",
+  admin: "1703",
+  "алексей": "1703"
+};
+window.EMPLOYEE_PINS = EMPLOYEE_PINS;
+
 const SESSION_AUTH_KEY = "lex_dashboard_auth_token";
 const SESSION_OPERATOR_KEY = "lex_dashboard_operator";
 
@@ -51,9 +90,16 @@ document.getElementById("btnSubmitPin")?.addEventListener("click", () => {
   const employeeSelect = document.getElementById("employeeSelect");
   const authCard = document.getElementById("authCard");
 
-  if (pinInput?.value.trim() === DASHBOARD_PIN) {
+  const enteredPin = pinInput?.value ? pinInput.value.trim() : "";
+  const selectedKey = employeeSelect ? employeeSelect.value.trim().toLowerCase() : "alex";
+  const selectedText = employeeSelect && employeeSelect.selectedIndex >= 0 ? employeeSelect.options[employeeSelect.selectedIndex].text : "Алексей";
+  const expectedPin = EMPLOYEE_PINS[selectedKey] || DASHBOARD_PIN;
+
+  const isAuthorized = enteredPin.length > 0 && (enteredPin === expectedPin || enteredPin === DASHBOARD_PIN);
+
+  if (isAuthorized) {
     sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
-    const opName = employeeSelect ? employeeSelect.options[employeeSelect.selectedIndex].text.split(" ")[0] : "Алексей";
+    const opName = selectedText.split(" ")[0] || "Алексей";
     sessionStorage.setItem(SESSION_OPERATOR_KEY, opName);
     if (pinError) pinError.style.opacity = "0";
     checkAuth();
@@ -61,7 +107,22 @@ document.getElementById("btnSubmitPin")?.addEventListener("click", () => {
     if (pinError) pinError.style.opacity = "1";
     authCard?.classList.add("animate-shake");
     setTimeout(() => authCard?.classList.remove("animate-shake"), 400);
+    pinInput?.select();
   }
+});
+
+// Отправка PIN-кода по нажатию Enter
+document.getElementById("pinInput")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("btnSubmitPin")?.click();
+  }
+});
+
+// Автоматическое скрытие ошибки при начале ввода нового PIN-кода
+document.getElementById("pinInput")?.addEventListener("input", () => {
+  const pinError = document.getElementById("pinError");
+  if (pinError) pinError.style.opacity = "0";
 });
 
 document.getElementById("btnLogout")?.addEventListener("click", () => {
@@ -83,14 +144,88 @@ window.switchMainTab = function (tabId) {
     targetPane.classList.add("flex");
   }
 
-  if (tabId === "kanban" && typeof window.renderKanbanBoard === "function") {
+  // Обновляем визуальный активный стиль кнопок навигации (Sidebar & Main Nav)
+  document.querySelectorAll(".main-tab-btn").forEach((btn) => {
+    const isAct = btn.id === `mainTab_${tabId}`;
+    if (isAct) {
+      btn.classList.add("bg-white/10", "text-white", "font-bold", "border-white/15");
+      btn.classList.remove("text-gray-400", "border-transparent");
+    } else {
+      btn.classList.remove("bg-white/10", "text-white", "font-bold", "border-white/15");
+      btn.classList.add("text-gray-400", "border-transparent");
+    }
+  });
+
+  // Принудительный рендеринг данных при переходе, исключающий пустые контейнеры
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || {};
+
+  if (tabId === "overview") {
+    if (typeof window.renderAuditLedger === "function") window.renderAuditLedger();
+  } else if (tabId === "pet") {
+    if (typeof window.renderCaseDrops === "function") window.renderCaseDrops(userRecord.caseHistory);
+    if (typeof window.renderRouletteHistory === "function") window.renderRouletteHistory(userRecord.rouletteHistory);
+    if (typeof window.renderWishesGrid === "function") window.renderWishesGrid(userRecord.wishes);
+  } else if (tabId === "economy") {
+    if (typeof window.renderEconomyInputs === "function") window.renderEconomyInputs();
+    if (typeof window.switchEcoSubTab === "function") window.switchEcoSubTab("food");
+  } else if (tabId === "odds") {
+    if (typeof window.switchOddsMode === "function") window.switchOddsMode(window.currentOddsTab || "case_std");
+  } else if (tabId === "advisor") {
+    if (typeof window.runComprehensiveAiEconomyAudit === "function") {
+      window.runComprehensiveAiEconomyAudit(userRecord.pet, userRecord.analytics, userRecord.audit);
+    }
+  } else if (tabId === "kanban" && typeof window.renderKanbanBoard === "function") {
     window.renderKanbanBoard();
-  }
-  if (tabId === "inbox" && typeof window.renderFeedbackInbox === "function") {
+  } else if (tabId === "inbox" && typeof window.renderFeedbackInbox === "function") {
     window.renderFeedbackInbox();
   }
 };
 window.switchDashboardTab = window.switchMainTab;
+
+// Сохранение отредактированных параметров питомца
+window.savePetState = async function () {
+  const activeUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[activeUser]) window.currentCloudData[activeUser] = {};
+  if (!window.currentCloudData[activeUser].pet) window.currentCloudData[activeUser].pet = {};
+
+  const pet = window.currentCloudData[activeUser].pet;
+  const nameEl = document.getElementById("editPetName");
+  const coinsEl = document.getElementById("editPetCoins");
+  const levelEl = document.getElementById("editPetLevel");
+  const xpEl = document.getElementById("editPetXp");
+  const hungerEl = document.getElementById("editPetHunger");
+  const happyEl = document.getElementById("editPetHappy");
+  const energyEl = document.getElementById("editPetEnergy");
+  const cleanEl = document.getElementById("editPetClean");
+
+  if (nameEl) pet.name = nameEl.value.trim() || pet.name || "Зефирка";
+  if (coinsEl) pet.coins = parseInt(coinsEl.value, 10) || 0;
+  if (levelEl) pet.level = parseInt(levelEl.value, 10) || 1;
+  if (xpEl) pet.xp = parseInt(xpEl.value, 10) || 0;
+  if (hungerEl) pet.hunger = Math.min(100, Math.max(0, parseInt(hungerEl.value, 10) || 0));
+  if (happyEl) pet.happy = Math.min(100, Math.max(0, parseInt(happyEl.value, 10) || 0));
+  if (energyEl) pet.energy = Math.min(100, Math.max(0, parseInt(energyEl.value, 10) || 0));
+  if (cleanEl) pet.clean = Math.min(100, Math.max(0, parseInt(cleanEl.value, 10) || 0));
+
+  if (!Array.isArray(window.currentCloudData[activeUser].audit)) window.currentCloudData[activeUser].audit = [];
+  window.currentCloudData[activeUser].audit.push({
+    text: `[ADMIN] Изменил параметры питомца: Баланс=${pet.coins}🪙, Ур=${pet.level}`,
+    icon: "🐱",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU"),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+  alert("Параметры питомца успешно сохранены в облаке!");
+  if (typeof window.renderDashboard === "function") {
+    window.renderDashboard();
+  }
+};
 
 // Рендер дашборда
 window.renderDashboard = async function () {
