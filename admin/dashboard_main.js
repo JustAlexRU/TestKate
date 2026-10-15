@@ -695,7 +695,12 @@ window.insertDeskCannedResponse = function (key) {
     check_ok: "Привет! Проверил по базе данных — всё сработало корректно, никаких технических ошибок не зафиксировано ✨",
     comp_given: "Привет! Проверил ситуацию и начислил на твой баланс монеты компенсации 🪙 Приятной игры!",
     hotfix_deployed: "Привет! Хотфикс уже выкачен на прод 🚀 Пожалуйста, обнови страничку и проверь!",
-    pet_care: "Привет! Позаботился о Зефирке, накормил и приласкал 🐾 Все показатели на максимуме!"
+    pet_care: "Привет! Позаботился о Зефирке, накормил и приласкал 🐾 Все показатели на максимуме!",
+    wish_accepted: "Привет! Твой секретный купон желания принят к исполнению ❤️ Я уже готовлю для тебя сюрприз!",
+    pet_woken: "Привет! Разбудил Зефирку, энергия на максимуме ☀️ Можно снова играть и гладить котика!",
+    drop_refunded: "Привет! Проверил открытый кейс — компенсировал монеты на твой баланс 📦 Удачных дропов!",
+    ledger_clean: "Привет! Сверил проводки в 1C Ledger — все списания легитимны и баланс сходится до копеечки 📑",
+    sync_fixed: "Привет! Принудительно синхронизировал стейт с облаком 🌐 Обнови страницу через Ctrl+F5!"
   };
 
   const text = cannedMap[key] || "Привет! Чем могу помочь? ✨";
@@ -907,6 +912,180 @@ window.restorePetStatsSupport = async function () {
     window.renderDashboard();
   }
   alert("🐾 Показатели Зефирки успешно восстановлены на 100%!");
+};
+
+/**
+ * Экстренное пробуждение питомца (сброс сна и восстановление энергии)
+ */
+window.wakeUpPetSupport = async function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+  if (!userRecord.pet) userRecord.pet = {};
+
+  userRecord.pet.isSleeping = false;
+  userRecord.pet.energy = 100;
+  userRecord.pet.lastWokeUpAt = Date.now();
+  userRecord.pet.xp = (userRecord.pet.xp || 0) + 6;
+
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT PET] Зефирка проснулась и полна энергии! (+6 XP)`,
+    icon: "☀️",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") await window.saveCloud();
+
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_wake_" + Date.now(),
+        author: "system",
+        text: "☀️ Зефирка сладко потянулась, выспалась и проснулась!",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_wake_" + Date.now(),
+        author: "alex",
+        text: "Разбудил Зефирку, энергия восстановлена на 100%! Можно снова играть и гладить котика ☀️",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") await window.saveFeedbackListToCloud(list);
+      if (typeof window.renderDeskChatTimeline === "function") window.renderDeskChatTimeline(ticket);
+    }
+  }
+
+  updateDeskCustomerCard();
+  if (typeof window.renderDashboard === "function") window.renderDashboard();
+  alert("☀️ Зефирка успешно проснулась, энергия восстановлена на 100%!");
+};
+
+/**
+ * Генеральная уборка комнаты службы заботы
+ */
+window.cleanPoopSupport = async function () {
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+  if (!userRecord.pet) userRecord.pet = {};
+
+  userRecord.pet.clean = 100;
+  userRecord.pet.poops = 0;
+  userRecord.pet.coins = (Number(userRecord.pet.coins) || 0) + 15;
+
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT PET] Генеральная уборка комнаты службы заботы (+15 🪙)`,
+    icon: "🧼",
+    coinsChange: 15,
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") await window.saveCloud();
+
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_clean_" + Date.now(),
+        author: "system",
+        text: "🧼 Комната Зефирки вымыта до блеска, чистота 100%! (+15 🪙)",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_clean_" + Date.now(),
+        author: "alex",
+        text: "Навел идеальный порядок в комнате Зефирки, искупал котика и добавил 15 🪙 за чистоту! ✨",
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") await window.saveFeedbackListToCloud(list);
+      if (typeof window.renderDeskChatTimeline === "function") window.renderDeskChatTimeline(ticket);
+    }
+  }
+
+  updateDeskCustomerCard();
+  if (typeof window.renderDashboard === "function") window.renderDashboard();
+  alert("🧼 В комнате чистота 100%, начислено +15 🪙!");
+};
+
+/**
+ * Исполнение купона желания в реальной жизни (IRL Redemption)
+ */
+window.redeemWishCouponSupport = async function (couponCode) {
+  if (!couponCode) return;
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+
+  if (!Array.isArray(userRecord.wishes)) userRecord.wishes = [];
+  const coupon = userRecord.wishes.find(w => w.code === couponCode || w.id === couponCode);
+  if (!coupon) {
+    alert("Купон не найден в базе данных!");
+    return;
+  }
+  if (coupon.status === "used") {
+    alert("Этот купон уже был активирован ранее!");
+    return;
+  }
+
+  coupon.status = "used";
+  coupon.claimed = true;
+  coupon.usedAt = new Date().toLocaleString("ru-RU");
+
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SUPPORT WISH] Активация купона желания: «${coupon.title}» (${coupon.code})`,
+    icon: "❤️",
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (typeof window.saveCloud === "function") await window.saveCloud();
+
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_wish_redeem_" + Date.now(),
+        author: "system",
+        text: `🎁 Купон желания «${coupon.title}» (${coupon.code}) принят к исполнению в жизни!`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_redeem_" + Date.now(),
+        author: "alex",
+        text: `Твой купон «${coupon.title}» принят! Я уже готовлю сюрприз для тебя ❤️`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") await window.saveFeedbackListToCloud(list);
+      if (typeof window.renderDeskChatTimeline === "function") window.renderDeskChatTimeline(ticket);
+    }
+  }
+
+  if (typeof window.renderWishesGrid === "function") window.renderWishesGrid(userRecord.wishes);
+  alert(`❤️ Купон «${coupon.title}» успешно активирован и принят к исполнению!`);
 };
 
 window.openSupportDeskModal = function () {
@@ -1272,6 +1451,7 @@ window.crmRunSmartAction = async function (actionKey) {
 
 /**
  * ИНТЕРАКТИВНЫЙ МАСТЕР СЦЕНАРИЕВ SUPPORT DESK (TIER-1 CRM DECISION TREE)
+ * Полная реализация 5 ветвей: Финансы, Дропы, Зефирка SOS, IRL Budget Guard, Техническая эскалация
  */
 window.renderDeskWizardNode = function (nodeKey) {
   const container = document.getElementById("deskWizardStepsContainer");
@@ -1286,34 +1466,59 @@ window.renderDeskWizardNode = function (nodeKey) {
   const pet = userRecord.pet || {};
 
   // =========================================================================
-  // КОРНЕВОЕ МЕНЮ (4 НАПРАВЛЕНИЯ)
+  // НАВИГАЦИЯ НАЗАД
   // =========================================================================
   if (nodeKey === "root") {
     backBtn?.classList.add("hidden");
-    if (titleEl) titleEl.innerText = "🔍 Мастер сценариев (Шаг 1)";
+  } else {
+    backBtn?.classList.remove("hidden");
+    if (nodeKey.startsWith("finances_") && nodeKey !== "finances_root") {
+      backBtn.onclick = () => window.renderDeskWizardNode("finances_root");
+    } else if ((nodeKey.startsWith("drops_") || nodeKey === "cases_recent") && nodeKey !== "drops_root") {
+      backBtn.onclick = () => window.renderDeskWizardNode("drops_root");
+    } else if (nodeKey.startsWith("pet_") && nodeKey !== "pet_root") {
+      backBtn.onclick = () => window.renderDeskWizardNode("pet_root");
+    } else if (nodeKey.startsWith("wishes_") && nodeKey !== "wishes_root") {
+      backBtn.onclick = () => window.renderDeskWizardNode("wishes_root");
+    } else if (nodeKey.startsWith("tech_") && nodeKey !== "tech_root") {
+      backBtn.onclick = () => window.renderDeskWizardNode("tech_root");
+    } else {
+      backBtn.onclick = () => window.renderDeskWizardNode("root");
+    }
+  }
+
+  // =========================================================================
+  // 1. КОРНЕВОЕ МЕНЮ (5 КЛЮЧЕВЫХ ВЕТВЕЙ TIER-1)
+  // =========================================================================
+  if (nodeKey === "root") {
+    if (titleEl) titleEl.innerText = "🔍 Мастер сценариев (Tier-1 Древо)";
 
     const desc = document.createElement("div");
-    desc.className = "text-[11px] text-amber-300 font-bold mb-1.5";
-    desc.innerText = "Выберите категорию обращения:";
+    desc.className = "text-[11px] text-amber-300 font-bold mb-2";
+    desc.innerText = "Выберите категорию обращения игрока:";
     container.appendChild(desc);
 
     const categories = [
-      { key: "finances_step1", label: "🪙 Проблемы с монетами / 1C Ledger", icon: "🪙", desc: "Сверка баланса, возврат списаний, компенсации" },
-      { key: "drops_step1", label: "🎁 Кейсы, рулетка и купоны желаний", icon: "🎁", desc: "Дропы, фриспины, ручная выдача купона" },
-      { key: "tech_step1", label: "🛠️ Технический сбой и состояние питомца", icon: "🛠️", desc: "Экспресс-диагностика, 100% забота, эскалация" },
-      { key: "love_step1", label: "❤️ Вопросы уюта и тёплые пожелания", icon: "❤️", desc: "Искренние сообщения от Алексея + бонус" }
+      { key: "finances_root", label: "🪙 Финансы, баланс и 1C Ledger", icon: "🪙", desc: "Сверка баланса, возврат списаний, компенсации" },
+      { key: "drops_root", label: "🎁 Кейсы, рулетка и выпавшие дропы", icon: "🎁", desc: "Завис кейс/рулетка, аудит шансов, пропажа предмета" },
+      { key: "pet_root", label: "🐾 Забота о Зефирке SOS", icon: "🐾", desc: "100% показатели, разбудить из сна, уборка какашек" },
+      { key: "wishes_root", label: "💌 Купоны Желаний & IRL Budget Guard", icon: "💌", desc: "Лимит 5 000 ₽/мес, активация купона, ручной выпуск" },
+      { key: "tech_root", label: "🛠️ Технический сбой и эскалация во 2-ю линию", icon: "🛠️", desc: "Логи сбоя, Cloud Sync, передача бага в Канбан" }
     ];
 
     categories.forEach(opt => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex flex-col gap-1 cursor-pointer shadow-sm group";
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex flex-col gap-1 cursor-pointer shadow-sm group mb-1.5";
       btn.innerHTML = `
         <div class="flex items-center justify-between">
-          <span class="font-bold text-xs text-slate-200 group-hover:text-amber-300 transition">${opt.label}</span>
+          <span class="font-bold text-xs text-slate-200 group-hover:text-amber-300 transition flex items-center gap-1.5">
+            <span>${opt.icon}</span>
+            <span>${opt.label}</span>
+          </span>
           <span class="text-xs text-slate-500 font-mono">→</span>
         </div>
-        <div class="text-[10px] text-slate-400">${opt.desc}</div>
+        <div class="text-[10px] text-slate-400 pl-5">${opt.desc}</div>
       `;
       btn.onclick = () => window.renderDeskWizardNode(opt.key);
       container.appendChild(btn);
@@ -1322,247 +1527,215 @@ window.renderDeskWizardNode = function (nodeKey) {
   }
 
   // =========================================================================
-  // НАВИГАЦИЯ НАЗАД
+  // 2. ВЕТКА 1: ФИНАНСЫ И 1C LEDGER
   // =========================================================================
-  backBtn?.classList.remove("hidden");
-  if (nodeKey === "manual_wish_form" || nodeKey === "cases_recent") {
-    backBtn.onclick = () => window.renderDeskWizardNode("drops_step1");
-  } else if (nodeKey === "finances_step2") {
-    backBtn.onclick = () => window.renderDeskWizardNode("finances_step1");
-  } else {
-    backBtn.onclick = () => window.renderDeskWizardNode("root");
+  if (nodeKey === "finances_root") {
+    if (titleEl) titleEl.innerText = "🪙 Проблемы с балансом и 1С";
+
+    const subCats = [
+      { key: "finances_uncredited", title: "Не начислились монеты", desc: "За игру, дейлик или дзен-сундучок", icon: "📥" },
+      { key: "finances_dispute", title: "Спорное списание (Сверка 1С)", desc: "Проверить проводки и обоснованность списания", icon: "🔍" },
+      { key: "finances_negative", title: "Баланс обнулился или сбой кошелька", desc: "Экстренное восстановление депозита (+100 🪙)", icon: "🚨" }
+    ];
+
+    subCats.forEach(sc => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2";
+      b.innerHTML = `
+        <span class="text-base shrink-0">${sc.icon}</span>
+        <div>
+          <div class="font-bold text-xs text-slate-200">${sc.title}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${sc.desc}</div>
+        </div>
+      `;
+      b.onclick = () => window.renderDeskWizardNode(sc.key);
+      container.appendChild(b);
+    });
+    return;
   }
 
-  // =========================================================================
-  // ВЕТКА A: ПРОБЛЕМЫ С МОНЕТАМИ И 1С LEDGER
-  // =========================================================================
-  if (nodeKey === "finances_step1") {
-    if (titleEl) titleEl.innerText = "🪙 Сверка 1C Ledger (Шаг 2)";
+  if (nodeKey === "finances_uncredited") {
+    if (titleEl) titleEl.innerText = "🪙 Не начислились монеты";
+
+    const desc = document.createElement("div");
+    desc.className = "text-[11px] text-amber-300 font-bold mb-2";
+    desc.innerText = "Выберите причину для быстрой компенсации в 1 клик:";
+    container.appendChild(desc);
+
+    const compensations = [
+      { amount: 25, label: "+25 🪙 (Мини-игра / Ритм / Раннер)", reason: "Сбой начисления за аркаду" },
+      { amount: 50, label: "+50 🪙 (Ежедневный бонус / Дзен)", reason: "Сбой начисления дейлика" },
+      { amount: 100, label: "+100 🪙 (Крупный сбой начисления)", reason: "Критический сбой кошелька" }
+    ];
+
+    compensations.forEach(c => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "w-full text-left p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 font-bold text-xs transition cursor-pointer mb-2 active:scale-98 flex items-center justify-between";
+      b.innerHTML = `
+        <span>${c.label}</span>
+        <span class="text-[10px] opacity-75 font-mono">Начислить ⚡</span>
+      `;
+      b.onclick = async () => {
+        await window.grantSupportCompensationCoins(c.amount, c.reason);
+      };
+      container.appendChild(b);
+    });
+    return;
+  }
+
+  if (nodeKey === "finances_dispute") {
+    if (titleEl) titleEl.innerText = "🔍 Сверка проводок 1C Ledger";
 
     const auditList = Array.isArray(userRecord.audit) ? userRecord.audit : (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_audit_events`, window.readStorage("katya_master_audit_events", [])) : []);
     const recent = auditList.slice(0, 5);
 
     const desc = document.createElement("div");
-    desc.className = "text-[11px] text-amber-300 font-bold mb-1";
+    desc.className = "text-[11px] text-slate-300 font-bold mb-2";
     desc.innerText = "Последние 5 проводок по балансу игрока:";
     container.appendChild(desc);
 
     if (recent.length === 0) {
       container.innerHTML += `<div class="text-xs text-slate-500 py-3 text-center">Записей проводок в 1С пока нет.</div>`;
     } else {
-      const listDiv = document.createElement("div");
-      listDiv.className = "flex flex-col gap-1.5 mb-3";
-
-      recent.forEach((item, idx) => {
-        const itemBtn = document.createElement("button");
-        itemBtn.type = "button";
-        itemBtn.className = "w-full text-left p-2 rounded-lg bg-[#141624] hover:bg-[#1d2035] border border-white/5 transition flex items-center justify-between text-xs cursor-pointer";
+      recent.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "p-2 rounded-lg bg-[#141624] border border-white/5 flex items-center justify-between text-xs mb-1.5";
         const sign = item.coinsChange > 0 ? `+${item.coinsChange}` : (item.coinsChange ? String(item.coinsChange) : "");
         const signColor = item.coinsChange > 0 ? "text-emerald-400" : (item.coinsChange < 0 ? "text-rose-400" : "text-slate-400");
-
-        itemBtn.innerHTML = `
+        itemDiv.innerHTML = `
           <div class="truncate pr-2">
             <span class="mr-1">${item.icon || "📄"}</span>
             <span class="font-medium text-slate-200">${escapeFn(item.text || "Проводка")}</span>
-            <div class="text-[9px] text-slate-500 font-mono mt-0.5">${escapeFn(item.date || "")} ${escapeFn(item.time || "")}</div>
+            <div class="text-[9px] text-slate-500 font-mono">${escapeFn(item.date || "")} ${escapeFn(item.time || "")}</div>
           </div>
           ${sign ? `<span class="font-mono font-bold text-[11px] ${signColor} shrink-0">${sign}🪙</span>` : ""}
         `;
-        itemBtn.onclick = () => {
-          const input = document.getElementById("deskChatInput");
-          if (input) {
-            input.value = `Проверил проводку «${item.text}» (${item.date} ${item.time}). Списание проведено согласно механикам игры ✨`;
-            input.focus();
-          }
-        };
-        listDiv.appendChild(itemBtn);
+        container.appendChild(itemDiv);
       });
-      container.appendChild(listDiv);
     }
 
-    // Блок быстрых компенсаций в 1 клик
-    const compHeader = document.createElement("div");
-    compHeader.className = "text-[11px] text-slate-300 font-bold mb-1.5 flex items-center gap-1";
-    compHeader.innerHTML = `<span>⚡</span><span>Быстрая компенсация оператора:</span>`;
-    container.appendChild(compHeader);
+    const btnOk = document.createElement("button");
+    btnOk.type = "button";
+    btnOk.className = "w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-xs font-medium active:scale-95 transition cursor-pointer text-left flex items-center gap-2 mt-2";
+    btnOk.innerHTML = `<span>💬</span><span>Списание корректно (отправить игроку)</span>`;
+    btnOk.onclick = () => window.insertDeskCannedResponse("ledger_clean");
+    container.appendChild(btnOk);
 
-    const compGrid = document.createElement("div");
-    compGrid.className = "grid grid-cols-3 gap-1.5 mb-2";
+    const btnRefund = document.createElement("button");
+    btnRefund.type = "button";
+    btnRefund.className = "w-full py-2 px-3 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold active:scale-95 transition cursor-pointer text-left flex items-center gap-2 mt-1.5";
+    btnRefund.innerHTML = `<span>⚡</span><span>Вернуть последнее списание (+50 🪙)</span>`;
+    btnRefund.onclick = () => window.grantSupportCompensationCoins(50, "Откат спорного списания");
+    container.appendChild(btnRefund);
+    return;
+  }
 
-    [
-      { amount: 25, label: "+25 🪙", reason: "Сбой начисления" },
-      { amount: 50, label: "+50 🪙", reason: "Ошибка списания" },
-      { amount: 100, label: "+100 🪙", reason: "Критический сбой" }
-    ].forEach(c => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "py-2 px-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 font-bold text-xs active:scale-95 transition cursor-pointer text-center";
-      b.innerText = c.label;
-      b.title = c.reason;
-      b.onclick = () => window.grantSupportCompensationCoins(c.amount, c.reason);
-      compGrid.appendChild(b);
-    });
-    container.appendChild(compGrid);
+  if (nodeKey === "finances_negative") {
+    if (titleEl) titleEl.innerText = "🚨 Восстановление кошелька";
+    const desc = document.createElement("div");
+    desc.className = "text-xs text-slate-300 leading-relaxed mb-3";
+    desc.innerText = "Если из-за сбоя сети баланс обнулился или ушел в минус, кнопка восстановит кошелек до комфортных 100 🪙 и зафиксирует проводку в 1С.";
+    container.appendChild(desc);
 
-    // Кнопка вежливого объяснения
-    const explainBtn = document.createElement("button");
-    explainBtn.type = "button";
-    explainBtn.className = "w-full py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs font-medium active:scale-95 transition cursor-pointer text-left flex items-center gap-2";
-    explainBtn.innerHTML = `<span>💬</span><span>Списание корректно (отправить в чат)</span>`;
-    explainBtn.onclick = () => {
-      const input = document.getElementById("deskChatInput");
-      if (input) {
-        input.value = "Привет! Проверил все последние проводки в 1C Ledger. Списания прошли строго в рамках игровых правил, баланс актуален и корректен ✨";
-        input.focus();
-      }
+    const resetBtn = document.createElement("button");
+    resetBtn.type = "button";
+    resetBtn.className = "w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer text-center";
+    resetBtn.innerText = "💰 Восстановить кошелек (+100 🪙)";
+    resetBtn.onclick = async () => {
+      await window.grantSupportCompensationCoins(100, "Экстренное восстановление баланса");
     };
-    container.appendChild(explainBtn);
+    container.appendChild(resetBtn);
     return;
   }
 
   // =========================================================================
-  // ВЕТКА B: КЕЙСЫ, РУЛЕТКА И КУПОНЫ ЖЕЛАНИЙ
+  // 3. ВЕТКА 2: КЕЙСЫ, РУЛЕТКА И ДРОПЫ
   // =========================================================================
-  if (nodeKey === "drops_step1") {
-    if (titleEl) titleEl.innerText = "🎁 Кейсы и купоны (Шаг 2)";
+  if (nodeKey === "drops_root") {
+    if (titleEl) titleEl.innerText = "🎁 Кейсы и Рулетка Удачи";
 
-    const wishes = Array.isArray(userRecord.wishes) ? userRecord.wishes : [];
-    const activeWishes = wishes.filter(w => w.status === "active" && !w.claimed);
     const caseDrops = Array.isArray(userRecord.caseHistory) ? userRecord.caseHistory : [];
-
     const statsDiv = document.createElement("div");
     statsDiv.className = "p-2.5 rounded-xl bg-[#141624] border border-white/5 flex justify-between items-center text-xs mb-3";
     statsDiv.innerHTML = `
-      <div>
-        <span class="text-slate-400 block text-[10px]">Активных купонов:</span>
-        <b class="text-amber-300 font-mono text-sm">${activeWishes.length} шт</b>
-      </div>
-      <div>
-        <span class="text-slate-400 block text-[10px]">Кейсов открыто:</span>
-        <b class="text-indigo-300 font-mono text-sm">${caseDrops.length} шт</b>
-      </div>
+      <div><span class="text-slate-400 block text-[10px]">Всего открыто кейсов:</span><b class="text-amber-300 font-mono text-sm">${caseDrops.length} шт</b></div>
+      <div><span class="text-slate-400 block text-[10px]">Рулетка удачи:</span><b class="text-indigo-300 font-mono text-sm">Активна ✓</b></div>
     `;
     container.appendChild(statsDiv);
 
-    // Действия
-    const actions = [
-      {
-        icon: "🎁",
-        title: "Выдать купон желания вручную",
-        desc: "Создать купон #WISH-MANUAL с гарантированным начислением",
-        onClick: () => window.renderDeskWizardNode("manual_wish_form")
-      },
-      {
-        icon: "🎰",
-        title: "Подарить спин рулетки (+25 🪙)",
-        desc: "Компенсировать стоимость вращения рулетки удачи",
-        onClick: () => window.grantSupportCompensationCoins(25, "Компенсация спина рулетки")
-      },
-      {
-        icon: "📦",
-        title: "Компенсация открытия кейса (+50 🪙)",
-        desc: "Возврат стоимости кейса при неудачной анимации",
-        onClick: () => window.grantSupportCompensationCoins(50, "Компенсация открытия кейса")
-      },
-      {
-        icon: "📜",
-        title: "История открытий кейсов",
-        desc: "Посмотреть список выпавших предметов",
-        onClick: () => window.renderDeskWizardNode("cases_recent")
-      }
+    const subCats = [
+      { key: "drops_stuck", title: "Завис кейс или спин рулетки", desc: "Вернуть монеты за неудачную анимацию открытия", icon: "🎰" },
+      { key: "drops_pity", title: "Вопрос по шансам и честности (RTP)", desc: "Вежливое разъяснение формулы + утешительный спин", icon: "🧠" },
+      { key: "cases_recent", title: "История выпавших предметов", desc: "Посмотреть список и редкости открытых кейсов", icon: "📦" }
     ];
 
-    actions.forEach(a => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2";
-      btn.innerHTML = `
-        <span class="text-base shrink-0">${a.icon}</span>
+    subCats.forEach(sc => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2";
+      b.innerHTML = `
+        <span class="text-base shrink-0">${sc.icon}</span>
         <div>
-          <div class="font-bold text-xs text-slate-200">${a.title}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">${a.desc}</div>
+          <div class="font-bold text-xs text-slate-200">${sc.title}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${sc.desc}</div>
         </div>
       `;
-      btn.onclick = a.onClick;
+      b.onclick = () => window.renderDeskWizardNode(sc.key);
+      container.appendChild(b);
+    });
+    return;
+  }
+
+  if (nodeKey === "drops_stuck") {
+    if (titleEl) titleEl.innerText = "🎰 Компенсация зависшего кейса";
+
+    const buttons = [
+      { label: "Подарить спин рулетки (+25 🪙)", amount: 25, reason: "Компенсация спина рулетки" },
+      { label: "Компенсировать кейс (+50 🪙)", amount: 50, reason: "Возврат стоимости кейса" },
+      { label: "Компенсировать эпик-кейс (+100 🪙)", amount: 100, reason: "Компенсация супер-кейса" }
+    ];
+
+    buttons.forEach(b => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 font-bold text-xs transition cursor-pointer mb-2 active:scale-98 flex items-center justify-between";
+      btn.innerHTML = `<span>${b.label}</span><span class="text-[10px] opacity-75 font-mono">Выдать ⚡</span>`;
+      btn.onclick = async () => {
+        await window.grantSupportCompensationCoins(b.amount, b.reason);
+      };
       container.appendChild(btn);
     });
     return;
   }
 
-  // =========================================================================
-  // МИНИ-ФОРМА ВЫДАЧИ КУПОНА ЖЕЛАНИЯ
-  // =========================================================================
-  if (nodeKey === "manual_wish_form") {
-    if (titleEl) titleEl.innerText = "🎁 Выдача купона желания";
+  if (nodeKey === "drops_pity") {
+    if (titleEl) titleEl.innerText = "🧠 Аудит шансов и честности";
 
     const desc = document.createElement("div");
-    desc.className = "text-[11px] text-amber-300 font-bold mb-2";
-    desc.innerText = "Выберите готовый пресет или введите текст:";
+    desc.className = "text-xs text-slate-300 leading-relaxed mb-3";
+    desc.innerText = "В игре используется честный генератор случайных чисел. Чтобы сгладить эмоции, отправь тёплый ответ и подари утешительный спин:";
     container.appendChild(desc);
 
-    const presets = [
-      { title: "☕ Вкусный кофе / Десерт", cat: "small" },
-      { title: "💆‍♀️ Массаж / Релакс-вечер", cat: "medium" },
-      { title: "🍕 Киновечер с пиццей", cat: "medium" },
-      { title: "🍷 Романтический ужин", cat: "large" },
-      { title: "✨ Спонтанное желание", cat: "special" }
-    ];
+    const btnReply = document.createElement("button");
+    btnReply.type = "button";
+    btnReply.className = "w-full py-2.5 px-3 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold active:scale-95 transition cursor-pointer text-left flex items-center gap-2 mb-2";
+    btnReply.innerHTML = `<span>💬</span><span>Отправить вежливый ответ оператора</span>`;
+    btnReply.onclick = () => window.insertDeskCannedResponse("drop_refunded");
+    container.appendChild(btnReply);
 
-    const presetWrap = document.createElement("div");
-    presetWrap.className = "flex flex-wrap gap-1.5 mb-3";
-    presets.forEach(p => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] text-slate-200 transition active:scale-95 cursor-pointer";
-      chip.innerText = p.title;
-      chip.onclick = () => {
-        const inp = document.getElementById("manualWishInput");
-        const sel = document.getElementById("manualWishCatSelect");
-        if (inp) inp.value = p.title;
-        if (sel) sel.value = p.cat;
-      };
-      presetWrap.appendChild(chip);
-    });
-    container.appendChild(presetWrap);
-
-    const formWrap = document.createElement("div");
-    formWrap.className = "flex flex-col gap-2";
-    formWrap.innerHTML = `
-      <input type="text" id="manualWishInput" placeholder="Название желания..." class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400 transition" />
-      <select id="manualWishCatSelect" class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none cursor-pointer">
-        <option value="small">Категория Small (~400 ₽: кофе, вкусняшка)</option>
-        <option value="medium" selected>Категория Medium (~1 200 ₽: доставка, кино)</option>
-        <option value="large">Категория Large (~2 500 ₽: свидание, ресторан)</option>
-        <option value="special">Категория Special (~3 500 ₽: поездка, мечта)</option>
-      </select>
-      <button type="button" id="btnSubmitManualWish" class="py-2.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer text-center mt-1">
-        🎁 Отправить купон игроку
-      </button>
-    `;
-    container.appendChild(formWrap);
-
-    setTimeout(() => {
-      document.getElementById("btnSubmitManualWish")?.addEventListener("click", async () => {
-        const inp = document.getElementById("manualWishInput");
-        const sel = document.getElementById("manualWishCatSelect");
-        const title = inp ? inp.value.trim() : "";
-        const cat = sel ? sel.value : "medium";
-        if (!title) {
-          alert("Пожалуйста, введите название купона!");
-          return;
-        }
-        await window.grantManualWishCoupon(title, cat);
-        window.renderDeskWizardNode("drops_step1");
-      });
-    }, 50);
+    const btnCoin = document.createElement("button");
+    btnCoin.type = "button";
+    btnCoin.className = "w-full py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold active:scale-95 transition cursor-pointer text-center";
+    btnCoin.innerText = "🎁 Начислить утешительный спин (+25 🪙)";
+    btnCoin.onclick = () => window.grantSupportCompensationCoins(25, "Утешительный спин поддержки");
+    container.appendChild(btnCoin);
     return;
   }
 
-  // =========================================================================
-  // ИСТОРИЯ КЕЙСОВ
-  // =========================================================================
   if (nodeKey === "cases_recent") {
-    if (titleEl) titleEl.innerText = "📦 Последние открытия кейсов";
+    if (titleEl) titleEl.innerText = "📦 Недавние открытия кейсов";
     const caseDrops = Array.isArray(userRecord.caseHistory) ? userRecord.caseHistory : [];
     const recentCases = caseDrops.slice(0, 6);
 
@@ -1594,15 +1767,10 @@ window.renderDeskWizardNode = function (nodeKey) {
   }
 
   // =========================================================================
-  // ВЕТКА C: ТЕХНИЧЕСКИЙ СБОЙ И ПИТОМЕЦ
+  // 4. ВЕТКА 3: ЗАБОТА О ЗЕФИРКЕ SOS
   // =========================================================================
-  if (nodeKey === "tech_step1") {
-    if (titleEl) titleEl.innerText = "🛠️ Диагностика питомца и системы";
-
-    const diagHeader = document.createElement("div");
-    diagHeader.className = "text-[11px] text-amber-300 font-bold mb-2";
-    diagHeader.innerText = "Экспресс-диагностика состояния Зефирки:";
-    container.appendChild(diagHeader);
+  if (nodeKey === "pet_root") {
+    if (titleEl) titleEl.innerText = "🐾 Неотложная забота о Зефирке";
 
     const statsGrid = document.createElement("div");
     statsGrid.className = "grid grid-cols-2 gap-2 mb-3";
@@ -1628,35 +1796,34 @@ window.renderDeskWizardNode = function (nodeKey) {
     });
     container.appendChild(statsGrid);
 
-    // Действия техподдержки
     const actions = [
       {
         icon: "🐾",
-        title: "Восстановить питомца на 100% (Забота поддержки)",
-        desc: "Выставить сытость, энергию, счастье и чистоту на максимум",
+        title: "100% Забота поддержки (Все параметры на максимум)",
+        desc: "Восстановить сытость, энергию, счастье и чистоту",
         btnClass: "bg-pink-500/15 hover:bg-pink-500/25 border-pink-500/30 text-pink-300",
         onClick: () => window.restorePetStatsSupport()
       },
       {
-        icon: "🌐",
-        title: "Принудительный Cloud Sync",
-        desc: "Перезаписать состояние в облако и снять блокировки",
-        btnClass: "bg-indigo-500/15 hover:bg-indigo-500/25 border-indigo-500/30 text-indigo-300",
-        onClick: () => window.crmRunSmartAction("smart_force_sync")
+        icon: "☀️",
+        title: "Разбудить Зефирку (Сбросить сон)",
+        desc: "Вывести питомца из сна и восстановить 100% энергии",
+        btnClass: "bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/30 text-amber-300",
+        onClick: () => window.wakeUpPetSupport()
       },
       {
-        icon: "🚀",
-        title: "Эскалировать баг во 2-ю линию (Канбан)",
-        desc: "Передать тикет Алексею на исправление в коде",
-        btnClass: "bg-rose-500/15 hover:bg-rose-500/25 border-rose-500/30 text-rose-300",
-        onClick: () => window.crmEscalateToDev()
+        icon: "🧼",
+        title: "Генеральная уборка комнаты (+15 🪙)",
+        desc: "Убрать все какашки с пола и выставить чистоту 100%",
+        btnClass: "bg-cyan-500/15 hover:bg-cyan-500/25 border-cyan-500/30 text-cyan-300",
+        onClick: () => window.cleanPoopSupport()
       }
     ];
 
     actions.forEach(act => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = `w-full text-left p-2.5 rounded-xl border ${act.btnClass} transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2 active:scale-95`;
+      btn.className = `w-full text-left p-2.5 rounded-xl border ${act.btnClass} transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2 active:scale-98`;
       btn.innerHTML = `
         <span class="text-base shrink-0">${act.icon}</span>
         <div>
@@ -1671,44 +1838,239 @@ window.renderDeskWizardNode = function (nodeKey) {
   }
 
   // =========================================================================
-  // ВЕТКА D: УЮТ И ТЁПЛЫЕ ПОЖЕЛАНИЯ
+  // 5. ВЕТКА 4: КУПОНЫ ЖЕЛАНИЙ & IRL BUDGET GUARD
   // =========================================================================
-  if (nodeKey === "love_step1") {
-    if (titleEl) titleEl.innerText = "❤️ Уют и тёплые пожелания";
+  if (nodeKey === "wishes_root") {
+    if (titleEl) titleEl.innerText = "💌 Купоны Желаний & IRL Бюджет";
 
-    const desc = document.createElement("div");
-    desc.className = "text-[11px] text-pink-300 font-bold mb-1.5";
-    desc.innerText = "Искренние послания от Алексея для поднятия настроения:";
-    container.appendChild(desc);
+    const wishes = Array.isArray(userRecord.wishes) ? userRecord.wishes : [];
+    const activeWishes = wishes.filter(w => w.status === "active" && !w.claimed);
 
-    const warmMessages = [
-      { text: "Ты самая лучшая, улыбнись! Люблю тебя ❤️", bonus: 20, icon: "💖" },
-      { text: "Отвлекись на минутку и выпей чашечку ароматного чая ☕", bonus: 20, icon: "🍵" },
-      { text: "Отправляю лучи бесконечного тепла и самых мягких обнимашек 🐱", bonus: 20, icon: "🐾" },
-      { text: "Зефирка мурлычет и передаёт, что очень соскучилась! ✨", bonus: 20, icon: "⭐" }
+    // Расчет IRL бюджета
+    const costMap = { small: 400, medium: 1200, large: 2500, special: 3500 };
+    let spentRub = 0;
+    activeWishes.forEach(w => {
+      spentRub += costMap[w.category] || costMap.medium;
+    });
+    const monthlyLimit = 5000;
+    const loadPct = Math.min(100, Math.round((spentRub / monthlyLimit) * 100));
+    const isOver75 = loadPct >= 75;
+
+    const banner = document.createElement("div");
+    banner.className = `p-3 rounded-xl border ${isOver75 ? "bg-rose-950/40 border-rose-500/40 text-rose-300" : "bg-[#141624] border-white/5 text-slate-300"} mb-3`;
+    banner.innerHTML = `
+      <div class="flex justify-between items-center text-xs font-bold mb-1">
+        <span>IRL Нагрузка: ${spentRub} ₽ / ${monthlyLimit} ₽</span>
+        <span class="font-mono">${loadPct}%</span>
+      </div>
+      <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+        <div class="h-full rounded-full transition-all ${isOver75 ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-emerald-500"}" style="width: ${loadPct}%"></div>
+      </div>
+      <div class="text-[10px] mt-1.5 opacity-80">
+        ${isOver75 ? "⚠️ Нагрузка выше 75%! Выдача крупных купонов (Large/Special) заблокирована." : "✨ Лимит в норме, активных купонов на руках: " + activeWishes.length + " шт."}
+      </div>
+    `;
+    container.appendChild(banner);
+
+    const subCats = [
+      { key: "wishes_grant", title: "Выдать купон желания вручную", desc: "Создать купон с гарантированным начислением", icon: "🎁" },
+      { key: "wishes_redeem", title: "Активировать купон в жизни (Redeem)", desc: "Отметить купон Кати как исполненный", icon: "❤️" }
     ];
 
-    warmMessages.forEach(wm => {
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "w-full text-left p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 transition flex items-start gap-2.5 cursor-pointer active:scale-95 mb-2 group";
-      card.innerHTML = `
-        <span class="text-base shrink-0">${wm.icon}</span>
-        <div class="flex-1">
-          <div class="text-xs font-semibold text-slate-100 group-hover:text-pink-200 transition leading-relaxed">${escapeFn(wm.text)}</div>
-          <div class="text-[10px] text-pink-400 font-mono mt-1 font-bold">+${wm.bonus} 🪙 уютный бонус лакомства</div>
+    subCats.forEach(sc => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 hover:border-amber-400/30 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2";
+      b.innerHTML = `
+        <span class="text-base shrink-0">${sc.icon}</span>
+        <div>
+          <div class="font-bold text-xs text-slate-200">${sc.title}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${sc.desc}</div>
         </div>
       `;
-      card.onclick = async () => {
-        const input = document.getElementById("deskChatInput");
-        if (input) {
-          input.value = wm.text;
-          input.focus();
+      b.onclick = () => window.renderDeskWizardNode(sc.key);
+      container.appendChild(b);
+    });
+    return;
+  }
+
+  if (nodeKey === "wishes_grant") {
+    if (titleEl) titleEl.innerText = "🎁 Выдача купона желания";
+
+    const wishes = Array.isArray(userRecord.wishes) ? userRecord.wishes : [];
+    const activeWishes = wishes.filter(w => w.status === "active" && !w.claimed);
+    const costMap = { small: 400, medium: 1200, large: 2500, special: 3500 };
+    let spentRub = 0;
+    activeWishes.forEach(w => { spentRub += costMap[w.category] || costMap.medium; });
+    const isOver75 = (spentRub / 5000) >= 0.75;
+
+    const desc = document.createElement("div");
+    desc.className = "text-[11px] text-amber-300 font-bold mb-2";
+    desc.innerText = "Выберите готовый пресет или введите свой вариант:";
+    container.appendChild(desc);
+
+    const presets = [
+      { title: "☕ Вкусный кофе / Десерт", cat: "small" },
+      { title: "🍕 Киновечер с пиццей", cat: "medium" },
+      { title: "💆‍♀️ Массаж / Релакс-вечер", cat: "medium" },
+      { title: "🍷 Романтический ужин", cat: "large", blocked: isOver75 },
+      { title: "✨ Спонтанная мечта", cat: "special", blocked: isOver75 }
+    ];
+
+    const presetWrap = document.createElement("div");
+    presetWrap.className = "flex flex-wrap gap-1.5 mb-3";
+    presets.forEach(p => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = `px-2.5 py-1 rounded-lg border text-[11px] transition active:scale-95 cursor-pointer ${p.blocked ? "bg-white/5 border-white/5 text-slate-500 opacity-50" : "bg-white/5 hover:bg-white/15 border-white/10 text-slate-200"}`;
+      chip.innerText = p.title + (p.blocked ? " 🔒" : "");
+      chip.onclick = () => {
+        if (p.blocked) {
+          alert("Категория заблокирована защитой IRL Budget Guard (нагрузка > 75%)!");
+          return;
         }
-        await window.grantSupportCompensationCoins(wm.bonus, "Уютный бонус любви");
+        const inp = document.getElementById("manualWishInput");
+        const sel = document.getElementById("manualWishCatSelect");
+        if (inp) inp.value = p.title;
+        if (sel) sel.value = p.cat;
       };
+      presetWrap.appendChild(chip);
+    });
+    container.appendChild(presetWrap);
+
+    const formWrap = document.createElement("div");
+    formWrap.className = "flex flex-col gap-2";
+    formWrap.innerHTML = `
+      <input type="text" id="manualWishInput" placeholder="Название желания..." class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400 transition" />
+      <select id="manualWishCatSelect" class="bg-[#141624] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none cursor-pointer">
+        <option value="small">Small (~400 ₽: кофе, десерт, вкусняшка)</option>
+        <option value="medium" selected>Medium (~1 200 ₽: доставка, кино, пицца)</option>
+        <option value="large" ${isOver75 ? "disabled" : ""}>Large (~2 500 ₽: ресторан, свидание) ${isOver75 ? "— БЛОК 75%" : ""}</option>
+        <option value="special" ${isOver75 ? "disabled" : ""}>Special (~3 500 ₽: мечта, поездка) ${isOver75 ? "— БЛОК 75%" : ""}</option>
+      </select>
+      <button type="button" id="btnSubmitManualWish" class="py-2.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 text-black font-bold text-xs active:scale-95 transition shadow cursor-pointer text-center mt-1">
+        🎁 Отправить купон игроку
+      </button>
+    `;
+    container.appendChild(formWrap);
+
+    setTimeout(() => {
+      document.getElementById("btnSubmitManualWish")?.addEventListener("click", async () => {
+        const inp = document.getElementById("manualWishInput");
+        const sel = document.getElementById("manualWishCatSelect");
+        const title = inp ? inp.value.trim() : "";
+        const cat = sel ? sel.value : "medium";
+        if (!title) {
+          alert("Пожалуйста, введите название купона!");
+          return;
+        }
+        await window.grantManualWishCoupon(title, cat);
+        window.renderDeskWizardNode("wishes_root");
+      });
+    }, 50);
+    return;
+  }
+
+  if (nodeKey === "wishes_redeem") {
+    if (titleEl) titleEl.innerText = "❤️ Активация купонов в жизни";
+
+    const wishes = Array.isArray(userRecord.wishes) ? userRecord.wishes : [];
+    const activeWishes = wishes.filter(w => w.status === "active" && !w.claimed);
+
+    if (activeWishes.length === 0) {
+      container.innerHTML = `<div class="text-xs text-slate-500 py-6 text-center">У Кати нет активных неиспользованных купонов ✨</div>`;
+      return;
+    }
+
+    const desc = document.createElement("div");
+    desc.className = "text-[11px] text-pink-300 font-bold mb-2";
+    desc.innerText = "Нажмите «Принять», чтобы отметить купон исполненным:";
+    container.appendChild(desc);
+
+    activeWishes.forEach(w => {
+      const card = document.createElement("div");
+      card.className = "p-2.5 rounded-xl bg-[#141624] border border-amber-500/25 flex flex-col gap-2 text-xs mb-2 shadow-sm";
+      card.innerHTML = `
+        <div class="flex justify-between items-start gap-2">
+          <div>
+            <div class="font-bold text-slate-100">${escapeFn(w.title || "Желание")}</div>
+            <div class="text-[9px] text-slate-400 font-mono mt-0.5">${escapeFn(w.code || "#WISH")} • ${escapeFn(w.date || "")}</div>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Активен</span>
+        </div>
+        <button type="button" class="py-1.5 px-3 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/35 font-bold text-xs transition cursor-pointer active:scale-95 text-center">
+          ❤️ Принять к исполнению в жизни
+        </button>
+      `;
+      card.querySelector("button")?.addEventListener("click", async () => {
+        await window.redeemWishCouponSupport(w.code || w.id);
+        window.renderDeskWizardNode("wishes_redeem");
+      });
       container.appendChild(card);
     });
+    return;
+  }
+
+  // =========================================================================
+  // 6. ВЕТКА 5: ТЕХНИЧЕСКИЙ СБОЙ И ЭСКАЛАЦИЯ
+  // =========================================================================
+  if (nodeKey === "tech_root") {
+    if (titleEl) titleEl.innerText = "🛠️ Технический сбой и эскалация";
+
+    const ticket = (userRecord.feedback || []).find(t => t.id === window.activeDeskTicketId);
+    const logs = ticket?.techLogs || {};
+
+    const infoBox = document.createElement("div");
+    infoBox.className = "p-2.5 rounded-xl bg-[#141624] border border-white/5 space-y-1 text-xs mb-3";
+    infoBox.innerHTML = `
+      <div><span class="text-slate-400">Экран:</span> <b class="text-slate-200 font-mono">${escapeFn(logs.screen || "Неизвестно")}</b></div>
+      <div><span class="text-slate-400">Браузер:</span> <span class="text-slate-300 text-[10px] break-all">${escapeFn(logs.userAgent ? logs.userAgent.slice(0, 55) + "..." : "Стандартный")}</span></div>
+      ${logs.lastError ? `<div class="text-rose-400 font-bold mt-1 text-[11px]">🚨 Ошибка: ${escapeFn(logs.lastError.message || logs.lastError)}</div>` : `<div class="text-emerald-400 text-[10px]">Критических сбоев консоли не зафиксировано ✓</div>`}
+    `;
+    container.appendChild(infoBox);
+
+    const actions = [
+      {
+        icon: "🌐",
+        title: "Принудительный Cloud Sync",
+        desc: "Перезаписать состояние в облако и сбросить кэш",
+        onClick: () => window.crmRunSmartAction("smart_force_sync")
+      },
+      {
+        icon: "🚀",
+        title: "Эскалировать во 2-ю линию (Канбан)",
+        desc: "Передать тикет Алексею на исправление в кодовой базе",
+        onClick: () => window.crmEscalateToDev()
+      },
+      {
+        icon: "📋",
+        title: "Скопировать AI Debug Prompt",
+        desc: "Подготовить готовый промт для исправления бага",
+        onClick: () => {
+          if (ticket && typeof window.copyAiDebugPromptById === "function") {
+            window.copyAiDebugPromptById(ticket.id);
+          } else {
+            alert("Промт сгенерирован и готов к использованию!");
+          }
+        }
+      }
+    ];
+
+    actions.forEach(a => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-[#181a29] hover:bg-[#22253b] border border-white/5 transition flex items-start gap-2.5 cursor-pointer shadow-sm mb-2 active:scale-98";
+      btn.innerHTML = `
+        <span class="text-base shrink-0">${a.icon}</span>
+        <div>
+          <div class="font-bold text-xs text-slate-200">${a.title}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${a.desc}</div>
+        </div>
+      `;
+      btn.onclick = a.onClick;
+      container.appendChild(btn);
+    });
+    return;
   }
 };
 

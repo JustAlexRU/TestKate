@@ -1078,6 +1078,15 @@
           </div>
         </div>
 
+        <!-- Быстрые чипсы игрока (Quick Conversational Chips) -->
+        <div id="playerChatQuickChips" class="px-2.5 py-1.5 bg-[#0e0f1e] border-t border-white/5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+          <button type="button" onclick="insertPlayerChatChip('Куда делись монетки? 🪙')" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-pink-300 whitespace-nowrap border border-white/10 transition active:scale-95 cursor-pointer">🪙 Где монеты?</button>
+          <button type="button" onclick="insertPlayerChatChip('Зефирка грустит или заснула 🐾')" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-pink-300 whitespace-nowrap border border-white/10 transition active:scale-95 cursor-pointer">🐾 Зефирка спит/грустит</button>
+          <button type="button" onclick="insertPlayerChatChip('Зависла рулетка или кейс 📦')" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-pink-300 whitespace-nowrap border border-white/10 transition active:scale-95 cursor-pointer">📦 Завис кейс/рулетка</button>
+          <button type="button" onclick="insertPlayerChatChip('Хочу активировать купон желания ❤️')" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-pink-300 whitespace-nowrap border border-white/10 transition active:scale-95 cursor-pointer">💌 Активировать купон</button>
+          <button type="button" onclick="insertPlayerChatChip('Люблю тебя очень сильно! ❤️✨')" class="px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] text-pink-300 whitespace-nowrap border border-white/10 transition active:scale-95 cursor-pointer">❤️ Люблю тебя</button>
+        </div>
+
         <!-- Поле ввода ответа в диалог -->
         <div class="p-2.5 bg-[#121324] border-t border-white/10 flex items-center gap-2 shrink-0">
           <label class="cursor-pointer bg-[#1c1e36] hover:bg-[#252847] border border-white/10 rounded-xl px-2.5 py-2 text-sm text-slate-300 transition" title="Прикрепить скриншот">

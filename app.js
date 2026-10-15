@@ -2215,6 +2215,13 @@ function renderChatTimeline(ticket) {
   }
 }
 
+window.insertPlayerChatChip = function (text) {
+  const input = document.getElementById("chatTextInput");
+  if (!input) return;
+  input.value = text;
+  input.focus();
+};
+
 // Надежная оптимистичная отправка сообщения от Кати
 window.sendPlayerChatMessage = async function () {
   const input = document.getElementById("chatTextInput");
@@ -2803,16 +2810,26 @@ setInterval(async () => {
     const root = (await res.json()).record || {};
     const remoteUser = root[currentUser] || root["katya"];
     
-    if (remoteUser && Array.isArray(remoteUser.feedback)) {
-      localStorage.setItem("katya_master_feedback", JSON.stringify(remoteUser.feedback));
-      const ticket = remoteUser.feedback.find(t => t.id === window.activeChatTicketId);
-      if (ticket) {
-        const msgs = ticket.messages || [];
-        const lastMsgId = msgs.length > 0 ? (msgs[msgs.length - 1].id || msgs[msgs.length - 1].timestamp || "") : "";
-        const currentHash = `${ticket.id}_${ticket.status}_${msgs.length}_${lastMsgId}_${ticket.claimed}`;
-        if (currentHash !== lastPlayerChatHash) {
-          lastPlayerChatHash = currentHash;
-          renderChatTimeline(ticket);
+    if (remoteUser) {
+      if (remoteUser.pet && typeof window.updatePetUI === "function") {
+        window.pet = Object.assign(window.pet || {}, remoteUser.pet);
+        localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
+        updatePetUI();
+      }
+      if (Array.isArray(remoteUser.wishes)) {
+        localStorage.setItem("katya_master_wishes_vault", JSON.stringify(remoteUser.wishes));
+      }
+      if (Array.isArray(remoteUser.feedback)) {
+        localStorage.setItem("katya_master_feedback", JSON.stringify(remoteUser.feedback));
+        const ticket = remoteUser.feedback.find(t => t.id === window.activeChatTicketId);
+        if (ticket) {
+          const msgs = ticket.messages || [];
+          const lastMsgId = msgs.length > 0 ? (msgs[msgs.length - 1].id || msgs[msgs.length - 1].timestamp || "") : "";
+          const currentHash = `${ticket.id}_${ticket.status}_${msgs.length}_${lastMsgId}_${ticket.claimed}`;
+          if (currentHash !== lastPlayerChatHash) {
+            lastPlayerChatHash = currentHash;
+            renderChatTimeline(ticket);
+          }
         }
       }
     }
