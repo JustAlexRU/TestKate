@@ -261,6 +261,26 @@ window.CASES_DATA = {
 
       logCaseDrop(cData?.title || "Кейс", winningItem, dupData);
       if (typeof window.updatePetUI === "function") window.updatePetUI();
+
+      // Lex Labs Achievements hooks
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("cases_open_first", 1);
+        if (activeStandardCaseKey === "black") {
+          window.trackAchievement("cases_black_box", 1);
+        }
+        if (winningItem.id === "blk_super_box") {
+          window.trackAchievement("cases_super_box", 1);
+          window.trackAchievement("love_real_gift", 1);
+        } else if (winningItem.id === "blk_argument") {
+          window.trackAchievement("cases_immunity", 1);
+        } else if (["prem_coffee", "prem_hoodie", "prem_cinema", "prem_song"].includes(winningItem.id)) {
+          window.trackAchievement("cases_premium_gift", 1);
+        }
+        if (dupData) {
+          window.trackAchievement("wardrobe_compliments_5", 1);
+        }
+      }
+      if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
     }, 5200);
   });
 
@@ -433,6 +453,14 @@ window.CASES_DATA = {
 
       logCaseDrop("Хеллоуинский Склеп", winningDrop);
       if (typeof window.updatePetUI === "function") window.updatePetUI();
+
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("cases_halloween_5", 1);
+        if (winningDrop.isBundle) {
+          window.trackAchievement("wardrobe_hw_bundle", 1);
+        }
+      }
+      if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
     }, 5200);
   });
 
@@ -664,6 +692,14 @@ window.CASES_DATA = {
     if (typeof window.logAuditEvent === "function") {
       window.logAuditEvent(`Обмен в Ателье: «${recipe.title}» (-${recipe.cost} ✨)`, "✨");
     }
+
+    if (typeof window.trackAchievement === "function") {
+      window.trackAchievement("atelier_first_craft", 1);
+      if (recipe.type === "item_pity") {
+        window.trackAchievement("atelier_pity_exchange", 1);
+      }
+    }
+    if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
 
     if (typeof window.updatePetUI === "function") window.updatePetUI();
     if (typeof window.renderWardrobeAtelierTab === "function") window.renderWardrobeAtelierTab();

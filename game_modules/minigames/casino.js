@@ -194,6 +194,13 @@
           window.pet.coins += wonAmount;
           if (statusText) statusText.innerHTML = `🎉 ПОБЕДА! <b class="text-amber-300">+${wonAmount} 🪙</b>`;
           if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Слоты 777: выигрыш +${wonAmount} 🪙`, "🎰");
+
+          if (typeof window.trackAchievement === "function") {
+            window.trackAchievement("casino_slots_win", 1);
+            if (r1 === "👑" || r1 === "🐱" || r1 === "⭐") {
+              window.trackAchievement("casino_slots_jackpot", 1);
+            }
+          }
         } else if (r1 !== "💌") {
           if (window.sound?.pop) window.sound.pop();
           if (statusText) statusText.innerText = "Мимо! Попробуй еще разок 🐾";
@@ -318,6 +325,15 @@
       window.logAuditEvent(`Мур-Краш: зафиксировала x${crashMultiplier.toFixed(2)} (+${wonCoins} 🪙)`, "🚀");
     }
 
+    if (typeof window.trackAchievement === "function") {
+      if (crashMultiplier >= 5.0) {
+        window.trackAchievement("casino_crash_x5", 1);
+      }
+      if (crashMultiplier >= 10.0) {
+        window.trackAchievement("casino_crash_x10", 1);
+      }
+    }
+
     btnCrashCashout.disabled = true;
     btnCrashCashout.className = "flex-1 py-3.5 rounded-2xl bg-gray-700 text-gray-500 font-black text-xs cursor-not-allowed";
     btnCrashStart.disabled = false;
@@ -365,6 +381,9 @@
       window.pet.coins += won;
       if (typeof window.logAuditEvent === "function") {
         window.logAuditEvent(`Кости: победа на «${choice}» (сумма ${sum}, +${won} 🪙)`, "🎲");
+      }
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("casino_dice_win", 1);
       }
     } else {
       if (sumText) sumText.innerHTML = `Сумма: <b class="text-rose-400">${sum}</b> (Мимо 🐾)`;
@@ -590,6 +609,9 @@
       alert("В этот раз мимо! Попробуй другой билетик 🐾");
     }
 
+    if (typeof window.trackAchievement === "function") {
+      window.trackAchievement("casino_scratch_5", 1);
+    }
     syncBalance();
   }
 

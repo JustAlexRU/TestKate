@@ -129,6 +129,10 @@
             <span id="headerSparks" class="font-extrabold text-purple-300 text-xs font-mono">0</span>
           </div>
 
+          <button id="btnHeaderAchievements" onclick="window.openAchievementsModal()" class="relative bg-gradient-to-tr from-amber-500/20 to-yellow-500/20 border border-amber-400/40 hover:border-amber-300 w-7 h-7 rounded-full flex items-center justify-center text-xs active:scale-90 transition shadow-sm cursor-pointer" title="Зал Славы и Достижения 🏆">
+            🏆
+            <span id="badgeAchievementsUnlocked" class="hidden absolute -top-1 -right-1 bg-amber-500 text-black font-mono font-black text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center shadow">0</span>
+          </button>
 
           <button id="soundToggleBtn" class="bg-[#1a1c32] hover:bg-[#252848] border border-white/10 w-7 h-7 rounded-full flex items-center justify-center text-xs active:scale-90 transition cursor-pointer" title="Звук">
             🔔
@@ -1265,12 +1269,73 @@
     </div>
   </div>
 
+  <!-- ===================================================================== -->
+  <!-- MODAL: ЗАЛ СЛАВЫ И ДОСТИЖЕНИЯ (ACHIEVEMENTS MODAL)                    -->
+  <!-- ===================================================================== -->
+  <div id="modalAchievements" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col justify-end items-center select-none" onclick="if(event.target===this) window.closeAchievementsModal()">
+    <div class="w-full max-w-md bg-[#111224] border-t-2 border-amber-500/50 rounded-t-[32px] p-4 flex flex-col max-h-[90vh] shadow-[0_-10px_40px_rgba(251,191,36,0.15)] relative overflow-hidden">
+      
+      <!-- Хэндл и кнопка закрытия -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500/30 to-orange-500/30 border border-amber-400/50 flex items-center justify-center text-lg shadow-inner">
+            🏆
+          </div>
+          <div>
+            <h3 class="cute-font text-sm font-black text-amber-300 tracking-wide">ЗАЛ СЛАВЫ И ДОСТИЖЕНИЯ</h3>
+            <div class="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
+              <span id="achRankBadge" class="text-amber-400 font-extrabold">Уютный Новичок 🐾</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeAchievementsModal()" class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer">✕</button>
+      </div>
+
+      <!-- Gamerscore & Прогресс бар -->
+      <div class="bg-gradient-to-r from-[#181932] via-[#1c193b] to-[#14152b] border border-amber-400/30 rounded-2xl p-3 my-2.5 flex flex-col gap-2 shadow-inner shrink-0">
+        <div class="flex justify-between items-center text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-base animate-pulse">✨</span>
+            <span class="text-slate-300 font-bold text-[11px]">Мур-Очки (Gamerscore):</span>
+          </div>
+          <span id="achMasterScore" class="font-extrabold text-amber-300 font-mono text-xs">0 / 1665</span>
+        </div>
+
+        <div class="w-full bg-[#080914] h-2.5 rounded-full overflow-hidden border border-white/10 p-0.5">
+          <div id="achProgressBar" class="bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+
+        <div class="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+          <span id="achUnlockedCount">0 из 50 открыто</span>
+          <span id="achPercentLabel" class="text-amber-300 font-bold">0%</span>
+        </div>
+      </div>
+
+      <!-- Горизонтальный скролл табов категорий -->
+      <div class="flex items-center gap-1.5 overflow-x-auto py-1 shrink-0 no-scrollbar mb-2">
+        <button type="button" id="achTab_all" onclick="window.switchAchievementsTab('all')">Все</button>
+        <button type="button" id="achTab_pet" onclick="window.switchAchievementsTab('pet')">🐾 Забота</button>
+        <button type="button" id="achTab_wardrobe" onclick="window.switchAchievementsTab('wardrobe')">👗 Стиль</button>
+        <button type="button" id="achTab_cases" onclick="window.switchAchievementsTab('cases')">🎁 Кейсы</button>
+        <button type="button" id="achTab_casino" onclick="window.switchAchievementsTab('casino')">🎰 Казино</button>
+        <button type="button" id="achTab_arcade" onclick="window.switchAchievementsTab('arcade')">🕹️ Аркады</button>
+        <button type="button" id="achTab_love" onclick="window.switchAchievementsTab('love')">💌 Любовь</button>
+        <button type="button" id="achTab_secret" onclick="window.switchAchievementsTab('secret')">🕵️ Секреты</button>
+      </div>
+
+      <!-- Скроллируемая сетка достижений -->
+      <div id="achievementsGridList" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-2 min-h-0"></div>
+
+    </div>
+  </div>
+
   <!-- Архитектура игры (Vanilla JS Layered Architecture) -->
   <script src="core/config.js"></script>
   <script src="core/utils.js"></script>
   <script src="core/storage.js"></script>
   <script src="api/cloud_client.js"></script>
   <script src="game_modules/items_db.js"></script>
+  <script src="game_modules/achievements_db.js"></script>
   <script src="game_modules/pet_renderer.js"></script>
   <script src="app.js"></script>
   <script src="game_modules/minigames/cases.js"></script>

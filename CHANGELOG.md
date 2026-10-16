@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.6.0] - 2026-10-16
+## [2.7.0] - 2026-10-16
+
+### Added
+- **Lex Labs Achievements & Hall of Fame Engine** (`game_modules/achievements_db.js`, `index.html`, `app.js`):
+  - 50 full achievements across 7 thematic categories: Pet Care (`pet`), Wardrobe & Atelier (`wardrobe`), Lootboxes (`cases`), Casino Hub (`casino`), Arcade Skill (`arcade`), Romance & Wishes (`love`), and Hidden Easter Eggs (`secret`).
+  - Tiered ranking system with Gamerscore (Мур-Очки: Bronze 10, Silver 25, Gold 50, Mythic 100) totaling 1,665 points and 5 progression ranks.
+  - Interactive «Зал Славы» modal (`modalAchievements`) featuring category filters, progress bar, rank badge, and dynamic achievement cards.
+  - Linear/Vercel-style floating achievement toast notifications with glowing tier borders, Web Audio sound effects (`sound.epicWin()`), particle confetti, and haptic feedback.
+  - Persistent state management with `katya_master_achievements` in localStorage and automatic synchronization with cloud data.
+  - Comprehensive hooks connected across all minigames, feeding, sleeping, poop cleaning, wardrobe fitting, casino slots/crash, and support chat.
 
 ### Added
 - **Star Sparks Duplicate Protection & Atelier Exchange System** (`game_modules/items_db.js`, `game_modules/minigames/cases.js`):

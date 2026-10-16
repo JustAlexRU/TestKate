@@ -6,8 +6,8 @@
 /* =========================================================================
  * 0. ЧЁРНЫЙ ЯЩИК ЛОГОВ И ОШИБОК БРАУЗЕРА (CLIENT-SIDE TELEMETRY)
  * ========================================================================= */
-window.APP_VERSION = "2.4.1";
-window.APP_BUILD = 241;
+window.APP_VERSION = "2.7.0";
+window.APP_BUILD = 270;
 window.CLIENT_LOGS_BUFFER = [];
 window.LAST_CAUGHT_ERROR = null;
 
@@ -851,6 +851,11 @@ function renderPoops() {
       addXP(4);
       spawnFloatingText("+2 🪙", p.x, p.y);
       logAuditEvent("Убрала какашки котика (+2 🪙)", "🧼");
+
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("pet_poop_10", 1);
+      }
+      if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
       updatePetUI();
     });
     pL.appendChild(el);
@@ -862,6 +867,15 @@ document.getElementById("catTapZone")?.addEventListener("click", (e) => {
   if (window.pet.isSleeping) return;
   if (window.sound?.purr) window.sound.purr();
   triggerHaptic();
+
+  // Пасхалка: бешеные клики (секретная ачивка «Затисканный котик»)
+  if (!window._catRapidClicks) window._catRapidClicks = [];
+  const tapNow = Date.now();
+  window._catRapidClicks.push(tapNow);
+  window._catRapidClicks = window._catRapidClicks.filter(t => tapNow - t <= 4000);
+  if (window._catRapidClicks.length >= 25 && typeof window.trackAchievement === "function") {
+    window.trackAchievement("secret_spam_clicks", 25, { isAbsolute: true });
+  }
 
   // Фиксируем время действия игрока, чтобы pullCloudSettings не перетёр изменения
   localStorage.setItem("katya_master_last_time", Date.now());
@@ -906,12 +920,20 @@ document.getElementById("btnActionSleep")?.addEventListener("click", () => {
       logAuditEvent("Котика разбудили слишком быстро", "☀️");
     }
 
+    if (window.pet.energy >= 100 && typeof window.trackAchievement === "function") {
+      window.trackAchievement("pet_sleep_full", 1);
+    }
+    if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
     updatePetUI();
     return;
   }
 
   if (window.pet.energy >= 85) {
     if (window.sound?.pop) window.sound.pop();
+    if (window.pet.energy >= 100 && typeof window.trackAchievement === "function") {
+      window.trackAchievement("secret_insomnia", 1);
+    }
     alert(`«${window.pet.name} полон сил (${window.pet.energy}%) и совсем не хочет спать! ⚡ Поиграйте в мини-игры!»`);
     return;
   }
@@ -947,6 +969,12 @@ document.getElementById("btnActionWash")?.addEventListener("click", () => {
   addXP(6);
   document.getElementById("catSpeechBubble").innerText = `«Буль-буль! ${window.pet.name} весь в пене и вкусно пахнет!» 🫧`;
   logAuditEvent("Искупала котика с пеной", "🫧");
+
+  if (window.pet.clean >= 100 && typeof window.trackAchievement === "function") {
+    window.trackAchievement("pet_bath_clean", 1);
+  }
+  if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
   updatePetUI();
 });
 
@@ -977,6 +1005,7 @@ document.getElementById("btnRenamePet")?.addEventListener("click", () => {
   if (newName && newName.trim()) {
     window.pet.name = newName.trim();
     logAuditEvent(`Котик переименован в «${window.pet.name}»`, "✏️");
+    if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
     updatePetUI();
   }
 });
@@ -1016,6 +1045,17 @@ window.buyFood = function (id) {
   triggerHaptic();
   spawnFloatingText(`${item.icon} +${item.hunger}%`, 100, 70);
   logAuditEvent(`Купила еду: ${item.name} (-${item.cost} 🪙)`, item.icon);
+
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("pet_first_feed", 1);
+    window.trackAchievement("pet_gourmet_50", 1);
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 4) {
+      window.trackAchievement("secret_midnight_snack", 1);
+    }
+  }
+  if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
   renderFoodShop();
   updatePetUI();
 };
@@ -1035,6 +1075,17 @@ document.getElementById("btnFreeFood")?.addEventListener("click", () => {
   spawnFloatingText("🥣 +8%", 100, 70);
   document.getElementById("freeFoodCount").innerText = window.freeFoodData.count;
   logAuditEvent("Скушала бесплатный творожок", "🥣");
+
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("pet_first_feed", 1);
+    window.trackAchievement("pet_gourmet_50", 1);
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 4) {
+      window.trackAchievement("secret_midnight_snack", 1);
+    }
+  }
+  if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
   updatePetUI();
 });
 
@@ -1045,6 +1096,15 @@ document.getElementById("btnWardrobe")?.addEventListener("click", () => {
   switchWardrobeTab("outfits");
   document.getElementById("modalWardrobe")?.classList.remove("hidden");
   logAuditEvent("Открыла Гардероб и Витрину", "🛍️");
+
+  // Таймер пасхалки «Слишком красива» (2 минуты в гардеробе)
+  if (window._wardrobeAfkTimer) clearTimeout(window._wardrobeAfkTimer);
+  window._wardrobeAfkTimer = setTimeout(() => {
+    const wModal = document.getElementById("modalWardrobe");
+    if (wModal && !wModal.classList.contains("hidden") && typeof window.trackAchievement === "function") {
+      window.trackAchievement("secret_wardrobe_afk", 1);
+    }
+  }, 120000);
 });
 
 function switchWardrobeTab(tabKey) {
@@ -1392,6 +1452,15 @@ window.equipSlot = function (slot, id) {
   window.activeEquipment[slot] = id;
   localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
   if (window.sound?.pop) window.sound.pop();
+
+  if (id && id !== "none" && typeof window.trackAchievement === "function") {
+    window.trackAchievement("wardrobe_first_outfit", 1);
+    if (["crown", "wizard", "tiara", "halo_gold", "astronaut_helm", "cyber_crown"].includes(id)) {
+      window.trackAchievement("wardrobe_royal_fit", 1);
+    }
+  }
+  if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
   updatePetUI();
   renderWardrobeCategory("body", "wardrobeOutfitsSection");
   renderWardrobeAccs();
@@ -1684,6 +1753,11 @@ document.getElementById("btnSpinWheel")?.addEventListener("click", () => {
 
       window.pet.coins += 8;
       logAuditEvent(`Рулетка: заказ «${winner}» [${winId}] (+8 🪙)`, "🎰");
+
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("casino_roulette_spin", 1);
+      }
+
       updatePetUI();
     }
   }
@@ -2149,6 +2223,10 @@ window.sendPlayerChatMessage = async function () {
   ticket.messages.push(optimisticMsg);
   localStorage.setItem("katya_master_feedback", JSON.stringify(list));
 
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("love_support_chat", 1);
+  }
+
   if (input) input.value = "";
   clearChatAttachment();
   renderChatTimeline(ticket);
@@ -2242,6 +2320,10 @@ window.setNewStars = function (stars) {
   document.querySelectorAll("#newTicketStars .star-item").forEach((s, i) => {
     s.className = (i < stars) ? "star-item text-amber-400 p-0.5" : "star-item text-gray-600 p-0.5";
   });
+
+  if (stars === 5 && typeof window.trackAchievement === "function") {
+    window.trackAchievement("love_csat_5star", 1);
+  }
 };
 
 window.submitSupportTicket = function () {
@@ -2250,6 +2332,10 @@ window.submitSupportTicket = function () {
   if (!text) {
     alert("Напиши хотя бы пару слов перед отправкой! 🐾");
     return;
+  }
+
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("love_support_chat", 1);
   }
 
   const techLogs = {
@@ -2422,6 +2508,10 @@ document.getElementById("zenTapArea")?.addEventListener("pointerdown", () => {
   const clickCountEl = document.getElementById("zenTotalClicks");
   if (clickCountEl) clickCountEl.innerText = zenClicks;
 
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("pet_zen_500", 1);
+  }
+
   if (zenClicks % 80 === 0) {
     window.pet.coins += 10;
     if (window.sound?.win) window.sound.win();
@@ -2446,6 +2536,12 @@ document.getElementById("btnDailyBonus")?.addEventListener("click", () => {
   if (typeof confetti === "function") confetti({ particleCount: 35 });
   alert(`🎁 Ежедневный бонус: +${bonusReward} 🪙!`);
   logAuditEvent(`Собрала ежедневный бонус (+${bonusReward} 🪙)`, "🎁");
+
+  if (typeof window.trackAchievement === "function") {
+    window.trackAchievement("pet_streak_7", 1);
+  }
+  if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+
   updatePetUI();
 });
 
@@ -2514,6 +2610,9 @@ let secretClicks = 0;
 document.getElementById("headerLevel")?.addEventListener("click", () => {
   secretClicks++;
   if (secretClicks >= 3) {
+    if (typeof window.trackAchievement === "function") {
+      window.trackAchievement("secret_pin_try", 1);
+    }
     window.location.href = "dashboard.html";
   }
   setTimeout(() => (secretClicks = 0), 1500);
@@ -2525,7 +2624,7 @@ document.querySelectorAll(".closeModalBtn").forEach((btn) => {
       #modalCasinoHub, #modalScratchCard, #modalFishing, #modalMemory, 
       #modalCsgoCase, #modalHalloweenCase, #modalWardrobe, #modalInventory, 
       #modalFeed, #modalWork, #modalTetris, #modalRunner, #modalMiniGame, 
-      #modalRhythmGame, #modalZen, #modalSecretWish, #modalWheelSettings
+      #modalRhythmGame, #modalZen, #modalSecretWish, #modalWheelSettings, #modalAchievements
     `).forEach((m) => m.classList.add("hidden"));
   });
 });
@@ -2764,4 +2863,6 @@ setInterval(async () => {
 applyOfflineDecay();
 updatePetUI();
 drawWheel();
+if (typeof window.checkCareAchievements === "function") window.checkCareAchievements();
+if (typeof window.updateAchievementsBadge === "function") window.updateAchievementsBadge();
 syncToCloud();

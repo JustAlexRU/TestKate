@@ -157,6 +157,14 @@
       if (fishingResult) fishingResult.innerHTML = `Поймана <b class="text-amber-300">${fishName}</b>! <span class="text-emerald-400">+${earned} 🪙</span>`;
       if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Рыбалка: поймала «${fishName}» (+${earned} 🪙)`, "🎣");
 
+      if (typeof window.trackAchievement === "function") {
+        window.trackAchievement("arcade_fish_first", 1);
+        if (fishEmoji === "👑") {
+          window.trackAchievement("arcade_fish_gold", 1);
+        }
+        window.trackAchievement("arcade_master_all", 1);
+      }
+
       if (btnFishingAction) {
         btnFishingAction.innerText = "ЕЩЕ ЗАБРОС 🎣";
         btnFishingAction.className = "w-full max-w-sm py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black text-xs active:scale-95 transition shadow-lg cursor-pointer";
@@ -253,6 +261,11 @@
 
           if (typeof confetti === "function") confetti({ particleCount: 60, spread: 75 });
           if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Мур-Память: все пары найдены (+${earned} 🪙)`, "🧩");
+
+          if (typeof window.trackAchievement === "function") {
+            window.trackAchievement("arcade_memory_win", 1);
+            window.trackAchievement("arcade_master_all", 1);
+          }
 
           if (typeof window.updatePetUI === "function") window.updatePetUI();
           setTimeout(() => {
@@ -378,6 +391,11 @@
 
         if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Кэт-Тетрис окончен (Очки: ${tetrisScore}, +${earned} 🪙)`, "🧱");
         checkAndDropWish("tetris", 0.50, "Кэт-Тетрис");
+
+        if (typeof window.trackAchievement === "function") {
+          window.trackAchievement("arcade_tetris_clear", tetrisScore, { isAbsolute: true });
+          window.trackAchievement("arcade_master_all", 1);
+        }
 
         if (tetrisOverlay) {
           tetrisOverlay.classList.remove("hidden");
@@ -600,6 +618,11 @@
           if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Subway Cat: забег окончен (Монеты: ${runnerCoins}, +${earned} 🪙)`, "🏃");
           checkAndDropWish("subway", 0.40, "Subway Cat");
 
+          if (typeof window.trackAchievement === "function") {
+            window.trackAchievement("arcade_runner_dist", Math.max(runnerCoins * 15, 300), { isAbsolute: true });
+            window.trackAchievement("arcade_master_all", 1);
+          }
+
           if (runnerOverlay) {
             runnerOverlay.classList.remove("hidden");
             runnerOverlay.innerHTML = `
@@ -757,6 +780,11 @@
 
     if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Курьер: смена окончена (Доставлено: ${courierScore}, +${earned} 🪙)`, "🛵");
     checkAndDropWish("catcher", 0.30, "Курьер вкусняшек");
+
+    if (typeof window.trackAchievement === "function") {
+      window.trackAchievement("arcade_courier_orders", 1);
+      window.trackAchievement("arcade_master_all", 1);
+    }
 
     if (gameStartOverlay) {
       gameStartOverlay.classList.remove("hidden");
@@ -1130,6 +1158,13 @@
       if (typeof confetti === "function") confetti({ particleCount: 50, spread: 75 });
       if (typeof window.logAuditEvent === "function") window.logAuditEvent(`Osu! Cat: трек «${OSU_GENRES[selectedOsuGenre].name}» пройден (+${earned} 🪙)`, "🎧");
       checkAndDropWish("rhythm", 0.35, "Ритм-игра Osu! Cat");
+
+      if (typeof window.trackAchievement === "function") {
+        if (osuMaxCombo >= 15) {
+          window.trackAchievement("arcade_rhythm_combo", osuMaxCombo, { isAbsolute: true });
+        }
+        window.trackAchievement("arcade_master_all", 1);
+      }
     } else {
       if (window.sound?.pop) window.sound.pop();
       if (typeof window.logAuditEvent === "function") window.logAuditEvent("Osu! Cat: прервано (HP 0%)", "💔");
