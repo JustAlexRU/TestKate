@@ -239,10 +239,15 @@ const defaultPetState = {
   activeRoom: "neon",
   color: "pink",
   sleepStartedAt: 0,
-  lastWokeUpAt: 0
+  lastWokeUpAt: 0,
+  starSparks: 0
 };
 
 window.pet = safeHydrate("katya_master_pet_state", defaultPetState);
+if (window.pet && typeof window.pet.starSparks !== "number") {
+  window.pet.starSparks = 0;
+}
+
 window.analytics = safeHydrate("katya_master_analytics", {
   date: new Date().toDateString(),
   sessionsCount: 0,
@@ -450,14 +455,15 @@ async function pullCloudSettings() {
 
     if (remoteUser && remoteUser.pet && !isRecentlyActive && cloudSyncTimer === null) {
       const rp = remoteUser.pet;
-      const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean"];
+      const numericFields = ["coins", "level", "xp", "hunger", "happy", "energy", "clean", "starSparks"];
 
       numericFields.forEach((f) => {
         if (typeof rp[f] === "number" && rp[f] !== window.pet[f]) {
           // Если на клиенте значение больше (например, накликан опыт/счастье), не понижаем его пулом
-          if ((f === "xp" || f === "happy" || f === "coins") && window.pet[f] > rp[f]) {
+          if ((f === "xp" || f === "happy" || f === "coins" || f === "starSparks") && window.pet[f] > rp[f]) {
             return;
           }
+
           window.pet[f] = rp[f];
           needUIUpdate = true;
         }
@@ -675,8 +681,16 @@ function updatePetUI(shouldSync = true) {
   document.getElementById("headerCoins").innerText = window.pet.coins;
   document.getElementById("headerLevel").innerText = window.pet.level;
 
+  const sparks = window.pet.starSparks || 0;
+  const headerSparks = document.getElementById("headerSparks");
+  if (headerSparks) headerSparks.innerText = sparks;
   const casinoHubCoins = document.getElementById("casinoHubCoins");
   if (casinoHubCoins) casinoHubCoins.innerText = window.pet.coins;
+  const casinoHubSparks = document.getElementById("casinoHubSparks");
+  if (casinoHubSparks) casinoHubSparks.innerText = sparks;
+  const wardrobeSparksVal = document.getElementById("wardrobeSparksVal");
+  if (wardrobeSparksVal) wardrobeSparksVal.innerText = sparks;
+
 
   const maxXp = window.pet.level * 100;
   const xpPercent = Math.min(100, Math.floor((window.pet.xp / maxXp) * 100));
@@ -1039,7 +1053,8 @@ function switchWardrobeTab(tabKey) {
     { btnId: "tabWardrobeAccs", secId: "wardrobeAccSection", key: "accs", display: "grid", render: renderWardrobeAccs },
     { btnId: "tabWardrobeRooms", secId: "wardrobeRoomsSection", key: "rooms", display: "grid", render: renderWardrobeRooms },
     { btnId: "tabWardrobeColors", secId: "wardrobeColorSection", key: "colors", display: "grid", render: renderColorShop },
-    { btnId: "tabWardrobeMyItems", secId: "wardrobeMyItemsSection", key: "myItems", display: "flex", render: renderInventoryGrid }
+    { btnId: "tabWardrobeMyItems", secId: "wardrobeMyItemsSection", key: "myItems", display: "flex", render: renderInventoryGrid },
+    { btnId: "tabWardrobeAtelier", secId: "wardrobeAtelierSection", key: "atelier", display: "flex", render: () => renderWardrobeAtelierTab() }
   ];
 
   tabs.forEach(t => {
@@ -1061,13 +1076,75 @@ function switchWardrobeTab(tabKey) {
 
   const coinsEl = document.getElementById("shopCoinsVal");
   if (coinsEl && window.pet) coinsEl.innerText = window.pet.coins;
+  const sparksEl = document.getElementById("wardrobeSparksVal");
+  if (sparksEl && window.pet) sparksEl.innerText = window.pet.starSparks || 0;
 }
+
+function renderWardrobeAtelierTab() {
+  const container = document.getElementById("wardrobeAtelierSection");
+  if (!container) return;
+
+  const currentSparks = window.pet?.starSparks || 0;
+  const recipes = window.ATELIER_RECIPES || [];
+
+  container.innerHTML = `
+    <div class="w-full flex flex-col gap-3">
+      <!-- Баланс Звёздных Искр -->
+      <div class="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950/80 via-[#1e153b] to-pink-950/70 border border-purple-500/40 flex items-center justify-between shadow-lg">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(168,85,247,0.4)] animate-pulse">
+            ✨
+          </div>
+          <div>
+            <div class="text-xs font-black text-purple-200 tracking-wide uppercase">Ателье Звёздных Искр</div>
+            <div class="text-[10px] text-slate-300">Награда за повторки из кейсов</div>
+          </div>
+        </div>
+        <div class="flex items-baseline gap-1.5 bg-[#090a14]/90 px-3.5 py-1.5 rounded-xl border border-purple-400/30 shadow-inner">
+          <span class="font-black text-amber-300 text-lg font-mono">${currentSparks}</span>
+          <span class="text-xs text-purple-300">✨</span>
+        </div>
+      </div>
+
+      <!-- Карточки рецептов обмена -->
+      <div class="flex flex-col gap-2">
+        ${recipes.map(r => {
+          const canAfford = currentSparks >= r.cost;
+          return `
+            <div class="p-3 rounded-2xl bg-[#121324] border ${canAfford ? 'border-purple-500/30 hover:border-purple-400/60' : 'border-white/5 opacity-80'} flex items-center justify-between gap-3 transition shadow-sm">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-2xl shrink-0">${r.icon}</span>
+                <div class="min-w-0">
+                  <div class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                    <span>${r.title}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">${r.cost} ✨</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 truncate mt-0.5">${r.desc}</div>
+                </div>
+              </div>
+              <button onclick="window.exchangeAtelierRecipe ? window.exchangeAtelierRecipe('${r.id}') : (window.CasesEngine?.exchangeAtelierRecipe('${r.id}'))" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer whitespace-nowrap shadow ${canAfford ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-95' : 'bg-white/5 text-slate-500 cursor-not-allowed'}">
+                Обменять
+              </button>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      
+      <div class="text-[10px] text-slate-400 text-center leading-relaxed px-2 bg-purple-950/20 border border-purple-500/20 p-2.5 rounded-xl">
+        💖 <b>Защита от повторок:</b> при открытии кейсов каждый дубликат автоматически конвертируется в <b>1–10 ✨</b> в зависимости от редкости и шанса! Котик также получает порцию деликатеса.
+      </div>
+    </div>
+  `;
+}
+window.renderWardrobeAtelierTab = renderWardrobeAtelierTab;
 
 document.getElementById("tabWardrobeOutfits")?.addEventListener("click", () => switchWardrobeTab("outfits"));
 document.getElementById("tabWardrobeAccs")?.addEventListener("click", () => switchWardrobeTab("accs"));
 document.getElementById("tabWardrobeRooms")?.addEventListener("click", () => switchWardrobeTab("rooms"));
 document.getElementById("tabWardrobeColors")?.addEventListener("click", () => switchWardrobeTab("colors"));
 document.getElementById("tabWardrobeMyItems")?.addEventListener("click", () => switchWardrobeTab("myItems"));
+document.getElementById("tabWardrobeAtelier")?.addEventListener("click", () => switchWardrobeTab("atelier"));
+
 
 function getRarityBadge(rarityKey) {
   switch (rarityKey) {

@@ -297,3 +297,102 @@ window.HALLOWEEN_CASE_CONFIG = {
     { id: "hw_pumpkin_shoes", slot: "legs", name: "Тыквенные туфельки", icon: "🥿", color: "#ea580c", chance: 10, desc: "Мягкий оранжевый бархат" }
   ]
 };
+
+// 4. СИСТЕМА ЗВЁЗДНЫХ ИСКР И РАСЧЕТА НАГРАД ЗА ДУБЛИКАТЫ (ATELIER ENGINE)
+window.SPARK_BASE_BY_RARITY = {
+  common: 1,
+  rare: 2,
+  epic: 4,
+  halloween: 5,
+  legendary: 7,
+  mythic: 10
+};
+
+/**
+ * Расчет количества Звёздных Искр за повторку с учетом редкости и шанса выпадения
+ * @param {object|string} itemOrId - Объект предмета или его ID
+ * @param {number} dropChance - Процент выпадения в кейсе (если известен)
+ * @returns {number} Количество искр
+ */
+window.calculateDuplicateSparks = function (itemOrId, dropChance = null) {
+  let item = null;
+  const itemId = typeof itemOrId === "string" ? itemOrId : itemOrId?.id;
+
+  if (typeof itemOrId === "object" && itemOrId !== null) {
+    item = itemOrId;
+  }
+
+  // Поиск по базе предметов если не передан объект целиком
+  if (!item || !item.rarity) {
+    const db = window.GAME_ITEMS_DB || {};
+    const slots = ["head", "eyes", "body", "legs", "room", "color"];
+    for (const s of slots) {
+      if (Array.isArray(db[s])) {
+        const found = db[s].find(x => x.id === itemId);
+        if (found) { item = Object.assign({}, found, item || {}); break; }
+      }
+    }
+    // Поиск по хеллоуинскому склепу
+    if ((!item || !item.rarity) && window.HALLOWEEN_CASE_CONFIG?.drops) {
+      const hwFound = window.HALLOWEEN_CASE_CONFIG.drops.find(x => x.id === itemId);
+      if (hwFound) item = Object.assign({}, hwFound, item || {});
+    }
+  }
+
+  let rarity = item?.rarity || "rare";
+  if (item?.isEpic) rarity = "epic";
+  if (itemId && itemId.startsWith("hw_")) rarity = "halloween";
+  if (item?.isBundle) rarity = "mythic";
+
+  const baseSparks = window.SPARK_BASE_BY_RARITY[rarity] || 2;
+  const chance = (typeof dropChance === "number" && dropChance > 0) ? dropChance : (Number(item?.chance) || 15);
+
+  let bonus = 0;
+  if (chance <= 5 || rarity === "mythic" || item?.isBundle) {
+    bonus = (rarity === "mythic" || item?.isBundle) ? 5 : 3;
+  } else if (chance <= 10) {
+    bonus = 1;
+  }
+
+  return Math.max(1, baseSparks + bonus);
+};
+
+// Пул романтических персональных комплиментов от Алексея для Кати при дубликате
+window.ROMANTIC_COMPLIMENTS = [
+  "Этот наряд у тебя уже есть, но ты в нём настолько прекрасна, что кейс решил напомнить об этом! 😍",
+  "Тебе безумно идёт этот стиль! Держи звёздные искорки на новую красоту ✨",
+  "Двойная доза уюта для тебя! Лёша передаёт самые крепкие обнимашки ❤️",
+  "Катя, этот образ — просто шедевр! Превращаем повторку в звёздное сияние ✨",
+  "Котик сыт, образ великолепен, а искорки копятся на твою мечту! 🥰",
+  "Ты в этом наряде сводишь с ума! Лови звёздочки в коллекцию 💫",
+  "Повторение — мать восхищения! Лёша любуется тобой каждую секунду 💕"
+];
+
+// Рецепты обмена в Ателье Звёздных Искр
+window.ATELIER_RECIPES = [
+  {
+    id: "sparks_coins_100",
+    cost: 5,
+    title: "Мешочек 100 🪙",
+    icon: "💰",
+    desc: "Монеты в кошелек для новых спинов в казино",
+    type: "coins",
+    amount: 100
+  },
+  {
+    id: "sparks_guaranteed_item",
+    cost: 10,
+    title: "Гарантированный наряд",
+    icon: "👗",
+    desc: "Случайный недостающий предмет гардероба на выбор без дубликатов",
+    type: "item_pity"
+  },
+  {
+    id: "sparks_secret_wish",
+    cost: 15,
+    title: "Секретный купон желания 💌",
+    icon: "💌",
+    desc: "Купон на романтическое желание от Кати (#WISH-...), действителен 3 месяца",
+    type: "wish"
+  }
+];

@@ -870,12 +870,22 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
     breakdownReports.push(`✅ Скретч-карты: RTP ${rtpScratch}% (в коридоре нормы 84–92%). Оптимально.`);
   }
 
-  // АУДИТ 3: КЕЙСЫ (Целевая окупаемость 75–82%)
+  // АУДИТ 3: КЕЙСЫ (Целевая окупаемость 75–82% с учетом Звёздных Искр за повторки)
   const auditCase = (caseKey, costVal, defKey, caps) => {
     const drops = chances[caseKey] || FALLBACK_ODDS_DATABASE[caseKey] || [];
     let expectedDropValue = 0;
     drops.forEach(d => {
-      expectedDropValue += ((d.chance || 0) / 100) * (d.value || 40);
+      let baseVal = d.value || 40;
+      // Учет конверсии повторок в Звёздные Искры (1 ✨ ≈ 20 🪙 ценности)
+      const isCosmeticDrop = d.slot || d.type === "item" || d.isBundle || (d.id && (d.id.startsWith("hw_") || d.id.includes("scarf") || d.id.includes("hoodie")));
+      if (isCosmeticDrop) {
+        const estSparks = typeof window.calculateDuplicateSparks === "function" 
+          ? window.calculateDuplicateSparks(d, d.chance || 15) 
+          : (d.isBundle ? 8 : (d.chance <= 10 ? 5 : 2));
+        const sparkValueInCoins = estSparks * 20;
+        baseVal = Math.max(baseVal, sparkValueInCoins * 0.75);
+      }
+      expectedDropValue += ((d.chance || 0) / 100) * baseVal;
     });
     const caseRtp = costVal > 0 ? Math.round((expectedDropValue / costVal) * 100) : 0;
     const hasRealWishes = caseKey === "case_blk" || caseKey === "case_prem";
@@ -917,12 +927,48 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
   auditCase("case_prem", eco.caseCostPremium || 160, "caseCostPremium", ECONOMY_CAPS.caseCostPremium);
   auditCase("case_blk", eco.caseCostBlack || 320, "caseCostBlack", ECONOMY_CAPS.caseCostBlack);
 
-  // АУДИТ 4: БАЛАНС МАКРОЭКОНОМИКИ И ЕДЫ (Коридор еды 8–20 🪙)
+  // АУДИТ 4: ХЕЛЛОУИНСКИЙ СКЛЕП И ПОВТОРКИ
+  const hwDrops = chances.case_hw || (window.HALLOWEEN_CASE_CONFIG ? window.HALLOWEEN_CASE_CONFIG.drops : []);
+  if (Array.isArray(hwDrops) && hwDrops.length > 0) {
+    let hwExpValue = 0;
+    hwDrops.forEach(d => {
+      let val = d.isBundle ? 220 : 70;
+      const estSparks = typeof window.calculateDuplicateSparks === "function" ? window.calculateDuplicateSparks(d, d.chance) : (d.isBundle ? 12 : 5);
+      val = Math.max(val, estSparks * 20 * 0.8);
+      hwExpValue += ((d.chance || 0) / 100) * val;
+    });
+    const hwCost = eco.caseCostHalloween || 130;
+    const hwRtp = Math.round((hwExpValue / hwCost) * 100);
+    breakdownReports.push(`🎃 Хеллоуинский Склеп: Окупаемость ${hwRtp}% (с учетом пула Звёздных Искр ✨).`);
+  }
+
+  // АУДИТ 5: ЗВЁЗДНЫЕ ИСКРЫ И АТЕЛЬЕ
+  const playerSparks = (pet && typeof pet.starSparks === "number") ? pet.starSparks : 0;
+  if (playerSparks >= 20) {
+    breakdownReports.push(`✨ Звёздные Искры: На балансе у игрока накоплено ${playerSparks} ✨ (экв. ~${playerSparks * 20} 🪙). Рекомендуется предложить акцию в Ателье.`);
+    window.generatedAdvisorEdits.push({
+      key: "sparks_atelier_notice",
+      isActionOnly: true,
+      title: `✨ Накопление Звёздных Искр (${playerSparks} ✨ на руках)`,
+      desc: `Игрок накопил солидный запас искр за повторки. Пригласите Катю в Ателье за гарантированным нарядом или купоном желания.`,
+      actionBtnText: "Отправить приглашение",
+      onApply: () => {
+        if (typeof window.insertDeskCannedResponse === "function") {
+          window.insertDeskCannedResponse("sparks_invitation");
+        }
+      }
+    });
+  } else {
+    breakdownReports.push(`✨ Баланс Звёздных Искр: ${playerSparks} ✨ (система защиты от повторок стабильна).`);
+  }
+
+  // АУДИТ 6: БАЛАНС МАКРОЭКОНОМИКИ И ЕДЫ (Коридор еды 8–20 🪙)
   const avgMiniGameReward = ((eco.maxRunner || 25) + (eco.maxTetris || 25) + (eco.maxFishing || 40) + (eco.maxMemory || 30)) / 4;
   if (avgMiniGameReward > 20 * 2.5) {
     riskScore += 8;
     breakdownReports.push(`⚠️ Бытовые расходы: Средняя награда за аркады (${Math.round(avgMiniGameReward)} 🪙) превышает стоимость еды в 2.5+ раза. Рекомендуется удерживать цены еды в коридоре 8–20 🪙.`);
   }
+
 
   // Отображение индикаторов риска
   riskScore = Math.min(100, Math.max(5, riskScore));

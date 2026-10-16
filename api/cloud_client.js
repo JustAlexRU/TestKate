@@ -78,8 +78,10 @@ function buildFallbackDataFromLocalStorage() {
       hunger: 80,
       happy: 80,
       energy: 80,
-      clean: 80
+      clean: 80,
+      starSparks: 0
     };
+
   }
 
   // 2. Игровая аналитика

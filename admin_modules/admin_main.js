@@ -103,6 +103,7 @@ window.savePetState = async function () {
   const pet = window.currentCloudData[activeUser].pet;
   const nameEl = document.getElementById("editPetName");
   const coinsEl = document.getElementById("editPetCoins");
+  const sparksEl = document.getElementById("editPetSparks");
   const levelEl = document.getElementById("editPetLevel");
   const xpEl = document.getElementById("editPetXp");
   const hungerEl = document.getElementById("editPetHunger");
@@ -112,6 +113,7 @@ window.savePetState = async function () {
 
   if (nameEl) pet.name = nameEl.value.trim() || pet.name || "Зефирка";
   if (coinsEl) pet.coins = parseInt(coinsEl.value, 10) || 0;
+  if (sparksEl) pet.starSparks = parseInt(sparksEl.value, 10) || 0;
   if (levelEl) pet.level = parseInt(levelEl.value, 10) || 1;
   if (xpEl) pet.xp = parseInt(xpEl.value, 10) || 0;
   if (hungerEl) pet.hunger = Math.min(100, Math.max(0, parseInt(hungerEl.value, 10) || 0));
@@ -121,8 +123,9 @@ window.savePetState = async function () {
 
   if (!Array.isArray(window.currentCloudData[activeUser].audit)) window.currentCloudData[activeUser].audit = [];
   window.currentCloudData[activeUser].audit.push({
-    text: `[ADMIN] Изменил параметры питомца: Баланс=${pet.coins}🪙, Ур=${pet.level}`,
+    text: `[ADMIN] Изменил параметры питомца: Баланс=${pet.coins}🪙, Искры=${pet.starSparks || 0}✨, Ур=${pet.level}`,
     icon: "🐱",
+
     date: new Date().toLocaleDateString("ru-RU"),
     time: new Date().toLocaleTimeString("ru-RU"),
     timestamp: Date.now()
@@ -257,6 +260,7 @@ window.renderDashboard = async function () {
     const petInputs = {
       editPetName: pet.name || "Зефирка",
       editPetCoins: pet.coins ?? 0,
+      editPetSparks: pet.starSparks ?? 0,
       editPetLevel: pet.level ?? 1,
       editPetXp: pet.xp ?? 0,
       editPetHunger: pet.hunger ?? 0,
@@ -264,6 +268,7 @@ window.renderDashboard = async function () {
       editPetEnergy: pet.energy ?? 0,
       editPetClean: pet.clean ?? 0
     };
+
     Object.entries(petInputs).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.value = val;
@@ -616,9 +621,12 @@ window.insertDeskCannedResponse = function (key) {
     wish_accepted: "Привет! Твой секретный купон желания принят к исполнению ❤️ Я уже готовлю для тебя сюрприз!",
     pet_woken: "Привет! Разбудил Зефирку, энергия на максимуме ☀️ Можно снова играть и гладить котика!",
     drop_refunded: "Привет! Проверил открытый кейс — компенсировал монеты на твой баланс 📦 Удачных дропов!",
+    sparks_refunded: "Привет! Проверил начисление за повторку — начислил тебе Звёздные Искры ✨ Заглядывай в Ателье за покупками!",
+    sparks_invitation: "Привет! Вижу, ты накопила много Звёздных Искр ✨ В Ателье тебя ждут гарантированные наряды и секретные купоны!",
     ledger_clean: "Привет! Сверил проводки в 1C Ledger — все списания легитимны и баланс сходится до копеечки 📑",
     sync_fixed: "Привет! Принудительно синхронизировал стейт с облаком 🌐 Обнови страницу через Ctrl+F5!"
   };
+
 
   const text = cannedMap[key] || "Привет! Чем могу помочь? ✨";
   input.value = text;
@@ -693,6 +701,79 @@ window.grantSupportCompensationCoins = async function (amount, reason) {
   }
 
   alert(`✅ Успешно начислена компенсация: +${num} 🪙 (${auditReason})`);
+};
+
+/**
+ * Начисление Звёздных Искр за повторки с проводкой и уведомлением в тикете
+ */
+window.grantSupportCompensationSparks = async function (amount, reason) {
+  const num = Number(amount) || 0;
+  if (num <= 0) return;
+
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  if (!window.currentCloudData) window.currentCloudData = {};
+  if (!window.currentCloudData[targetUser]) window.currentCloudData[targetUser] = {};
+  const userRecord = window.currentCloudData[targetUser];
+  if (!userRecord.pet) userRecord.pet = {};
+
+  userRecord.pet.starSparks = (Number(userRecord.pet.starSparks) || 0) + num;
+
+  const auditReason = reason || "Компенсация за повторку";
+  if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+  userRecord.audit.unshift({
+    text: `[SPARKS COMP] Начисление за повторку: +${num} ✨ (${auditReason})`,
+    icon: "✨",
+    coinsChange: 0,
+    date: new Date().toLocaleDateString("ru-RU"),
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  if (targetUser === "katya" && window.pet) {
+    window.pet.starSparks = userRecord.pet.starSparks;
+    localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
+    if (typeof window.updatePetUI === "function") window.updatePetUI();
+  }
+
+  if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  // Уведомление в открытом тикете
+  if (window.activeDeskTicketId) {
+    let list = userRecord.feedback || (typeof window.readStorage === "function" ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", [])) : []);
+    const ticket = list.find(t => t.id === window.activeDeskTicketId);
+    if (ticket) {
+      if (!Array.isArray(ticket.messages)) ticket.messages = [];
+      ticket.messages.push({
+        id: "sys_sparks_" + Date.now(),
+        author: "system",
+        text: `✨ Начислены Звёздные Искры: +${num} ✨ (${auditReason})`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now()
+      });
+      ticket.messages.push({
+        id: "msg_sparks_" + Date.now(),
+        author: "alex",
+        text: `Проверил повторку и начислил на твой баланс +${num} Звёздных Искр ✨ В Ателье можно забрать наряд или купон!`,
+        time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+        timestamp: Date.now() + 1
+      });
+      if (typeof window.saveFeedbackListToCloud === "function") {
+        await window.saveFeedbackListToCloud(list);
+      }
+      if (typeof window.renderDeskChatTimeline === "function") {
+        window.renderDeskChatTimeline(ticket);
+      }
+    }
+  }
+
+  updateDeskCustomerCard();
+  if (typeof window.renderAuditLedger === "function") {
+    window.renderAuditLedger(userRecord.audit);
+  }
+
+  alert(`✨ Успешно начислено: +${num} Звёздных Искр (${auditReason})! Текущий баланс: ${userRecord.pet.starSparks} ✨`);
 };
 
 /**
@@ -1794,10 +1875,12 @@ window.renderDeskWizardNode = function (nodeKey) {
     container.appendChild(statsDiv);
 
     const subCats = [
+      { key: "drops_sparks", title: "✨ Звёздные Искры и Повторки", desc: "Сверка начисления искр, компенсация дубликатов", icon: "✨" },
       { key: "drops_stuck", title: "Завис кейс или спин рулетки", desc: "Вернуть монеты за неудачную анимацию открытия", icon: "🎰" },
       { key: "drops_pity", title: "Вопрос по шансам и честности (RTP)", desc: "Вежливое разъяснение формулы + утешительный спин", icon: "🧠" },
       { key: "cases_recent", title: "История выпавших предметов", desc: "Посмотреть список и редкости открытых кейсов", icon: "📦" }
     ];
+
 
     subCats.forEach(sc => {
       const b = document.createElement("button");
@@ -1813,6 +1896,49 @@ window.renderDeskWizardNode = function (nodeKey) {
       b.onclick = () => window.renderDeskWizardNode(sc.key);
       container.appendChild(b);
     });
+    return;
+  }
+
+  if (nodeKey === "drops_sparks") {
+    if (titleEl) titleEl.innerText = "✨ Звёздные Искры и Повторки";
+
+    const sparksCount = (pet && typeof pet.starSparks === "number") ? pet.starSparks : 0;
+    const statsDiv = document.createElement("div");
+    statsDiv.className = "p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 flex justify-between items-center text-xs mb-3 shadow-inner";
+    statsDiv.innerHTML = `
+      <div><span class="text-purple-300 block text-[10px]">Баланс Звёздных Искр:</span><b class="text-amber-300 font-mono text-sm">${sparksCount} ✨</b></div>
+      <div class="text-right"><span class="text-slate-400 block text-[10px]">Курс в Ателье:</span><b class="text-emerald-400 font-mono text-xs">1 ✨ ≈ 20 🪙</b></div>
+    `;
+    container.appendChild(statsDiv);
+
+    const desc = document.createElement("div");
+    desc.className = "text-xs text-slate-300 leading-relaxed mb-3";
+    desc.innerText = "Если у игрока выпал дубликат или возник вопрос по повторке, начислите Звёздные Искры в зависимости от редкости вещи:";
+    container.appendChild(desc);
+
+    const sparkButtons = [
+      { label: "+2 ✨ (Обычная / Редкая повторка)", amount: 2, reason: "Компенсация редкой повторки" },
+      { label: "+6 ✨ (Хеллоуин / Эпическая повторка)", amount: 6, reason: "Компенсация эпической/ивентовой повторки" },
+      { label: "+10 ✨ (Легендарный / Мифический дубликат)", amount: 10, reason: "Компенсация легендарного дубликата" }
+    ];
+
+    sparkButtons.forEach(b => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "w-full text-left p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/25 font-bold text-xs transition cursor-pointer mb-2 active:scale-98 flex items-center justify-between";
+      btn.innerHTML = `<span>${b.label}</span><span class="text-[10px] opacity-75 font-mono">Выдать ✨</span>`;
+      btn.onclick = async () => {
+        await window.grantSupportCompensationSparks(b.amount, b.reason);
+      };
+      container.appendChild(btn);
+    });
+
+    const replyBtn = document.createElement("button");
+    replyBtn.type = "button";
+    replyBtn.className = "w-full py-2.5 px-3 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-bold active:scale-95 transition cursor-pointer text-left flex items-center gap-2 mt-2";
+    replyBtn.innerHTML = `<span>💬</span><span>Отправить вежливый ответ про Ателье и Искры</span>`;
+    replyBtn.onclick = () => window.insertDeskCannedResponse("sparks_refunded");
+    container.appendChild(replyBtn);
     return;
   }
 

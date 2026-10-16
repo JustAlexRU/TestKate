@@ -1,6 +1,7 @@
 {
   "name": "test-kate",
-  "version": "2.5.0",
+  "version": "2.6.0",
+
   "description": "Lex Labs Enterprise Pet Care Game & Mission Control Dashboard",
   "main": "app.js",
   "scripts": {

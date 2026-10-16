@@ -1,22 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "name": "kotya-pet-mission-control",
   "displayName": "Котик & Вкусняшки 💖 • Mission Control",
-  "build": 250,
+  "build": 260,
   "releaseDate": "2026-10-16",
-  "codename": "Layered Architecture & UI/UX Harmonization",
+  "codename": "Star Sparks & Atelier Duplicate Protection",
   "semver": {
     "major": 2,
-    "minor": 5,
+    "minor": 6,
     "patch": 0
   },
   "modules": {
-    "client": "2.5.0",
-    "dashboard": "2.5.0",
+    "client": "2.6.0",
+    "dashboard": "2.6.0",
     "core": "1.0.0",
-    "decisionTree": "1.0.0",
-    "aiEconomyAdvisor": "2.2.0",
+    "decisionTree": "1.1.0",
+    "aiEconomyAdvisor": "2.3.0",
     "irlBudgetGuard": "1.0.0"
   }
 }
+

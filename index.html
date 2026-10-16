@@ -124,6 +124,12 @@
             <span id="headerCoins" class="font-extrabold text-amber-300 text-xs font-mono">25</span>
           </div>
 
+          <div id="btnHeaderSparks" onclick="switchWardrobeTab('atelier'); document.getElementById('modalWardrobe')?.classList.remove('hidden');" class="flex items-center gap-1 bg-[#160d29] border border-purple-400/40 hover:border-purple-300 px-2 py-1 rounded-full shadow-inner cursor-pointer transition active:scale-95" title="Ателье Звёздных Искр ✨">
+            <span class="text-xs leading-none">✨</span>
+            <span id="headerSparks" class="font-extrabold text-purple-300 text-xs font-mono">0</span>
+          </div>
+
+
           <button id="soundToggleBtn" class="bg-[#1a1c32] hover:bg-[#252848] border border-white/10 w-7 h-7 rounded-full flex items-center justify-center text-xs active:scale-90 transition cursor-pointer" title="Звук">
             🔔
           </button>
@@ -477,6 +483,10 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <div onclick="switchWardrobeTab('atelier')" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-extrabold cursor-pointer hover:bg-purple-500/25 transition shadow-sm" title="Ателье Звёздных Искр ✨">
+            <span>✨</span>
+            <span id="wardrobeSparksVal" class="font-mono">0</span>
+          </div>
           <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-extrabold shadow-[0_0_10px_rgba(245,158,11,0.15)]">
             <span class="text-xs">🪙</span>
             <span id="shopCoinsVal" class="font-mono">25</span>
@@ -486,12 +496,13 @@
       </div>
 
       <!-- Сегментированный контрол (Pill Tabs) -->
-      <div class="flex bg-[#0b0c16]/90 p-1 rounded-2xl border border-white/10 text-xs font-bold gap-1 shadow-inner">
-        <button id="tabWardrobeOutfits" class="flex-1 py-1.5 rounded-xl bg-pink-500 text-white font-extrabold transition-all text-[11px] shadow-sm cursor-pointer">👗 Одежда</button>
-        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎀 Наряды</button>
-        <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🏠 Локации</button>
-        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎨 Шерстка</button>
-        <button id="tabWardrobeMyItems" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎒 Моё</button>
+      <div class="flex bg-[#0b0c16]/90 p-1 rounded-2xl border border-white/10 text-xs font-bold gap-1 shadow-inner overflow-x-auto custom-scrollbar">
+        <button id="tabWardrobeOutfits" class="flex-1 py-1.5 rounded-xl bg-pink-500 text-white font-extrabold transition-all text-[11px] shadow-sm cursor-pointer whitespace-nowrap">👗 Одежда</button>
+        <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer whitespace-nowrap">🎀 Наряды</button>
+        <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer whitespace-nowrap">🏠 Локации</button>
+        <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer whitespace-nowrap">🎨 Шерстка</button>
+        <button id="tabWardrobeMyItems" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer whitespace-nowrap">🎒 Моё</button>
+        <button id="tabWardrobeAtelier" class="flex-1 py-1.5 rounded-xl text-purple-300 hover:text-purple-100 hover:bg-purple-500/10 transition-all text-[11px] font-bold cursor-pointer whitespace-nowrap">✨ Ателье</button>
       </div>
 
       <!-- Секции предметов с фиксированной высотой и единой адаптивной сеткой -->
@@ -515,6 +526,10 @@
           <button onclick="unequipAllCosmetics()" class="text-[10px] font-bold text-rose-400 hover:underline cursor-pointer">Снять всё ✕</button>
         </div>
       </div>
+
+      <!-- Секция: Ателье Звёздных Искр -->
+      <div id="wardrobeAtelierSection" class="hidden flex-col gap-2.5 h-[360px] overflow-y-auto pr-1.5 custom-scrollbar"></div>
+
 
       <!-- Подвал: компактная ghost-кнопка сброса нарядов -->
       <div class="pt-2 border-t border-white/10 flex justify-center">
@@ -571,7 +586,11 @@
               <span class="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 font-mono font-black text-[11px] flex items-center gap-1 shadow-sm">
                 <span id="casinoHubCoins">25</span> 🪙
               </span>
+              <span onclick="switchWardrobeTab('atelier'); document.getElementById('modalWardrobe')?.classList.remove('hidden');" class="px-2 py-0.5 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-300 font-mono font-black text-[11px] flex items-center gap-1 shadow-sm cursor-pointer hover:bg-purple-500/25 transition" title="Звёздные Искры (Ателье)">
+                <span id="casinoHubSparks">0</span> ✨
+              </span>
             </div>
+
           </div>
         </div>
         <button class="closeModalBtn w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-slate-400 hover:text-white text-sm flex items-center justify-center transition active:scale-90 cursor-pointer">

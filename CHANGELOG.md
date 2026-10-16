@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.0] - 2026-10-16
+
+### Added
+- **Star Sparks Duplicate Protection & Atelier Exchange System** (`game_modules/items_db.js`, `game_modules/minigames/cases.js`):
+  - Dynamic duplicate reward calculation based on item rarity (`common`, `rare`, `epic`, `halloween`, `legendary`, `mythic`) and drop chance percentage ($\le 10\%$, $\le 5\%$).
+  - Full bundle breakdown logic: individual evaluation of elements in multi-item sets, granting new items and accumulating Star Sparks for duplicates.
+  - Interactive «✨ Ателье» tab embedded in the Wardrobe modal with 3 exchange recipes: coins, guaranteed missing outfit (pity protection), and secret wish coupon.
+  - Royal pet treat (+40% hunger, +30% happy) and romantic compliment generator from Alexey upon rolling duplicate items.
+  - Live spark balance badges integrated into App Header, Wardrobe Modal, and Casino Hub.
+- **Macroeconomy Balance & AI Advisor Integration** (`admin_modules/admin_economy.js`):
+  - Expected duplicate value ($1 \text{ ✨} \approx 20 \text{ 🪙}$) factored into case RTP equations, ensuring stable 75–82% return even with collected wardrobes.
+  - Comprehensive Halloween Crypt RTP audit added to LiveOps engine.
+  - AI Economy Advisor monitors player Star Sparks stockpile ($\ge 20 \text{ ✨}$) and suggests Atelier promotions.
+- **Support Desk (Tier-1 CRM Decision Tree) Enhancements** (`admin_modules/admin_main.js`, `dashboard.html`):
+  - Added «✨ Звёздные Искры и Повторки» node under the Drops branch with 1-click spark compensation (+2, +6, +10 ✨) and 1C Ledger audit trails.
+  - Added `editPetSparks` input in Mission Control dashboard.
+  - Added canned response templates for duplicate compensations and Atelier invitations.
+
+---
+
 ## [2.4.1] - 2026-10-16
+
 
 ### Added
 - **Support Desk Live Chats & Auto-Archive** (`admin/dashboard_main.js`, `dashboard.html`):
