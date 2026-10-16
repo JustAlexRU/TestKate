@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.1] - 2026-10-16
+
+### Added
+- **Support Desk Live Chats & Auto-Archive** (`admin/dashboard_main.js`, `dashboard.html`):
+  - Strictly separated active chats (`⚡ В работе`) and completed/archived chats (`📜 История`) in Support Desk.
+  - Resolved tickets (`status === "done"`, `resolved`, `closed`, or `claimed === true`) now immediately and automatically fly out of the active chats bar into History.
+  - Added mode switcher tabs in Support Desk header with live ticket counts: `⚡ В работе (N)` and `📜 История (M)`.
+  - Added Zero Inbox completion screen when all active inquiries are handled.
+  - Added `reopenDeskTicket` action allowing historical tickets to be reopened and restored into the active queue.
+  - Linked `badgeSupportDeskCount` on the Mission Control top navigation bar to the live count of active support tickets.
+
+---
+
 ## [2.4.0] - 2026-10-16
 
 ### Added

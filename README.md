@@ -1,6 +1,6 @@
 # Lex Labs: Kotya Pet & Mission Control
 
-[![Version](https://img.shields.io/badge/version-2.4.0-indigo.svg)](version.json)
+[![Version](https://img.shields.io/badge/version-2.4.1-indigo.svg)](version.json)
 [![Status](https://img.shields.io/badge/status-production-emerald.svg)](dashboard.html)
 [![SemVer](https://img.shields.io/badge/semver-2.0.0-blue.svg)](https://semver.org)
 [![License](https://img.shields.io/badge/license-private-slate.svg)](#)

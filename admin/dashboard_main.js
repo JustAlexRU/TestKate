@@ -391,6 +391,9 @@ window.renderDashboard = async function () {
 
   try {
     if (typeof updateDeskCustomerCard === "function") updateDeskCustomerCard();
+    if (!document.getElementById("modalSupportDesk")?.classList.contains("hidden")) {
+      if (typeof renderDeskTopActiveChatsBar === "function") renderDeskTopActiveChatsBar();
+    }
   } catch (e) {}
 };
 function renderDashboard() {
@@ -576,6 +579,7 @@ window.updateUnreadBadges = function () {
 
   let unreadBugs = 0;
   let unreadInbox = 0;
+  let activeSupportCount = 0;
 
   list.forEach(item => {
     const isBug = item.category?.includes("Баг");
@@ -584,10 +588,15 @@ window.updateUnreadBadges = function () {
       if (isBug) unreadBugs++;
       else unreadInbox++;
     }
+    const st = item.status || "sent";
+    if (st !== "done" && st !== "resolved" && st !== "closed" && item.claimed !== true && !isBug) {
+      activeSupportCount++;
+    }
   });
 
   const bBug = document.getElementById("badgeUnreadBugs");
   const bInbox = document.getElementById("badgeUnreadInbox");
+  const bDesk = document.getElementById("badgeSupportDeskCount");
   if (bBug) {
     bBug.innerText = unreadBugs;
     bBug.classList.toggle("hidden", unreadBugs === 0);
@@ -595,6 +604,9 @@ window.updateUnreadBadges = function () {
   if (bInbox) {
     bInbox.innerText = unreadInbox;
     bInbox.classList.toggle("hidden", unreadInbox === 0);
+  }
+  if (bDesk) {
+    bDesk.innerText = activeSupportCount;
   }
 };
 
@@ -1088,28 +1100,96 @@ window.redeemWishCouponSupport = async function (couponCode) {
   alert(`❤️ Купон «${coupon.title}» успешно активирован и принят к исполнению!`);
 };
 
-window.openSupportDeskModal = function () {
-  document.getElementById("modalSupportDesk")?.classList.remove("hidden");
+window.deskViewMode = "active"; // "active" | "history"
+
+function isTicketActive(t) {
+  if (!t) return false;
+  if (t.category?.includes("Баг (Требует разработки)") && (t.status === "inbox" || t.status === "todo" || t.status === "done")) return false;
+  const st = t.status || "sent";
+  if (st === "done" || st === "resolved" || st === "closed" || t.claimed === true) return false;
+  return ["sent", "in_progress", "testing"].includes(st);
+}
+
+function isTicketCompleted(t) {
+  if (!t) return false;
+  if (t.category?.includes("Баг (Требует разработки)") && (t.status === "inbox" || t.status === "todo")) return false;
+  const st = t.status || "sent";
+  return st === "done" || st === "resolved" || st === "closed" || t.claimed === true;
+}
+
+function getDeskTicketCollections() {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   const list = userRecord.feedback || (typeof window.readStorage === "function"
     ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
     : []);
 
-  const deskTickets = list.filter(t => {
-    const st = t.status || "sent";
-    if (t.claimed === true && st === "done") return false;
-    return ["sent", "in_progress", "testing", "done"].includes(st);
-  });
+  const activeTickets = list.filter(isTicketActive);
+  const historyTickets = list.filter(isTicketCompleted);
 
-  if (deskTickets.length > 0 && (!window.activeDeskTicketId || !deskTickets.some(t => t.id === window.activeDeskTicketId))) {
-    window.activeDeskTicketId = deskTickets[0].id;
+  return { list, activeTickets, historyTickets, targetUser, userRecord };
+}
+
+function updateDeskTabStyles() {
+  const tabActive = document.getElementById("deskTabActive");
+  const tabHistory = document.getElementById("deskTabHistory");
+  if (!tabActive || !tabHistory) return;
+
+  if (window.deskViewMode === "active") {
+    tabActive.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-amber-400 text-black shadow-sm";
+    tabHistory.className = "px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer";
+  } else {
+    tabActive.className = "px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5 cursor-pointer";
+    tabHistory.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-sm";
+  }
+}
+
+window.setDeskViewMode = function (mode) {
+  window.deskViewMode = mode === "history" ? "history" : "active";
+  updateDeskTabStyles();
+
+  const { activeTickets, historyTickets } = getDeskTicketCollections();
+  const currentList = window.deskViewMode === "history" ? historyTickets : activeTickets;
+
+  if (currentList.length > 0) {
+    if (!currentList.some(t => t.id === window.activeDeskTicketId)) {
+      window.activeDeskTicketId = currentList[0].id;
+    }
+  } else {
+    window.activeDeskTicketId = null;
   }
 
-  renderDeskTopActiveChatsBar(deskTickets, window.activeDeskTicketId);
+  renderDeskTopActiveChatsBar();
+
   if (window.activeDeskTicketId) {
     selectDeskTicket(window.activeDeskTicketId);
+  } else {
+    renderDeskEmptyState();
   }
+};
+
+window.openSupportDeskModal = function () {
+  document.getElementById("modalSupportDesk")?.classList.remove("hidden");
+
+  window.deskViewMode = "active";
+  updateDeskTabStyles();
+
+  const { activeTickets } = getDeskTicketCollections();
+
+  if (activeTickets.length > 0 && (!window.activeDeskTicketId || !activeTickets.some(t => t.id === window.activeDeskTicketId))) {
+    window.activeDeskTicketId = activeTickets[0].id;
+  } else if (activeTickets.length === 0) {
+    window.activeDeskTicketId = null;
+  }
+
+  renderDeskTopActiveChatsBar();
+
+  if (window.activeDeskTicketId) {
+    selectDeskTicket(window.activeDeskTicketId);
+  } else {
+    renderDeskEmptyState();
+  }
+
   updateDeskCustomerCard();
   window.renderDeskWizardNode("root");
 };
@@ -1118,56 +1198,129 @@ window.closeSupportDeskModal = function () {
   document.getElementById("modalSupportDesk")?.classList.add("hidden");
 };
 
-function renderDeskTopActiveChatsBar(deskTickets, activeId) {
+function renderDeskTopActiveChatsBar() {
   const bar = document.getElementById("deskTopActiveChatsBar");
   if (!bar) return;
-  bar.innerHTML = "";
 
-  if (deskTickets.length === 0) {
-    bar.innerHTML = `<span class="text-xs text-slate-500 font-mono">Нет активных тикетов первой линии ✨</span>`;
+  const { activeTickets, historyTickets } = getDeskTicketCollections();
+
+  const badgeActive = document.getElementById("deskActiveCountBadge");
+  const badgeHistory = document.getElementById("deskHistoryCountBadge");
+  const bDesk = document.getElementById("badgeSupportDeskCount");
+  if (badgeActive) badgeActive.innerText = activeTickets.length;
+  if (badgeHistory) badgeHistory.innerText = historyTickets.length;
+  if (bDesk) bDesk.innerText = activeTickets.length;
+
+  bar.innerHTML = "";
+  const escapeFn = getEscapeHtml();
+  const currentTickets = window.deskViewMode === "history" ? historyTickets : activeTickets;
+
+  if (currentTickets.length === 0) {
+    if (window.deskViewMode === "history") {
+      bar.innerHTML = `<span class="text-xs text-slate-500 font-mono py-1">История выполненных тикетов пуста ✨</span>`;
+    } else {
+      bar.innerHTML = `<span class="text-xs text-emerald-400 font-mono py-1 font-medium">🎉 Нет активных тикетов — все вопросы решены!</span>`;
+    }
     return;
   }
 
-  const escapeFn = getEscapeHtml();
-
-  deskTickets.forEach(ticket => {
-    const isSelected = ticket.id === activeId;
+  currentTickets.forEach(ticket => {
+    const isSelected = ticket.id === window.activeDeskTicketId;
     const msgs = Array.isArray(ticket.messages) ? ticket.messages : [];
     const preview = msgs.length > 0 ? msgs[msgs.length - 1].text : (ticket.text || "");
 
     const pill = document.createElement("button");
     pill.type = "button";
-    pill.className = `flex items-center gap-2 px-3 py-1.5 rounded-xl whitespace-nowrap text-xs transition cursor-pointer border ${isSelected ? "bg-amber-400 text-black font-black border-amber-300 shadow-md" : "bg-[#181a29] text-gray-300 hover:text-white border-white/5"}`;
 
+    let borderClass = "border-white/5";
+    let bgClass = "bg-[#181a29] text-gray-300 hover:text-white";
+    if (isSelected) {
+      if (window.deskViewMode === "history") {
+        bgClass = "bg-indigo-600 text-white font-bold shadow-md";
+        borderClass = "border-indigo-400";
+      } else {
+        bgClass = "bg-amber-400 text-black font-black shadow-md";
+        borderClass = "border-amber-300";
+      }
+    }
+
+    pill.className = `flex items-center gap-2 px-3 py-1.5 rounded-xl whitespace-nowrap text-xs transition cursor-pointer border ${bgClass} ${borderClass}`;
     pill.onclick = () => selectDeskTicket(ticket.id);
 
     let stBadge = "📥";
     if (ticket.status === "in_progress") stBadge = "⚙️";
     else if (ticket.status === "testing") stBadge = "🧪";
-    else if (ticket.status === "done") stBadge = "🏁";
+    else if (ticket.status === "done" || ticket.claimed === true) stBadge = "✅";
 
     const safePreview = escapeFn(preview);
 
     pill.innerHTML = `
       <span>${stBadge}</span>
       <span class="font-bold">#${ticket.id ? String(ticket.id).slice(-4) : "????"}</span>
-      <span class="opacity-70 truncate max-w-[120px]">${safePreview}</span>
+      <span class="opacity-75 truncate max-w-[120px]">${safePreview}</span>
     `;
     bar.appendChild(pill);
   });
 }
 
+function renderDeskEmptyState() {
+  const area = document.getElementById("deskChatTimeline") || document.getElementById("deskChatMessagesArea");
+  const topicEl = document.getElementById("deskChatTopic");
+  const { historyTickets } = getDeskTicketCollections();
+
+  if (topicEl) {
+    topicEl.innerText = window.deskViewMode === "history" 
+      ? "Архив выполненных обращений пуст"
+      : "Все активные обращения закрыты (Zero Inbox) ✨";
+  }
+
+  const statusSel = document.getElementById("deskStatusSelect");
+  const reopenBtn = document.getElementById("btnDeskReopenTicket");
+  if (statusSel) statusSel.classList.add("hidden");
+  if (reopenBtn) reopenBtn.classList.add("hidden");
+
+  if (area) {
+    if (window.deskViewMode === "history") {
+      area.innerHTML = `
+        <div class="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400 gap-3 my-auto">
+          <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 text-3xl flex items-center justify-center text-slate-300 shadow-inner">
+            📜
+          </div>
+          <h3 class="font-bold text-white text-base">История пуста</h3>
+          <p class="text-xs text-slate-400 max-w-sm">Здесь будут храниться завершенные диалоги поддержки с оценками игроков.</p>
+          <button type="button" onclick="window.setDeskViewMode('active')" class="mt-2 px-4 py-2 rounded-xl bg-amber-400 text-black text-xs font-bold transition cursor-pointer active:scale-95 shadow">
+            ⚡ Вернуться к действующим
+          </button>
+        </div>
+      `;
+    } else {
+      area.innerHTML = `
+        <div class="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400 gap-3 my-auto">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-3xl flex items-center justify-center text-emerald-400 shadow-inner">
+            🎉
+          </div>
+          <h3 class="font-bold text-white text-base">Все активные обращения закрыты!</h3>
+          <p class="text-xs text-slate-400 max-w-sm">На первой линии поддержки нет открытых вопросов. Все выполненные тикеты автоматически перемещены в архив истории.</p>
+          ${historyTickets.length > 0 ? `
+            <button type="button" onclick="window.setDeskViewMode('history')" class="mt-2 px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold flex items-center gap-2 border border-indigo-500/30 transition cursor-pointer active:scale-95">
+              <span>📜 Открыть историю выполненных (${historyTickets.length})</span>
+            </button>
+          ` : ''}
+        </div>
+      `;
+    }
+  }
+}
+
 function selectDeskTicket(ticketId) {
   window.activeDeskTicketId = ticketId;
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
-  let list = userRecord.feedback || (typeof window.readStorage === "function"
-    ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
-    : []);
+  const { list, targetUser, userRecord } = getDeskTicketCollections();
   const ticket = list.find(t => t.id === ticketId);
   if (!ticket) return;
 
-  if (!ticket.status || ticket.status === "sent") {
+  const isCompleted = isTicketCompleted(ticket);
+
+  if (!isCompleted && (!ticket.status || ticket.status === "sent")) {
     ticket.status = "in_progress";
     userRecord.feedback = list;
     if (typeof window.saveFeedbackListToCloud === "function") {
@@ -1178,20 +1331,69 @@ function selectDeskTicket(ticketId) {
   const topicEl = document.getElementById("deskChatTopic");
   if (topicEl) {
     const escapeFn = getEscapeHtml();
-    topicEl.innerText = `#${String(ticket.id).slice(-4)}: ${ticket.category || "Обращение"} — ${ticket.text ? ticket.text.slice(0, 35) + "..." : "Диалог"}`;
+    const statusPrefix = isCompleted ? "[Выполнено / Архив] " : "";
+    topicEl.innerText = `${statusPrefix}#${String(ticket.id).slice(-4)}: ${ticket.category || "Обращение"} — ${ticket.text ? ticket.text.slice(0, 35) + "..." : "Диалог"}`;
   }
 
   const statusSel = document.getElementById("deskStatusSelect");
+  const reopenBtn = document.getElementById("btnDeskReopenTicket");
   if (statusSel) {
-    statusSel.value = ticket.status || "in_progress";
+    statusSel.value = ticket.status || (isCompleted ? "done" : "in_progress");
+    if (isCompleted) {
+      statusSel.classList.add("hidden");
+    } else {
+      statusSel.classList.remove("hidden");
+    }
+  }
+  if (reopenBtn) {
+    if (isCompleted) {
+      reopenBtn.classList.remove("hidden");
+    } else {
+      reopenBtn.classList.add("hidden");
+    }
   }
 
-  renderDeskTopActiveChatsBar(list.filter(t => !(t.claimed === true && t.status === "done")), ticketId);
+  renderDeskTopActiveChatsBar();
   if (typeof window.renderDeskChatTimeline === "function") {
     window.renderDeskChatTimeline(ticket);
   }
   updateDeskCustomerCard();
 }
+
+window.reopenDeskTicket = async function (ticketId) {
+  const idToReopen = ticketId || window.activeDeskTicketId;
+  if (!idToReopen) return;
+  const { list, targetUser, userRecord } = getDeskTicketCollections();
+  const ticket = list.find(t => t.id === idToReopen);
+  if (!ticket) return;
+
+  ticket.status = "in_progress";
+  ticket.claimed = false;
+  if (!Array.isArray(ticket.messages)) ticket.messages = [];
+  ticket.messages.push({
+    id: "sys_reopen_" + Date.now(),
+    author: "system",
+    text: "⚡ Обращение возобновлено оператором и возвращено в работу первой линии поддержки",
+    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: Date.now()
+  });
+
+  userRecord.feedback = list;
+  if (typeof window.saveFeedbackListToCloud === "function") {
+    await window.saveFeedbackListToCloud(list);
+  } else {
+    localStorage.setItem(`${targetUser}_master_feedback`, JSON.stringify(list));
+    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+    if (typeof window.saveCloud === "function") await window.saveCloud();
+  }
+
+  window.deskViewMode = "active";
+  window.activeDeskTicketId = ticket.id;
+  updateDeskTabStyles();
+  renderDeskTopActiveChatsBar();
+  selectDeskTicket(ticket.id);
+  window.updateUnreadBadges();
+};
 
 window.renderDeskChatTimeline = function (ticket) {
   const area = document.getElementById("deskChatTimeline") || document.getElementById("deskChatMessagesArea");
@@ -1329,11 +1531,7 @@ window.sendDeskMessage = async function () {
 
 window.onDeskStatusChange = async function (newStatus) {
   if (!window.activeDeskTicketId) return;
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
-  let list = userRecord.feedback || (typeof window.readStorage === "function"
-    ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
-    : []);
+  const { list, targetUser, userRecord } = getDeskTicketCollections();
   const ticket = list.find(t => t.id === window.activeDeskTicketId);
   if (!ticket) return;
 
@@ -1376,17 +1574,31 @@ window.onDeskStatusChange = async function (newStatus) {
     if (typeof window.saveCloud === "function") await window.saveCloud();
   }
 
-  renderDeskTopActiveChatsBar(list.filter(t => !(t.claimed === true && t.status === "done")), ticket.id);
-  window.renderDeskChatTimeline(ticket);
+  // АВТОМАТИЧЕСКИЙ УЛЕТ В ИСТОРИЮ ПРИ newStatus === "done":
+  if (newStatus === "done") {
+    const remainingActive = list.filter(isTicketActive);
+    if (window.deskViewMode === "active") {
+      if (remainingActive.length > 0) {
+        window.activeDeskTicketId = remainingActive[0].id;
+        selectDeskTicket(window.activeDeskTicketId);
+      } else {
+        window.activeDeskTicketId = null;
+        renderDeskEmptyState();
+      }
+    } else {
+      selectDeskTicket(ticket.id);
+    }
+  } else {
+    window.renderDeskChatTimeline(ticket);
+  }
+
+  renderDeskTopActiveChatsBar();
+  window.updateUnreadBadges();
 };
 
 window.crmEscalateToDev = async function () {
   if (!window.activeDeskTicketId) return;
-  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
-  const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
-  let list = userRecord.feedback || (typeof window.readStorage === "function"
-    ? window.readStorage(`${targetUser}_master_feedback`, window.readStorage("katya_master_feedback", []))
-    : []);
+  const { list, targetUser, userRecord } = getDeskTicketCollections();
   const ticket = list.find(t => t.id === window.activeDeskTicketId);
   if (!ticket) return;
 
@@ -1402,7 +1614,18 @@ window.crmEscalateToDev = async function () {
     if (typeof window.saveCloud === "function") await window.saveCloud();
   }
   if (typeof window.renderKanbanBoard === "function") window.renderKanbanBoard();
-  window.closeSupportDeskModal();
+  
+  // После эскалации в канбан убираем из активных тикетов первой линии
+  const remainingActive = list.filter(isTicketActive);
+  if (remainingActive.length > 0) {
+    window.activeDeskTicketId = remainingActive[0].id;
+    selectDeskTicket(window.activeDeskTicketId);
+  } else {
+    window.activeDeskTicketId = null;
+    renderDeskEmptyState();
+  }
+  renderDeskTopActiveChatsBar();
+  window.updateUnreadBadges();
   alert("🚀 Задача успешно эскалирована во вторую линию разработки (Канбан)!");
 };
 

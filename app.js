@@ -6,8 +6,8 @@
 /* =========================================================================
  * 0. ЧЁРНЫЙ ЯЩИК ЛОГОВ И ОШИБОК БРАУЗЕРА (CLIENT-SIDE TELEMETRY)
  * ========================================================================= */
-window.APP_VERSION = "2.4.0";
-window.APP_BUILD = 240;
+window.APP_VERSION = "2.4.1";
+window.APP_BUILD = 241;
 window.CLIENT_LOGS_BUFFER = [];
 window.LAST_CAUGHT_ERROR = null;
 
