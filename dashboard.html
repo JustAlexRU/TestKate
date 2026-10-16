@@ -982,12 +982,16 @@
     </div>
   </div>
 
-  <!-- Подключение модульной архитектуры дешборда -->
-  <script src="game/items.js"></script>
-  <script src="admin/dashboard_api.js"></script>
-  <script src="admin/dashboard_chat.js"></script>
-  <script src="admin/dashboard_kanban.js"></script>
-  <script src="admin/dashboard_economy.js"></script>
-  <script src="admin/dashboard_main.js"></script>
+  <!-- Архитектура дешборда (Vanilla JS Layered Architecture) -->
+  <script src="core/config.js"></script>
+  <script src="core/utils.js"></script>
+  <script src="core/storage.js"></script>
+  <script src="api/cloud_client.js"></script>
+  <script src="game_modules/items_db.js"></script>
+  <script src="admin_modules/admin_auth.js"></script>
+  <script src="admin_modules/admin_chat.js"></script>
+  <script src="admin_modules/admin_kanban.js"></script>
+  <script src="admin_modules/admin_economy.js"></script>
+  <script src="admin_modules/admin_main.js"></script>
 </body>
 </html>

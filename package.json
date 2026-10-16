@@ -1,10 +1,10 @@
 {
   "name": "test-kate",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Lex Labs Enterprise Pet Care Game & Mission Control Dashboard",
   "main": "app.js",
   "scripts": {
-    "check": "node --check app.js admin/dashboard_api.js admin/dashboard_chat.js admin/dashboard_economy.js admin/dashboard_kanban.js admin/dashboard_main.js game/cases.js game/casino.js game/games.js game/items.js game/renderMap.js",
+    "check": "node --check app.js core/config.js core/storage.js core/utils.js api/cloud_client.js game_modules/items_db.js game_modules/pet_renderer.js game_modules/minigames/cases.js game_modules/minigames/casino.js game_modules/minigames/arcade.js admin_modules/admin_auth.js admin_modules/admin_chat.js admin_modules/admin_kanban.js admin_modules/admin_economy.js admin_modules/admin_main.js",
     "serve": "python -m http.server 8080",
     "version": "node -e \"console.log(require('./version.json').version)\""
   },

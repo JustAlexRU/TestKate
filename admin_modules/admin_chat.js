@@ -1,6 +1,6 @@
 /**
  * @fileoverview LEX LABS ENTERPRISE: CRM CHAT & ATTACHMENTS MODULE
- * @module admin/dashboard_chat
+ * @module admin_modules/admin_chat
  * 
  * @description
  * Зона ответственности (Single Responsibility):
@@ -196,7 +196,7 @@ function renderCrmChatTimeline(bug) {
   if (!area || !bug) return;
   area.innerHTML = "";
 
-  const escapeFn = typeof window.escapeHtml === "function" ? window.escapeHtml : (str => str || "");
+  const escapeFn = window.escapeHtml || (str => str || "");
   const sortedMsgs = normalizeAndSortMessages(bug.messages, bug.text, bug.date);
 
   sortedMsgs.forEach(msg => {

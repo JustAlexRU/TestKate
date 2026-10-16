@@ -68,30 +68,7 @@ window.addEventListener("unhandledrejection", function (e) {
   pushClientLog("PROMISE_FAIL", [reason]);
 });
 
-function safeParseJSON(raw, fallback) {
-  try {
-    if (raw == null || raw === "") return fallback;
-    return JSON.parse(raw);
-  } catch (e) {
-    return fallback;
-  }
-}
-window.safeParseJSON = safeParseJSON;
-
-function readStorage(key, fallback) {
-  return safeParseJSON(localStorage.getItem(key), fallback);
-}
-window.readStorage = readStorage;
-
-function escapeHtml(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-window.escapeHtml = escapeHtml;
+// Базовые утилиты и хранилище импортируются из core/utils.js и core/storage.js
 
 /* -------------------------------------------------------------------------
  * 1. ЗВУКОВОЙ ДВИЖОК (WEB AUDIO API)
@@ -201,10 +178,10 @@ if (urlParams.has("user")) {
 localStorage.setItem("active_player_profile", currentUser);
 window.currentUser = currentUser;
 
-const TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
-const TELEGRAM_CHAT_ID = "409697238";
-const JSONBIN_BIN_ID = "6acb3d30ac6210605a272eb6";
-const JSONBIN_API_KEY = "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
+var TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
+var TELEGRAM_CHAT_ID = "409697238";
+var JSONBIN_BIN_ID = window.JSONBIN_BIN_ID || "6acb3d30ac6210605a272eb6";
+var JSONBIN_API_KEY = window.JSONBIN_API_KEY || "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
 
 function safeHydrate(key, defaults) {
   try {
@@ -1058,10 +1035,11 @@ document.getElementById("btnWardrobe")?.addEventListener("click", () => {
 
 function switchWardrobeTab(tabKey) {
   const tabs = [
-    { btnId: "tabWardrobeOutfits", secId: "wardrobeOutfitsSection", key: "outfits", render: () => renderWardrobeCategory("body", "wardrobeOutfitsSection") },
-    { btnId: "tabWardrobeAccs", secId: "wardrobeAccSection", key: "accs", render: renderWardrobeAccs },
-    { btnId: "tabWardrobeRooms", secId: "wardrobeRoomsSection", key: "rooms", render: renderWardrobeRooms },
-    { btnId: "tabWardrobeColors", secId: "wardrobeColorSection", key: "colors", render: renderColorShop }
+    { btnId: "tabWardrobeOutfits", secId: "wardrobeOutfitsSection", key: "outfits", display: "grid", render: () => renderWardrobeCategory("body", "wardrobeOutfitsSection") },
+    { btnId: "tabWardrobeAccs", secId: "wardrobeAccSection", key: "accs", display: "grid", render: renderWardrobeAccs },
+    { btnId: "tabWardrobeRooms", secId: "wardrobeRoomsSection", key: "rooms", display: "grid", render: renderWardrobeRooms },
+    { btnId: "tabWardrobeColors", secId: "wardrobeColorSection", key: "colors", display: "grid", render: renderColorShop },
+    { btnId: "tabWardrobeMyItems", secId: "wardrobeMyItemsSection", key: "myItems", display: "flex", render: renderInventoryGrid }
   ];
 
   tabs.forEach(t => {
@@ -1072,12 +1050,12 @@ function switchWardrobeTab(tabKey) {
     if (t.key === tabKey) {
       btn.className = "flex-1 py-1.5 rounded-xl bg-pink-500 text-white font-extrabold transition-all text-[11px] shadow-sm cursor-pointer";
       sec.classList.remove("hidden");
-      sec.classList.add("grid");
+      sec.classList.add(t.display || "grid");
       t.render();
     } else {
       btn.className = "flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer";
       sec.classList.add("hidden");
-      sec.classList.remove("grid");
+      sec.classList.remove("grid", "flex");
     }
   });
 
@@ -1089,6 +1067,7 @@ document.getElementById("tabWardrobeOutfits")?.addEventListener("click", () => s
 document.getElementById("tabWardrobeAccs")?.addEventListener("click", () => switchWardrobeTab("accs"));
 document.getElementById("tabWardrobeRooms")?.addEventListener("click", () => switchWardrobeTab("rooms"));
 document.getElementById("tabWardrobeColors")?.addEventListener("click", () => switchWardrobeTab("colors"));
+document.getElementById("tabWardrobeMyItems")?.addEventListener("click", () => switchWardrobeTab("myItems"));
 
 function getRarityBadge(rarityKey) {
   switch (rarityKey) {
@@ -1436,9 +1415,13 @@ window.switchInvFilter = function (tab) {
 };
 
 function renderInventoryGrid() {
-  const grid = document.getElementById("inventoryItemsGrid");
-  if (!grid) return;
-  grid.innerHTML = "";
+  const grids = [
+    document.getElementById("inventoryItemsGrid"),
+    document.getElementById("wardrobeInventoryItemsGrid")
+  ].filter(Boolean);
+
+  if (grids.length === 0) return;
+  grids.forEach(g => (g.innerHTML = ""));
 
   let allOwned = [];
 
@@ -1463,11 +1446,15 @@ function renderInventoryGrid() {
       : allOwned.filter((x) => x.slotType === currentInvTab);
   }
 
-  const countEl = document.getElementById("invTotalCount");
-  if (countEl) countEl.innerText = allOwned.length;
+  const countEl1 = document.getElementById("invTotalCount");
+  const countEl2 = document.getElementById("wardrobeInvCount");
+  if (countEl1) countEl1.innerText = allOwned.length;
+  if (countEl2) countEl2.innerText = allOwned.length;
 
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="col-span-3 text-center text-xs text-gray-500 py-8">В этой категории пока пусто ✨</div>`;
+    grids.forEach(grid => {
+      grid.innerHTML = `<div class="col-span-2 sm:col-span-3 text-center text-xs text-gray-500 py-8">В этой категории пока пусто ✨</div>`;
+    });
     return;
   }
 
@@ -1483,7 +1470,7 @@ function renderInventoryGrid() {
       badgeBg: "bg-slate-800 text-slate-300 border-slate-600/50"
     };
 
-    grid.innerHTML += `
+    const cardHtml = `
       <div class="bg-[#18192a] border-2 ${isEquipped ? "border-pink-500 shadow-[0_0_15px_rgba(244,114,182,0.35)]" : r.borderClass} ${r.glowClass} p-2 rounded-2xl flex flex-col items-center justify-between text-center relative group min-h-[115px]">
         <div class="w-full flex justify-between items-center text-[9px]">
           <span class="px-1.5 py-0.5 rounded font-mono font-bold border ${r.badgeBg}">${r.name}</span>
@@ -1496,6 +1483,10 @@ function renderInventoryGrid() {
           : `<button onclick="equipFromInventory('${it.slotType}', '${it.id}')" class="w-full mt-1.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold active:scale-95 transition cursor-pointer">Надеть</button>`}
       </div>
     `;
+
+    grids.forEach(grid => {
+      grid.innerHTML += cardHtml;
+    });
   });
 }
 
@@ -1542,11 +1533,16 @@ const WHEEL_PALETTE = ["#FF5E57", "#FFA940", "#FFD53F", "#1DD1A1", "#48DBFB", "#
 
 function drawWheel() {
   if (!rCtx || !rCanvas) return;
+  const items = (Array.isArray(window.wheelItems) && window.wheelItems.length > 0)
+    ? window.wheelItems
+    : ["Пицца 🍕", "Суши 🍣", "Бургеры 🍔", "Рамен 🍜", "Паста 🍝", "Поке 🥗"];
+  window.wheelItems = items;
+
   const w = rCanvas.width;
   const cx = w / 2;
   const cy = w / 2;
   const radius = cx - 28;
-  const count = window.wheelItems.length;
+  const count = items.length;
 
   rCtx.clearRect(0, 0, w, w);
   if (count === 0) return;
@@ -1564,7 +1560,7 @@ function drawWheel() {
     rCtx.fillStyle = "#ffffff";
     rCtx.font = "bold 22px 'Nunito', sans-serif";
     rCtx.textAlign = "right";
-    rCtx.fillText(window.wheelItems[i], radius - 35, 8);
+    rCtx.fillText(items[i], radius - 35, 8);
     rCtx.restore();
   }
 
@@ -1676,189 +1672,6 @@ window.closeThanksModal = function () {
   }
   document.getElementById("modalProjectThanks")?.classList.add("hidden");
   updatePetUI();
-};
-
-window.openSupportModal = function () {
-  const modal = document.getElementById("modalSupport");
-  const input = document.getElementById("supportMessageInput");
-  if (input) input.value = "";
-  const counter = document.getElementById("supportCharCounter");
-  if (counter) counter.innerText = "0/600";
-  window.resetSupportImage();
-  window.onFeedbackCat("💖 Любовь");
-  window.onStarClick(5);
-  modal?.classList.remove("hidden");
-  if (window.sound?.pop) window.sound.pop();
-};
-
-window.closeSupportModal = function () {
-  document.getElementById("modalSupport")?.classList.add("hidden");
-};
-
-document.getElementById("btnOpenSupport")?.addEventListener("click", window.openSupportModal);
-
-window.onFeedbackCat = function (cat) {
-  window.currentFeedbackCategory = cat;
-  const btnLove = document.getElementById("typeBtnLove");
-  const btnIdea = document.getElementById("typeBtnIdea");
-  const btnBug = document.getElementById("typeBtnBug");
-
-  const activeCls = "support-cat-btn py-1.5 rounded-xl bg-pink-500 text-white shadow-sm transition font-bold cursor-pointer";
-  const inactiveCls = "support-cat-btn py-1.5 rounded-xl text-gray-400 hover:text-white transition font-bold cursor-pointer";
-
-  if (btnLove) btnLove.className = (cat === "💖 Любовь") ? activeCls : inactiveCls;
-  if (btnIdea) btnIdea.className = (cat === "💡 Идея") ? activeCls : inactiveCls;
-  if (btnBug) btnBug.className = (cat === "🪲 Баг") ? activeCls : inactiveCls;
-  if (window.sound?.pop) window.sound.pop();
-};
-
-window.onStarClick = function (stars) {
-  window.currentFeedbackRating = stars;
-  const starElements = document.querySelectorAll("#supportRatingStars .star-item");
-  starElements.forEach((el, idx) => {
-    el.className = (idx < stars) ? "star-item text-amber-400 p-0.5 select-none" : "star-item text-gray-600 p-0.5 select-none";
-  });
-  if (window.sound?.pop) window.sound.pop();
-};
-
-window.onSupportFileChange = function (e) {
-  if (e.target.files && e.target.files[0]) {
-    window.processImageFile(e.target.files[0]);
-  }
-};
-
-window.processImageFile = function (file) {
-  if (!file || !file.type.startsWith("image/")) return;
-  window.attachedScreenshotFile = file;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const maxDim = 800;
-      let w = img.width, h = img.height;
-      if (w > maxDim || h > maxDim) {
-        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
-        else { w = Math.round((w * maxDim) / h); h = maxDim; }
-      }
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, w, h);
-      window.attachedScreenshotBase64 = canvas.toDataURL("image/jpeg", 0.7);
-
-      const preview = document.getElementById("supportImagePreview");
-      const container = document.getElementById("imagePreviewContainer");
-      const prompt = document.getElementById("uploadPrompt");
-      if (preview) preview.src = window.attachedScreenshotBase64;
-      container?.classList.remove("hidden");
-      prompt?.classList.add("hidden");
-      if (window.sound?.pop) window.sound.pop();
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-};
-
-window.resetSupportImage = function (e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  window.attachedScreenshotBase64 = null;
-  window.attachedScreenshotFile = null;
-  const input = document.getElementById("supportImageInput");
-  const preview = document.getElementById("supportImagePreview");
-  const container = document.getElementById("imagePreviewContainer");
-  const prompt = document.getElementById("uploadPrompt");
-  if (input) input.value = "";
-  if (preview) preview.src = "";
-  container?.classList.add("hidden");
-  prompt?.classList.remove("hidden");
-};
-
-window.addEventListener("paste", (e) => {
-  if (document.getElementById("modalSupport")?.classList.contains("hidden")) return;
-  const items = e.clipboardData?.items;
-  if (!items) return;
-  for (let it of items) {
-    if (it.type.indexOf("image") !== -1) {
-      window.processImageFile(it.getAsFile());
-      break;
-    }
-  }
-});
-
-document.getElementById("supportMessageInput")?.addEventListener("input", (e) => {
-  const counter = document.getElementById("supportCharCounter");
-  if (counter) counter.innerText = `${e.target.value.length}/600`;
-});
-
-// Отправка отчёта БЕЗ VPN: чисто через JSONBin
-window.submitFeedbackReport = async function () {
-  const input = document.getElementById("supportMessageInput");
-  const text = input ? input.value.trim() : "";
-  const sendBtn = document.getElementById("btnSendSupportMessage");
-  const attachLogs = document.getElementById("attachLogsCheckbox")?.checked ?? true;
-
-  if (!text) {
-    alert("Напиши хотя бы пару слов перед отправкой! 🐾");
-    return;
-  }
-
-  if (sendBtn) {
-    sendBtn.disabled = true;
-    sendBtn.innerText = "ОТПРАВЛЯЕМ... ⏳";
-  }
-
-  const techLogs = attachLogs ? {
-    userAgent: navigator.userAgent,
-    screen: window.innerWidth + "x" + window.innerHeight,
-    lastError: window.LAST_CAUGHT_ERROR || null,
-    consoleHistory: Array.isArray(window.CLIENT_LOGS_BUFFER) ? [...window.CLIENT_LOGS_BUFFER] : []
-  } : null;
-
-  const feedbackData = {
-    id: "fb_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
-    category: window.currentFeedbackCategory,
-    rating: window.currentFeedbackRating,
-    text: text,
-    status: "inbox",
-    petName: window.pet?.name || "Зефирка",
-    petLevel: window.pet?.level || 1,
-    coins: window.pet?.coins || 0,
-    hasImage: !!window.attachedScreenshotBase64,
-    image: window.attachedScreenshotBase64 || null,
-    techLogs: techLogs,
-    tgSent: false, // <--- Метка: дашборд увидит и перешлёт тебе в TG
-    date: new Date().toLocaleString("ru-RU")
-  };
-
-  try {
-    // 1. Сохраняем локально
-    let storedFeedback = readStorage("katya_master_feedback", []);
-    storedFeedback.unshift(feedbackData);
-    if (storedFeedback.length > 50) storedFeedback.pop();
-    localStorage.setItem("katya_master_feedback", JSON.stringify(storedFeedback));
-
-    // 2. Отправляем в облако JSONBin
-    await syncToCloud();
-
-    if (window.sound?.win) window.sound.win();
-    if (typeof confetti === "function") confetti({ particleCount: 70, spread: 80 });
-
-    alert("Послание успешно сохранено и передано разработчику! 💖✨");
-    window.closeSupportModal();
-    logAuditEvent("Отправила отзыв [" + window.currentFeedbackCategory + "]", "💌");
-
-  } catch (err) {
-    console.error("Feedback submit error:", err);
-    alert("Сообщение сохранено в игре, разработчик увидит его в дашборде! 🐾");
-    window.closeSupportModal();
-  } finally {
-    if (sendBtn) {
-      sendBtn.disabled = false;
-      sendBtn.innerHTML = "<span>ОТПРАВИТЬ ОТЧЁТ</span> <span>🚀</span>";
-    }
-  }
 };
 
 /* =========================================================================
@@ -2515,16 +2328,6 @@ function scrollChatToBottom(container, smooth = true) {
 }
 window.scrollChatToBottom = scrollChatToBottom;
 
-function escapeHtml(str) {
-  if (str == null) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-window.escapeHtml = escapeHtml;
 
 /* -------------------------------------------------------------------------
  * 11. ДЗЕН-КЛИКЕР (ASMR), DAILY БОНУС И СИСТЕМНЫЕ СЛУШАТЕЛИ
@@ -2569,20 +2372,56 @@ document.getElementById("btnDailyBonus")?.addEventListener("click", () => {
   updatePetUI();
 });
 
-document.getElementById("navTabPet")?.addEventListener("click", () => {
+function showPetTab() {
   document.getElementById("tabPet")?.classList.remove("hidden");
   document.getElementById("tabRoulette")?.classList.add("hidden");
-  document.getElementById("navTabPet").className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
-  document.getElementById("navTabRoulette").className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
-});
+  document.getElementById("tabRoulette")?.classList.remove("flex");
+  const navPet = document.getElementById("navTabPet");
+  const navRou = document.getElementById("navTabRoulette");
+  if (navPet) navPet.className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition cursor-pointer active:scale-90";
+  if (navRou) navRou.className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90";
+}
 
-document.getElementById("navTabRoulette")?.addEventListener("click", () => {
+function showRouletteTab() {
   document.getElementById("tabRoulette")?.classList.remove("hidden");
   document.getElementById("tabRoulette")?.classList.add("flex");
   document.getElementById("tabPet")?.classList.add("hidden");
-  document.getElementById("navTabRoulette").className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition";
-  document.getElementById("navTabPet").className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition";
+  const navPet = document.getElementById("navTabPet");
+  const navRou = document.getElementById("navTabRoulette");
+  if (navRou) navRou.className = "flex flex-col items-center gap-0.5 text-pink-400 font-extrabold transition cursor-pointer active:scale-90";
+  if (navPet) navPet.className = "flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90";
   drawWheel();
+  if (window.sound?.pop) window.sound.pop();
+}
+
+window.showPetTab = showPetTab;
+window.showRouletteTab = showRouletteTab;
+
+document.getElementById("navTabPet")?.addEventListener("click", showPetTab);
+document.getElementById("btnRouletteBackToPet")?.addEventListener("click", showPetTab);
+document.getElementById("navTabRoulette")?.addEventListener("click", showRouletteTab);
+
+document.getElementById("navTabWardrobe")?.addEventListener("click", () => {
+  switchWardrobeTab("outfits");
+  document.getElementById("modalWardrobe")?.classList.remove("hidden");
+  if (window.sound?.pop) window.sound.pop();
+  logAuditEvent("Открыла Гардероб", "🛍️");
+});
+
+document.getElementById("navTabCasino")?.addEventListener("click", () => {
+  document.getElementById("modalCasinoHub")?.classList.remove("hidden");
+  if (window.sound?.pop) window.sound.pop();
+  logAuditEvent("Открыла Казино «У Зефирки»", "🎰");
+});
+
+document.getElementById("navTabWishes")?.addEventListener("click", () => {
+  if (typeof window.openWishesVaultModal === "function") {
+    window.openWishesVaultModal();
+  } else {
+    document.getElementById("modalWishesVault")?.classList.remove("hidden");
+  }
+  if (window.sound?.pop) window.sound.pop();
+  logAuditEvent("Открыла шкатулку желаний", "💌");
 });
 
 document.getElementById("soundToggleBtn")?.addEventListener("click", () => {

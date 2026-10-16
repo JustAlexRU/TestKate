@@ -1,6 +1,6 @@
 /**
  * @fileoverview LEX LABS ENTERPRISE: MAIN DASHBOARD CONTROLLER & SUPPORT DESK
- * @module admin/dashboard_main
+ * @module admin_modules/admin_main
  * 
  * @description
  * Зона ответственности (Single Responsibility):
@@ -37,103 +37,8 @@
  * - window.updateDeskCustomerCard() — обновление карточки игрока в модалке поддержки
  */
 
-const DASHBOARD_PIN = "1703";
-const EMPLOYEE_PINS = {
-  alex: "1703",       // Алексей (Lead Dev / Architect)
-  lead: "1703",
-  architect: "1703",
-  developer: "1703",
-  admin: "1703",
-  "алексей": "1703"
-};
-window.EMPLOYEE_PINS = EMPLOYEE_PINS;
-
-const SESSION_AUTH_KEY = "lex_dashboard_auth_token";
-const SESSION_OPERATOR_KEY = "lex_dashboard_operator";
-
 let currentMainTab = "overview";
 let currentAuditFilterPeriod = "all";
-
-// Безопасное экранирование HTML
-function getEscapeHtml() {
-  return typeof window.escapeHtml === "function" ? window.escapeHtml : (str => {
-    if (str === null || str === undefined) return "";
-    return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  });
-}
-
-// Авторизация оператора
-function checkAuth() {
-  const authOverlay = document.getElementById("authOverlay");
-  const dashboardContent = document.getElementById("dashboardContent");
-  const pinInput = document.getElementById("pinInput");
-  const currentOperatorLabel = document.getElementById("currentOperatorLabel");
-
-  if (sessionStorage.getItem(SESSION_AUTH_KEY) === "authorized") {
-    authOverlay?.classList.add("hidden");
-    dashboardContent?.classList.remove("hidden");
-    if (currentOperatorLabel) {
-      currentOperatorLabel.innerText = sessionStorage.getItem(SESSION_OPERATOR_KEY) || "Алексей";
-    }
-    renderDashboard();
-  } else {
-    authOverlay?.classList.remove("hidden");
-    dashboardContent?.classList.add("hidden");
-    setTimeout(() => pinInput?.focus(), 150);
-  }
-}
-window.checkAuth = checkAuth;
-
-document.getElementById("btnSubmitPin")?.addEventListener("click", () => {
-  const pinInput = document.getElementById("pinInput");
-  const pinError = document.getElementById("pinError");
-  const employeeSelect = document.getElementById("employeeSelect");
-  const authCard = document.getElementById("authCard");
-
-  const enteredPin = pinInput?.value ? pinInput.value.trim() : "";
-  const selectedKey = employeeSelect ? employeeSelect.value.trim().toLowerCase() : "alex";
-  const selectedText = employeeSelect && employeeSelect.selectedIndex >= 0 ? employeeSelect.options[employeeSelect.selectedIndex].text : "Алексей";
-  const expectedPin = EMPLOYEE_PINS[selectedKey] || DASHBOARD_PIN;
-
-  const isAuthorized = enteredPin.length > 0 && (enteredPin === expectedPin || enteredPin === DASHBOARD_PIN);
-
-  if (isAuthorized) {
-    sessionStorage.setItem(SESSION_AUTH_KEY, "authorized");
-    const opName = selectedText.split(" ")[0] || "Алексей";
-    sessionStorage.setItem(SESSION_OPERATOR_KEY, opName);
-    if (pinError) pinError.style.opacity = "0";
-    checkAuth();
-  } else {
-    if (pinError) pinError.style.opacity = "1";
-    authCard?.classList.add("animate-shake");
-    setTimeout(() => authCard?.classList.remove("animate-shake"), 400);
-    pinInput?.select();
-  }
-});
-
-// Отправка PIN-кода по нажатию Enter
-document.getElementById("pinInput")?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    document.getElementById("btnSubmitPin")?.click();
-  }
-});
-
-// Автоматическое скрытие ошибки при начале ввода нового PIN-кода
-document.getElementById("pinInput")?.addEventListener("input", () => {
-  const pinError = document.getElementById("pinError");
-  if (pinError) pinError.style.opacity = "0";
-});
-
-document.getElementById("btnLogout")?.addEventListener("click", () => {
-  sessionStorage.removeItem(SESSION_AUTH_KEY);
-  checkAuth();
-});
 
 // Управление вкладками
 window.switchMainTab = function (tabId) {
@@ -453,7 +358,7 @@ window.renderAuditLedger = function (audit) {
     if (minusMatch) creditCoinsTotal += parseInt(minusMatch[1], 10);
   });
 
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
 
   // Панель оборотной ведомости над логами
   const summaryHeader = `
@@ -513,7 +418,7 @@ window.renderFeedbackInbox = function () {
 
   container.innerHTML = "";
   let nonBugCount = 0;
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
 
   list.forEach((item) => {
     if (item.category?.includes("Баг")) return;
@@ -630,7 +535,7 @@ window.renderCaseDrops = function (drops) {
     box.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Кейсы еще не открывались</div>`;
     return;
   }
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
   data.slice().reverse().forEach((d) => {
     box.innerHTML += `
       <div class="bg-[#0a0b14] border border-[#22243d] p-3 rounded-2xl flex items-center justify-between text-xs">
@@ -658,7 +563,7 @@ window.renderRouletteHistory = function (history) {
     box.innerHTML = `<div class="text-center text-xs text-gray-500 py-4">Рулетка еще не запускалась</div>`;
     return;
   }
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
   data.slice().reverse().forEach((h) => {
     box.innerHTML += `
       <div class="bg-[#0a0b14] border border-[#22243d] p-2.5 rounded-xl flex items-center justify-between text-xs">
@@ -1212,7 +1117,7 @@ function renderDeskTopActiveChatsBar() {
   if (bDesk) bDesk.innerText = activeTickets.length;
 
   bar.innerHTML = "";
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
   const currentTickets = window.deskViewMode === "history" ? historyTickets : activeTickets;
 
   if (currentTickets.length === 0) {
@@ -1330,7 +1235,7 @@ function selectDeskTicket(ticketId) {
 
   const topicEl = document.getElementById("deskChatTopic");
   if (topicEl) {
-    const escapeFn = getEscapeHtml();
+    const escapeFn = window.escapeHtml || (s => s || "");
     const statusPrefix = isCompleted ? "[Выполнено / Архив] " : "";
     topicEl.innerText = `${statusPrefix}#${String(ticket.id).slice(-4)}: ${ticket.category || "Обращение"} — ${ticket.text ? ticket.text.slice(0, 35) + "..." : "Диалог"}`;
   }
@@ -1400,7 +1305,7 @@ window.renderDeskChatTimeline = function (ticket) {
   if (!area || !ticket) return;
   area.innerHTML = "";
 
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
   const sortFn = typeof window.normalizeAndSortMessages === "function" 
     ? window.normalizeAndSortMessages 
     : ((raw, txt, dt) => (Array.isArray(raw) ? raw : []));
@@ -1683,7 +1588,7 @@ window.renderDeskWizardNode = function (nodeKey) {
   if (!container) return;
 
   container.innerHTML = "";
-  const escapeFn = getEscapeHtml();
+  const escapeFn = window.escapeHtml || (s => s || "");
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = window.currentCloudData?.[targetUser] || window.currentCloudData?.katya || {};
   const pet = userRecord.pet || {};

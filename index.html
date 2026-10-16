@@ -291,32 +291,43 @@
         </button>
       </div>
 
-      <!-- Главная панель хабов (Инвентарь, Гардероб, Ивент, Казино, Дзен, Бонус) -->
-      <div class="grid grid-cols-3 gap-2 w-full">
-        <button id="btnOpenInventory" class="bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/40 hover:border-indigo-400 rounded-2xl py-2 px-1 flex flex-col items-center justify-center text-[10px] font-black text-indigo-200 active:scale-95 transition shadow-sm cursor-pointer">
-          <span class="text-lg">🎒</span>
-          <span>Инвентарь</span>
+      <!-- Секция: События и Ежедневные активности (Без дубликатов навигации) -->
+      <div class="flex flex-col gap-2 w-full mt-0.5">
+        <!-- Сезонный ивент Хеллоуин -->
+        <button id="btnLaunchHalloweenModal" class="w-full bg-gradient-to-r from-orange-950/70 via-[#1c1228] to-purple-950/70 border border-orange-500/50 hover:border-orange-400/80 p-3 rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(249,115,22,0.2)] group cursor-pointer">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-400/40 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-inner">
+              🎃
+            </div>
+            <div class="text-left">
+              <div class="font-extrabold text-xs text-orange-200 flex items-center gap-1.5">
+                <span>Ивент: Хеллоуин 2026</span>
+                <span class="px-1.5 py-0.2 rounded-full bg-orange-500 text-black text-[9px] font-black uppercase tracking-wider animate-pulse">Live</span>
+              </div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Мистический склеп, редкие сеты и комната</div>
+            </div>
+          </div>
+          <span class="text-orange-400 text-sm font-bold font-mono group-hover:translate-x-1 transition-transform">→</span>
         </button>
-        <button id="btnWardrobe" class="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-pink-500/40 hover:border-pink-400 rounded-2xl py-2 px-1 flex flex-col items-center justify-center text-[10px] font-bold text-pink-200 active:scale-95 transition shadow-sm cursor-pointer">
-          <span class="text-lg">🛍️</span>
-          <span>Магазин</span>
-        </button>
-        <button id="btnLaunchHalloweenModal" class="bg-gradient-to-r from-orange-600/60 to-amber-600/60 border-2 border-orange-400/80 rounded-2xl py-2 px-1 text-[10px] font-black text-amber-100 flex flex-col items-center justify-center active:scale-95 transition animate-pulse shadow-[0_0_15px_rgba(249,115,22,0.3)] cursor-pointer">
-          <span class="text-lg">🎃</span>
-          <span>Ивент</span>
-        </button>
-        <button id="btnCasinoHub" class="bg-gradient-to-r from-amber-600/60 via-purple-600/60 to-rose-600/60 border border-amber-400/60 rounded-2xl py-2 px-1 text-[10px] font-black text-amber-200 flex flex-col items-center justify-center active:scale-95 transition shadow-sm cursor-pointer">
-          <span class="text-lg">🎰</span>
-          <span>Казино</span>
-        </button>
-        <button id="btnZenClicker" class="bg-gradient-to-r from-teal-900/40 to-emerald-900/40 border border-emerald-500/40 hover:border-emerald-400 rounded-2xl py-2 px-1 text-[10px] font-black text-emerald-200 flex flex-col items-center justify-center active:scale-95 transition shadow-sm cursor-pointer">
-          <span class="text-lg">🧘</span>
-          <span>Дзен</span>
-        </button>
-        <button id="btnDailyBonus" class="bg-[#141527] border border-amber-500/30 hover:border-amber-400/60 rounded-2xl py-2 px-1 text-[10px] font-bold text-amber-300 flex flex-col items-center justify-center active:scale-95 transition shadow-sm cursor-pointer">
-          <span class="text-lg">🎁</span>
-          <span>Бонус</span>
-        </button>
+
+        <!-- Ежедневные активности: Бонус дня и Дзен ASMR -->
+        <div class="grid grid-cols-2 gap-2 w-full">
+          <button id="btnDailyBonus" class="bg-gradient-to-r from-[#181a30] to-[#141527] border border-amber-500/30 hover:border-amber-400/60 p-2.5 rounded-2xl flex items-center gap-2.5 active:scale-95 transition shadow-sm cursor-pointer group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">🎁</span>
+            <div class="text-left">
+              <div class="text-xs font-black text-amber-300">Бонус дня</div>
+              <div class="text-[9px] text-slate-400">+15 🪙 раз в 24ч</div>
+            </div>
+          </button>
+
+          <button id="btnZenClicker" class="bg-gradient-to-r from-[#132225] to-[#141527] border border-teal-500/30 hover:border-teal-400/60 p-2.5 rounded-2xl flex items-center gap-2.5 active:scale-95 transition shadow-sm cursor-pointer group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">🧘</span>
+            <div class="text-left">
+              <div class="text-xs font-black text-teal-300">Дзен ASMR</div>
+              <div class="text-[9px] text-slate-400">Мурчание & релакс</div>
+            </div>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -324,7 +335,14 @@
     <!-- TAB 2: РУЛЕТКА ВКУСНОСТЕЙ                                             -->
     <!-- ===================================================================== -->
     <section id="tabRoulette" class="hidden flex-col gap-3.5 w-full items-center justify-center my-auto">
-      <div class="w-full text-center py-1">
+      <div class="w-full flex items-center justify-between py-1">
+        <button id="btnRouletteBackToPet" class="text-xs text-pink-300 hover:text-white font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 active:scale-95 transition cursor-pointer">
+          <span>← Назад к котику</span>
+        </button>
+        <span class="text-xs text-slate-400 font-mono">🎰 Food Picker</span>
+      </div>
+
+      <div class="w-full text-center py-0.5">
         <h2 class="cute-font text-base font-extrabold text-pink-300">🎰 Рулетка вкусностей</h2>
         <p class="text-[11px] text-slate-400">Что сегодня вкусного закажем?</p>
       </div>
@@ -369,21 +387,21 @@
       <span class="text-xl">🐾</span>
       <span class="text-[10px] cute-font">Котик</span>
     </button>
-    <button onclick="document.getElementById('btnActionWork')?.click()" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
-      <span class="text-xl">🎮</span>
-      <span class="text-[10px] cute-font">Игры</span>
+    <button id="navTabWardrobe" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
+      <span class="text-xl">🛍️</span>
+      <span class="text-[10px] cute-font">Гардероб</span>
     </button>
     <button id="navTabRoulette" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
-      <span class="text-xl">🎁</span>
+      <span class="text-xl">🍕</span>
       <span class="text-[10px] cute-font">Рулетка</span>
     </button>
-    <button onclick="window.openWishesVaultModal ? window.openWishesVaultModal() : document.getElementById('modalWishesVault')?.classList.remove('hidden')" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
+    <button id="navTabCasino" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
+      <span class="text-xl">🎰</span>
+      <span class="text-[10px] cute-font">Казино</span>
+    </button>
+    <button id="navTabWishes" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
       <span class="text-xl">💌</span>
       <span class="text-[10px] cute-font">Желания</span>
-    </button>
-    <button onclick="document.getElementById('btnOpenSupport')?.click()" class="relative flex flex-col items-center gap-0.5 text-gray-400 hover:text-pink-300 transition cursor-pointer active:scale-90">
-      <span class="text-xl">💬</span>
-      <span class="text-[10px] cute-font">Чат</span>
     </button>
   </nav>
 
@@ -473,6 +491,7 @@
         <button id="tabWardrobeAccs" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎀 Наряды</button>
         <button id="tabWardrobeRooms" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🏠 Локации</button>
         <button id="tabWardrobeColors" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎨 Шерстка</button>
+        <button id="tabWardrobeMyItems" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all text-[11px] font-bold cursor-pointer">🎒 Моё</button>
       </div>
 
       <!-- Секции предметов с фиксированной высотой и единой адаптивной сеткой -->
@@ -480,6 +499,22 @@
       <div id="wardrobeAccSection" class="hidden grid-cols-2 sm:grid-cols-3 gap-2.5 h-[360px] overflow-y-auto pr-1.5 custom-scrollbar"></div>
       <div id="wardrobeRoomsSection" class="hidden grid-cols-2 sm:grid-cols-3 gap-2.5 h-[360px] overflow-y-auto pr-1.5 custom-scrollbar"></div>
       <div id="wardrobeColorSection" class="hidden grid-cols-2 sm:grid-cols-3 gap-2.5 h-[360px] overflow-y-auto pr-1.5 custom-scrollbar"></div>
+
+      <!-- Секция: Личная коллекция (Инвентарь внутри Гардероба) -->
+      <div id="wardrobeMyItemsSection" class="hidden flex-col gap-2.5 h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
+        <div class="flex bg-[#080914] p-1 rounded-xl border border-white/5 text-[10px] font-bold gap-1 overflow-x-auto shrink-0">
+          <button onclick="switchInvFilter('all')" data-invtab="all" class="inv-tab-btn flex-1 py-1 px-2 rounded-lg bg-pink-600 text-white whitespace-nowrap font-black cursor-pointer">Все</button>
+          <button onclick="switchInvFilter('head')" data-invtab="head" class="inv-tab-btn flex-1 py-1 px-2 rounded-lg text-slate-400 whitespace-nowrap cursor-pointer">👑 Голова</button>
+          <button onclick="switchInvFilter('body')" data-invtab="body" class="inv-tab-btn flex-1 py-1 px-2 rounded-lg text-slate-400 whitespace-nowrap cursor-pointer">👗 Тело</button>
+          <button onclick="switchInvFilter('room')" data-invtab="room" class="inv-tab-btn flex-1 py-1 px-2 rounded-lg text-slate-400 whitespace-nowrap cursor-pointer">🏠 Локации</button>
+          <button onclick="switchInvFilter('halloween')" data-invtab="halloween" class="inv-tab-btn flex-1 py-1 px-2 rounded-lg text-orange-400 whitespace-nowrap cursor-pointer">🎃 Ивент</button>
+        </div>
+        <div id="wardrobeInventoryItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 flex-1 overflow-y-auto pr-1"></div>
+        <div class="flex justify-between items-center pt-2 border-t border-white/10 text-xs shrink-0">
+          <span class="text-[10px] text-slate-400">В коллекции: <b id="wardrobeInvCount" class="text-amber-300 font-mono">0</b></span>
+          <button onclick="unequipAllCosmetics()" class="text-[10px] font-bold text-rose-400 hover:underline cursor-pointer">Снять всё ✕</button>
+        </div>
+      </div>
 
       <!-- Подвал: компактная ghost-кнопка сброса нарядов -->
       <div class="pt-2 border-t border-white/10 flex justify-center">
@@ -835,6 +870,14 @@
           </div>
           <span class="text-xs font-extrabold text-amber-300 font-mono">+10-40 🪙</span>
         </button>
+
+        <button id="btnJobZen" onclick="document.getElementById('modalWork')?.classList.add('hidden'); document.getElementById('modalZen')?.classList.remove('hidden');" class="bg-[#181825] border border-teal-500/40 hover:border-teal-400/80 p-2.5 rounded-2xl flex items-center justify-between active:scale-95 transition cursor-pointer">
+          <div class="flex items-center gap-2.5 text-left">
+            <span class="text-3xl">🧘</span>
+            <div><div class="text-xs font-bold text-teal-200">Дзен-мурчание (ASMR)</div><div class="text-[10px] text-slate-400">Релакс, мурлыканье и сундучки</div></div>
+          </div>
+          <span class="text-xs font-extrabold text-teal-300 font-mono">ASMR ✨</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1152,19 +1195,7 @@
     </div>
   </div>
 
-  <!-- Совместимость: резервный скрытый контейнер для вспомогательных элементов -->
-  <div id="modalSupport" class="hidden">
-    <button id="typeBtnLove"></button>
-    <button id="typeBtnIdea"></button>
-    <button id="typeBtnBug"></button>
-    <textarea id="supportMessageInput"></textarea>
-    <span id="supportCharCounter"></span>
-    <input type="file" id="supportImageInput">
-    <div id="uploadPrompt"></div>
-    <div id="imagePreviewContainer"><img id="supportImagePreview" alt=""></div>
-    <input type="checkbox" id="attachLogsCheckbox">
-    <button id="btnSendSupportMessage"></button>
-  </div>
+
   <div id="modalProjectThanks" class="hidden"></div>
 
   <!-- Вспомогательный скрипт для отображения коллекции купонов -->
@@ -1215,12 +1246,16 @@
     </div>
   </div>
 
-  <!-- ПОДКЛЮЧЕНИЕ МОДУЛЕЙ (СТРОГО В КОНЦЕ BODY) -->
-  <script src="game/items.js"></script>
-  <script src="game/renderMap.js"></script>
+  <!-- Архитектура игры (Vanilla JS Layered Architecture) -->
+  <script src="core/config.js"></script>
+  <script src="core/utils.js"></script>
+  <script src="core/storage.js"></script>
+  <script src="api/cloud_client.js"></script>
+  <script src="game_modules/items_db.js"></script>
+  <script src="game_modules/pet_renderer.js"></script>
   <script src="app.js"></script>
-  <script src="game/cases.js"></script>
-  <script src="game/casino.js"></script>
-  <script src="game/games.js"></script>
+  <script src="game_modules/minigames/cases.js"></script>
+  <script src="game_modules/minigames/casino.js"></script>
+  <script src="game_modules/minigames/arcade.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /**
  * @fileoverview LEX LABS ENTERPRISE: ECONOMY, ODDS & AI ADVISOR MODULE
- * @module admin/dashboard_economy
+ * @module admin_modules/admin_economy
  * 
  * @description
  * Зона ответственности (Single Responsibility):
@@ -728,9 +728,8 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
   const burnRatePercent = Math.round((activeWishesRub / monthlyBudgetRub) * 100);
   const isWishLimitReached = burnRatePercent >= 75;
 
-  // Обновление UI Финансового Щита
   const irlInput = document.getElementById("irlMonthlyBudgetInput");
-  if (irlInput && !irlInput.matches(":focus")) irlInput.value = monthlyBudgetRub;
+  if (irlInput && document.activeElement !== irlInput) irlInput.value = monthlyBudgetRub;
 
   const irlSpentEl = document.getElementById("irlBudgetSpentText");
   if (irlSpentEl) irlSpentEl.innerText = `${activeWishesRub.toLocaleString("ru-RU")} ₽ / ${monthlyBudgetRub.toLocaleString("ru-RU")} ₽`;
@@ -1038,7 +1037,7 @@ window.renderWishesGrid = function (wishes) {
     return;
   }
 
-  const safeEscape = typeof window.escapeHtml === "function" ? window.escapeHtml : (s) => s || "";
+  const safeEscape = window.escapeHtml || ((s) => s || "");
 
   wishes.slice().reverse().forEach((w, rIdx) => {
     const origIdx = wishes.length - 1 - rIdx;
