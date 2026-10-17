@@ -634,16 +634,25 @@
             </div>
           </div>
 
-          <div class="flex justify-between items-center border-b border-white/5 pb-3">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
             <div>
               <h2 class="text-sm font-bold text-rose-400 flex items-center gap-2">
-                <span>🪲</span> Технический трекер дефектов (Канбан)
+                <span>📋</span> Доска задач и трекер разработки (Канбан)
               </h2>
-              <p class="text-xs text-slate-400">Кликни по карточке, чтобы открыть детали, таймер и отчёт разработчика</p>
+              <p class="text-xs text-slate-400">Исправления, доработки функционала, создание нового и идеи</p>
             </div>
-            <button type="button" onclick="renderKanbanBoard()" class="py-1.5 px-3 bg-[#131522] border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-slate-300 transition active:scale-95 cursor-pointer">
-              🔄 Обновить
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1 bg-[#090a10] border border-white/10 p-1 rounded-xl text-xs">
+                <button type="button" onclick="setKanbanTypeFilter('all')" id="kFilter_all" class="px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer bg-white/15 text-white shadow-sm">Все задачи</button>
+                <button type="button" onclick="setKanbanTypeFilter('bug')" id="kFilter_bug" class="px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer text-rose-300 hover:bg-white/5">🐛 Исправление</button>
+                <button type="button" onclick="setKanbanTypeFilter('improvement')" id="kFilter_improvement" class="px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer text-sky-300 hover:bg-white/5">⚡ Доработка</button>
+                <button type="button" onclick="setKanbanTypeFilter('feature')" id="kFilter_feature" class="px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer text-emerald-300 hover:bg-white/5">✨ Новое</button>
+                <button type="button" onclick="setKanbanTypeFilter('idea')" id="kFilter_idea" class="px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer text-amber-300 hover:bg-white/5">💡 Идея</button>
+              </div>
+              <button type="button" onclick="renderKanbanBoard()" class="py-1.5 px-3 bg-[#131522] border border-white/10 hover:border-white/20 rounded-lg text-xs font-semibold text-slate-300 transition active:scale-95 cursor-pointer">
+                🔄 Обновить
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-start select-none">
@@ -734,12 +743,20 @@
               <span class="text-[10px] font-mono text-pink-400 font-bold" id="detailTicketIdLabel">ТИКЕТ #0000</span>
               <h4 class="text-xs sm:text-sm font-semibold text-slate-100 leading-snug break-words" id="detailTicketTextPreview">Описание проблемы...</h4>
             </div>
-            <select id="detailStatusSelect" class="bg-[#090a10] border border-white/10 text-xs font-semibold text-amber-300 rounded-lg px-3 py-2 outline-none cursor-pointer shrink-0">
-              <option value="inbox">📥 Принято</option>
-              <option value="in_progress">⚙️ В работе</option>
-              <option value="testing">🧪 Тест</option>
-              <option value="done">✅ Выполнено</option>
-            </select>
+            <div class="flex items-center gap-2 shrink-0">
+              <select id="detailTaskTypeSelect" class="bg-[#090a10] border border-white/10 text-xs font-semibold text-sky-300 rounded-lg px-2.5 py-2 outline-none cursor-pointer">
+                <option value="bug">🐛 Исправление</option>
+                <option value="improvement">⚡ Доработка</option>
+                <option value="feature">✨ Создание нового</option>
+                <option value="idea">💡 Идея</option>
+              </select>
+              <select id="detailStatusSelect" class="bg-[#090a10] border border-white/10 text-xs font-semibold text-amber-300 rounded-lg px-3 py-2 outline-none cursor-pointer">
+                <option value="inbox">📥 Принято</option>
+                <option value="in_progress">⚙️ В работе</option>
+                <option value="testing">🧪 Тест</option>
+                <option value="done">✅ Выполнено</option>
+              </select>
+            </div>
           </div>
 
           <div class="grid grid-cols-3 gap-3 shrink-0">
@@ -984,6 +1001,68 @@
     <div class="relative max-w-2xl max-h-[90vh] flex flex-col items-center">
       <button type="button" onclick="window.closeFullImage()" class="absolute -top-10 right-0 w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-sm cursor-pointer transition">✕</button>
       <img id="lightboxFullImage" src="" alt="Full view" class="max-w-full max-h-[85vh] object-contain rounded-2xl border border-white/20 shadow-2xl">
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ПЕРЕНОС В КАНБАН ИЗ INBOX -->
+  <div id="modalSendToKanban" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 select-none">
+    <div class="bg-[#0e1017] border border-white/10 rounded-2xl w-full max-w-md p-5 flex flex-col gap-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/5 pb-3">
+        <h3 class="text-xs font-bold text-sky-300 flex items-center gap-2">
+          <span>📋</span> Перенести обращение на Канбан
+        </h3>
+        <button type="button" onclick="document.getElementById('modalSendToKanban').classList.add('hidden')" class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-xs">✕</button>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed max-h-24 overflow-y-auto" id="sendToKanbanTextPreview">Текст предложения...</p>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[10px] font-mono text-slate-400 uppercase font-semibold">Выберите категорию задачи на Канбане:</label>
+        <select id="sendToKanbanTypeSelect" class="bg-[#090a10] border border-white/10 rounded-xl p-2.5 text-xs text-sky-200 outline-none">
+          <option value="improvement">⚡ Доработка функционала</option>
+          <option value="feature">✨ Создание нового функционала</option>
+          <option value="bug">🐛 Исправление дефекта / бага</option>
+          <option value="idea">💡 Идея / Улучшение UI</option>
+        </select>
+      </div>
+      <div class="flex gap-2 pt-2 border-t border-white/5">
+        <button type="button" onclick="document.getElementById('modalSendToKanban').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition">Отмена</button>
+        <button type="button" onclick="window.confirmSendToKanban()" class="flex-1 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs active:scale-95 transition shadow-sm">🚀 На Канбан</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ПРИНЯТЬ ПОХВАЛУ И ОТПРАВИТЬ ОТВЕТ -->
+  <div id="modalAcceptPraise" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 select-none">
+    <div class="bg-[#0e1017] border border-pink-500/30 rounded-2xl w-full max-w-lg p-5 flex flex-col gap-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/5 pb-3">
+        <h3 class="text-xs font-bold text-pink-300 flex items-center gap-2">
+          <span>💖</span> Принять похвалу и отправить ответ Кате
+        </h3>
+        <button type="button" onclick="document.getElementById('modalAcceptPraise').classList.add('hidden')" class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-xs">✕</button>
+      </div>
+      <div class="bg-[#141525] p-3 rounded-xl border border-white/5">
+        <span class="text-[10px] text-pink-400 font-mono font-bold block mb-1">Послание от Кати:</span>
+        <p class="text-xs text-slate-200 italic max-h-20 overflow-y-auto" id="praiseFeedbackPreview">...</p>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[10px] font-mono text-slate-400 uppercase font-semibold">Выберите шаблон приятного ответа:</label>
+        <div class="flex flex-col gap-1.5 max-h-36 overflow-y-auto">
+          <button type="button" onclick="window.setPraiseReplyPreset(0)" class="text-left text-xs bg-[#10121f] hover:bg-[#181a2e] border border-white/5 p-2 rounded-lg text-slate-200 transition">🥰 Спасибо огромное за тёплые слова! Котик передаёт мур-мур, а разработчик уже вдохновлён на новые фичи ✨</button>
+          <button type="button" onclick="window.setPraiseReplyPreset(1)" class="text-left text-xs bg-[#10121f] hover:bg-[#181a2e] border border-white/5 p-2 rounded-lg text-slate-200 transition">💖 Твои послания — лучшая мотивация делать игру ещё прекраснее! Люблю тебя бесконечно 🐾</button>
+          <button type="button" onclick="window.setPraiseReplyPreset(2)" class="text-left text-xs bg-[#10121f] hover:bg-[#181a2e] border border-white/5 p-2 rounded-lg text-slate-200 transition">🌸 Спасибо, моя радость! Всё прочитал, котика погладил и уже работаю над обновлениями! 🐱</button>
+        </div>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[10px] font-mono text-slate-400 uppercase font-semibold">Текст твоего ответа:</label>
+        <textarea id="praiseReplyTextInput" rows="2" class="w-full bg-[#090a10] border border-white/10 rounded-xl p-2.5 text-xs text-pink-200 outline-none resize-none font-sans"></textarea>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="praiseRewardCoinsCheckbox" checked class="rounded border-white/20 bg-white/5 text-pink-500 cursor-pointer">
+        <label for="praiseRewardCoinsCheckbox" class="text-xs text-amber-300 font-semibold cursor-pointer">🎁 Подарить Кате бонус +25 🪙 и сердечко в игре</label>
+      </div>
+      <div class="flex gap-2 pt-2 border-t border-white/5">
+        <button type="button" onclick="document.getElementById('modalAcceptPraise').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition">Отмена</button>
+        <button type="button" onclick="window.confirmAcceptPraise()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-xs active:scale-95 transition shadow-lg">💌 Отправить с любовью</button>
+      </div>
     </div>
   </div>
 

@@ -303,13 +303,16 @@ function savePet(triggerCloud = true) {
 window.savePet = savePet;
 
 function logAuditEvent(text, icon = "📌") {
+  const now = new Date();
   let audit = readStorage("katya_master_audit_events", []);
   audit.push({
     text,
     icon,
-    time: new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    date: now.toLocaleDateString("ru-RU"),
+    time: now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+    timestamp: now.getTime()
   });
-  if (audit.length > 250) audit.shift();
+  if (audit.length > 300) audit.shift();
   localStorage.setItem("katya_master_audit_events", JSON.stringify(audit));
   syncToCloud();
 }
@@ -358,6 +361,12 @@ function syncToCloud() {
           localItem.devReport = existing.devReport || localItem.devReport;
           localItem.timeSpentSec = existing.timeSpentSec || localItem.timeSpentSec;
           localItem.rewardGranted = existing.rewardGranted || localItem.rewardGranted;
+          if (Array.isArray(existing.messages) && existing.messages.length > (localItem.messages?.length || 0)) {
+            localItem.messages = existing.messages;
+          }
+          if (existing.praiseAccepted) localItem.praiseAccepted = true;
+          if (existing.inKanban) localItem.inKanban = true;
+          if (existing.taskType) localItem.taskType = existing.taskType;
         } else {
           // Новый отчёт — добавляем в облачный снимок
           mergedMap.set(localItem.id, localItem);
@@ -366,6 +375,25 @@ function syncToCloud() {
 
       const finalFeedback = Array.from(mergedMap.values());
       localStorage.setItem("katya_master_feedback", JSON.stringify(finalFeedback));
+
+      // Двусторонний слияющий мердж журнала аудита (Audit Deduplication Engine)
+      const cloudAudit = Array.isArray(root[currentUser]?.audit) ? root[currentUser].audit : [];
+      const localAudit = readStorage("katya_master_audit_events", []);
+      const seenAuditKeys = new Set();
+      const finalAudit = [];
+
+      [...cloudAudit, ...localAudit].forEach(item => {
+        if (!item || !item.text) return;
+        const key = (item.timestamp || 0) + "_" + (item.date || "") + "_" + (item.time || "") + "_" + item.text;
+        if (!seenAuditKeys.has(key)) {
+          seenAuditKeys.add(key);
+          finalAudit.push(item);
+        }
+      });
+
+      finalAudit.sort((a, b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0));
+      if (finalAudit.length > 300) finalAudit.splice(0, finalAudit.length - 300);
+      localStorage.setItem("katya_master_audit_events", JSON.stringify(finalAudit));
 
       // Формируем чистый объект игрока
       root[currentUser] = {
@@ -395,7 +423,7 @@ function syncToCloud() {
         })(),
         devChangelog: root[currentUser]?.devChangelog || [],
         rouletteHistory: readStorage("katya_master_roulette_history", []),
-        audit: readStorage("katya_master_audit_events", []),
+        audit: finalAudit,
         lastActive: new Date().toLocaleString("ru-RU"),
         clientUpdatedAt: Date.now()
       };

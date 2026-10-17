@@ -814,6 +814,19 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
         desc: `Повысить ставку с ${slotBet} до ${targetBet} 🪙 (шаг не более +15%) для фиксации целевого возврата 88%.`,
         newVal: targetBet
       });
+    } else {
+      breakdownReports.push(`🚨 Слоты: RTP завышен до ${rtpSlots}%, но ставка уже максимальна (${slotBet} 🪙).`);
+      window.generatedAdvisorEdits.push({
+        key: "betSlots_cap",
+        isActionOnly: true,
+        title: `🎰 Коррекция множителей Слотов 777 (RTP: ${rtpSlots}%)`,
+        desc: `Ставка достигла верхнего лимита (${slotBet} 🪙). Рекомендуется снизить коэффициенты редких комбинаций в настройках шансов.`,
+        actionBtnText: "Скорректировать шансы",
+        onApply: () => {
+          alert("Открываю редактор шансов казино. Отрегулируйте множители Слотов.");
+          if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+        }
+      });
     }
   } else if (rtpSlots < capsSlots.rtpMin) {
     riskScore += 10;
@@ -825,6 +838,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
         title: `🎰 Поддержка отдачи Слотов 777 (Текущий RTP: ${rtpSlots}%)`,
         desc: `Снизить ставку с ${slotBet} до ${targetBet} 🪙 (шаг не более -15%) для защиты от быстрого проигрыша.`,
         newVal: targetBet
+      });
+    } else {
+      breakdownReports.push(`⚠️ Слоты: RTP занижен до ${rtpSlots}%, но ставка уже минимальна (${slotBet} 🪙).`);
+      window.generatedAdvisorEdits.push({
+        key: "betSlots_min",
+        isActionOnly: true,
+        title: `🎰 Повышение отдачи Слотов 777 (RTP: ${rtpSlots}%)`,
+        desc: `Ставка на нижнем пороге (${slotBet} 🪙). Рекомендуется повысить базовые коэффициенты выигрышей.`,
+        actionBtnText: "Повысить коэффициенты",
+        onApply: () => {
+          if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+        }
       });
     }
   } else {
@@ -853,6 +878,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
         desc: `Повысить цену билета с ${scrCost} до ${targetTicketCost} 🪙 (шаг не более +15%).`,
         newVal: targetTicketCost
       });
+    } else {
+      breakdownReports.push(`🚨 Скретч-карты: RTP ${rtpScratch}%, но цена билета на максимуме (${scrCost} 🪙).`);
+      window.generatedAdvisorEdits.push({
+        key: "scratch_cap",
+        isActionOnly: true,
+        title: `🎟️ Коррекция выплат Скретч (RTP: ${rtpScratch}%)`,
+        desc: `Цена билета достигла потолка (${scrCost} 🪙). Рекомендуется снизить коэффициенты джекпота в таблице шансов.`,
+        actionBtnText: "Скорректировать шансы",
+        onApply: () => {
+          if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+        }
+      });
     }
   } else if (rtpScratch < capsScratch.rtpMin) {
     riskScore += 8;
@@ -864,6 +901,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
         title: `🎟️ Повышение отдачи Скретч (RTP: ${rtpScratch}%)`,
         desc: `Снизить цену билета с ${scrCost} до ${targetTicketCost} 🪙 (шаг не более -15%).`,
         newVal: targetTicketCost
+      });
+    } else {
+      breakdownReports.push(`⚠️ Скретч-карты: RTP ${rtpScratch}%, но цена билета на минимуме (${scrCost} 🪙).`);
+      window.generatedAdvisorEdits.push({
+        key: "scratch_min",
+        isActionOnly: true,
+        title: `🎟️ Оптимизация Скретч-карт (RTP: ${rtpScratch}%)`,
+        desc: `Билеты на нижнем пороге стоимости. Рекомендуется слегка повысить шанс среднего выигрыша.`,
+        actionBtnText: "Повысить отдачу",
+        onApply: () => {
+          if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+        }
       });
     }
   } else {
@@ -901,6 +950,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
           desc: `Поднять стоимость открытия с ${costVal} до ${targetCaseCost} 🪙 (шаг не более +15%) для окупаемости 78%.`,
           newVal: targetCaseCost
         });
+      } else {
+        breakdownReports.push(`🚨 Кейс [${caseKey}]: Окупаемость завышена (${caseRtp}%), но цена на максимуме (${costVal} 🪙).`);
+        window.generatedAdvisorEdits.push({
+          key: `${caseKey}_cap`,
+          isActionOnly: true,
+          title: `📦 Коррекция дропа кейса [${caseKey}] (Окупаемость: ${caseRtp}%)`,
+          desc: `Стоимость кейса достигла предела (${costVal} 🪙). Рекомендуется снизить процент выпадения супер-призов.`,
+          actionBtnText: "Скорректировать дроп",
+          onApply: () => {
+            if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+          }
+        });
       }
     } else if (caseRtp < caps.rtpMin) {
       if (hasRealWishes && isWishLimitReached) {
@@ -915,6 +976,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
             title: `📦 Доступность кейса [${caseKey}]`,
             desc: `Снизить стоимость открытия с ${costVal} до ${targetCaseCost} 🪙 (шаг не более -15%) для защиты от разочарования.`,
             newVal: targetCaseCost
+          });
+        } else {
+          breakdownReports.push(`⚠️ Кейс [${caseKey}]: Окупаемость занижена (${caseRtp}%), но цена уже минимальна (${costVal} 🪙).`);
+          window.generatedAdvisorEdits.push({
+            key: `${caseKey}_min`,
+            isActionOnly: true,
+            title: `📦 Повышение окупаемости [${caseKey}]`,
+            desc: `Цена кейса минимальна (${costVal} 🪙). Рекомендуется улучшить дроп или повысить вероятность редких предметов.`,
+            actionBtnText: "Улучшить дроп",
+            onApply: () => {
+              if (typeof window.switchAdminTab === "function") window.switchAdminTab("economy");
+            }
           });
         }
       }
@@ -939,7 +1012,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
     });
     const hwCost = eco.caseCostHalloween || 130;
     const hwRtp = Math.round((hwExpValue / hwCost) * 100);
-    breakdownReports.push(`🎃 Хеллоуинский Склеп: Окупаемость ${hwRtp}% (с учетом пула Звёздных Искр ✨).`);
+    if (hwRtp > 85) {
+      riskScore += 8;
+      breakdownReports.push(`🎃 Хеллоуинский Склеп: Окупаемость ${hwRtp}% (Норма 75–82%). Повышенная отдача из-за конверсии Звёздных Искр ✨.`);
+      window.generatedAdvisorEdits.push({
+        key: "caseCostHalloween",
+        title: "🎃 Баланс Хеллоуинского Склепа",
+        desc: `Скорректировать стоимость ключа склепа со ${hwCost} до ${Math.min(180, Math.round(hwExpValue / 0.78))} 🪙 для приведения окупаемости к 78%.`,
+        newVal: Math.min(180, Math.round(hwExpValue / 0.78))
+      });
+    } else {
+      breakdownReports.push(`🎃 Хеллоуинский Склеп: Окупаемость ${hwRtp}% (с учетом пула Звёздных Искр ✨).`);
+    }
   }
 
   // АУДИТ 5: ЗВЁЗДНЫЕ ИСКРЫ И АТЕЛЬЕ
@@ -969,7 +1053,6 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
     breakdownReports.push(`⚠️ Бытовые расходы: Средняя награда за аркады (${Math.round(avgMiniGameReward)} 🪙) превышает стоимость еды в 2.5+ раза. Рекомендуется удерживать цены еды в коридоре 8–20 🪙.`);
   }
 
-
   // Отображение индикаторов риска
   riskScore = Math.min(100, Math.max(5, riskScore));
   const pBadge = document.getElementById("churnRiskPercentBadge");
@@ -990,14 +1073,28 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
   container.innerHTML = "";
 
   if (window.generatedAdvisorEdits.length === 0) {
-    container.innerHTML = `<div class="text-center text-emerald-400 py-8 font-semibold text-xs">✨ Все параметры экономики, RTP казино (84–92%) и окупаемость кейсов (75–82%) находятся в оптимальном коридоре! Отклонений не зафиксировано.</div>`;
+    if (riskScore > 25) {
+      const nonOk = breakdownReports.filter(r => !r.startsWith("✅"));
+      container.innerHTML = `
+        <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-xs text-amber-200 flex flex-col gap-2">
+          <div class="font-bold flex items-center gap-2">
+            <span>⚠️</span> Зафиксированы факторы экономического риска (${riskScore}%):
+          </div>
+          <div class="text-[11px] text-gray-300 leading-relaxed font-mono">
+            ${nonOk.join("<br>") || "Параметры упёрлись в границы лимитов. Рекомендуется ручная ревизия коэффициентов."}
+          </div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<div class="text-center text-emerald-400 py-8 font-semibold text-xs">✨ Все параметры экономики, RTP казино (84–92%) и окупаемость кейсов (75–82%) находятся в оптимальном коридоре! Отклонений не зафиксировано.</div>`;
+    }
   } else {
     window.generatedAdvisorEdits.forEach((it, idx) => {
       let actionControl = "";
       if (it.isActionOnly) {
         actionControl = `
-          <button type="button" onclick="window.lowerWishChancesInCloud()" class="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 font-bold text-xs active:scale-95 transition cursor-pointer whitespace-nowrap shadow-sm">
-            🛑 ${it.actionBtnText || 'Заморозить дроп'}
+          <button type="button" onclick="window.handleAdvisorAction(${idx})" class="px-3.5 py-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 font-bold text-xs active:scale-95 transition cursor-pointer whitespace-nowrap shadow-sm">
+            ⚡ ${it.actionBtnText || 'Применить'}
           </button>
         `;
       } else {
@@ -1019,6 +1116,18 @@ window.runComprehensiveAiEconomyAudit = function (pet, analytics, audit = []) {
         </div>
       `;
     });
+  }
+};
+
+window.handleAdvisorAction = function (idx) {
+  const item = window.generatedAdvisorEdits?.[idx];
+  if (!item) return;
+  if (typeof item.onApply === "function") {
+    item.onApply();
+  } else if (item.key === "irl_guard_freeze" && typeof window.lowerWishChancesInCloud === "function") {
+    window.lowerWishChancesInCloud();
+  } else {
+    alert(`Действие «${item.title}» зафиксировано!`);
   }
 };
 

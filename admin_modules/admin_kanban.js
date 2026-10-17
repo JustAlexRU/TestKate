@@ -61,6 +61,24 @@ function formatTimerSeconds(sec) {
   return [h, m, remS].map(v => v < 10 ? "0" + v : v).join(":");
 }
 
+window.currentKanbanTypeFilter = "all";
+
+window.setKanbanTypeFilter = function (filterType) {
+  window.currentKanbanTypeFilter = filterType;
+  ["all", "bug", "improvement", "feature", "idea"].forEach(t => {
+    const btn = document.getElementById(`kFilter_${t}`);
+    if (btn) {
+      if (t === filterType) {
+        btn.className = "px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer bg-white/15 text-white shadow-sm";
+      } else {
+        const textCol = t === 'bug' ? 'text-rose-300' : t === 'improvement' ? 'text-sky-300' : t === 'feature' ? 'text-emerald-300' : t === 'idea' ? 'text-amber-300' : 'text-slate-400';
+        btn.className = `px-2.5 py-1 rounded-lg font-semibold transition cursor-pointer ${textCol} hover:bg-white/5`;
+      }
+    }
+  });
+  window.renderKanbanBoard();
+};
+
 window.renderKanbanBoard = function () {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = window.currentCloudData?.[targetUser] || {};
@@ -81,15 +99,38 @@ window.renderKanbanBoard = function () {
   const escapeFn = window.escapeHtml || (s => s || "");
 
   list.forEach((item) => {
-    if (!item.category?.includes("Баг")) return;
-    if (!item.id) item.id = "bug_" + (item.date ? Date.parse(item.date) || Date.now() : Date.now());
+    // Задача отображается на Канбане, если это баг ИЛИ явно перенесена в Канбан ИЛИ имеет тип задачи
+    const isKanbanItem = (item.category && item.category.includes("Баг")) || item.inKanban === true || !!item.taskType;
+    if (!isKanbanItem) return;
+
+    if (!item.id) item.id = "task_" + (item.date ? Date.parse(item.date) || Date.now() : Date.now());
+
+    const taskType = item.taskType || (item.category?.includes("Баг") ? "bug" : (item.category?.includes("Любовь") ? "idea" : "improvement"));
 
     const status = item.status || "inbox";
     if (counts[status] !== undefined) counts[status]++;
 
+    // Фильтрация по выбранному типу задачи
+    if (window.currentKanbanTypeFilter && window.currentKanbanTypeFilter !== "all" && taskType !== window.currentKanbanTypeFilter) {
+      return;
+    }
+
     const isUnread = item.isRead === false || item.isRead === undefined;
     const timeSpentSec = item.timeSpentSec || 0;
     const timeStr = typeof window.formatSecondsToHms === "function" ? window.formatSecondsToHms(timeSpentSec) : formatTimerSeconds(timeSpentSec);
+
+    let typeBadgeClass = "bg-rose-500/20 text-rose-300 border border-rose-500/30";
+    let typeBadgeLabel = "🐛 Исправление";
+    if (taskType === "improvement") {
+      typeBadgeClass = "bg-sky-500/20 text-sky-300 border border-sky-500/30";
+      typeBadgeLabel = "⚡ Доработка";
+    } else if (taskType === "feature") {
+      typeBadgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      typeBadgeLabel = "✨ Новое";
+    } else if (taskType === "idea") {
+      typeBadgeClass = "bg-amber-500/20 text-amber-300 border border-amber-500/30";
+      typeBadgeLabel = "💡 Идея";
+    }
 
     const card = document.createElement("div");
     card.className = `bg-[#18192a] border ${isUnread ? "border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]" : "border-[#2e304f]"} hover:border-pink-500 rounded-2xl p-2.5 flex flex-col gap-1.5 shadow transition cursor-pointer relative active:scale-98`;
@@ -101,6 +142,9 @@ window.renderKanbanBoard = function () {
     card.innerHTML = `
       <div class="flex justify-between items-center text-[10px]">
         <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded-lg font-mono text-[9px] font-bold ${typeBadgeClass}">
+            ${typeBadgeLabel}
+          </span>
           ${isUnread ? '<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>' : ''}
           <span class="text-amber-400 font-bold">${"★".repeat(item.rating || 5)}</span>
         </div>
@@ -154,6 +198,10 @@ window.openBugDetailModal = function (bugId) {
   document.getElementById("detailCoinsInfo").innerText = `${bug.coins || 0} 🪙`;
   document.getElementById("detailScreenInfo").innerText = bug.techLogs?.screen || "390x728";
   document.getElementById("detailStatusSelect").value = bug.status || "inbox";
+  const typeSel = document.getElementById("detailTaskTypeSelect");
+  if (typeSel) {
+    typeSel.value = bug.taskType || (bug.category?.includes("Баг") ? "bug" : (bug.category?.includes("Любовь") ? "idea" : "improvement"));
+  }
   document.getElementById("detailDevReportInput").value = bug.devReport || "";
 
   const btnLogs = document.getElementById("btnDetailOpenLogs");
@@ -338,6 +386,10 @@ window.saveBugDetailModal = async function () {
 
     const newStatus = document.getElementById("detailStatusSelect")?.value || "inbox";
     const devReport = document.getElementById("detailDevReportInput")?.value.trim() || "";
+    const taskTypeSel = document.getElementById("detailTaskTypeSelect");
+    if (taskTypeSel) {
+      bug.taskType = taskTypeSel.value;
+    }
 
     bug.devReport = devReport;
     bug.status = newStatus;

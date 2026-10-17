@@ -221,10 +221,26 @@ window.renderDashboard = async function () {
     : readFn(`${activeUser}_master_roulette_history`, readFn("katya_master_roulette_history", readFn("roulette_history", []))) || [];
   record.rouletteHistory = rouletteHistory;
 
-  const audit = (Array.isArray(record.audit) && record.audit.length > 0)
-    ? record.audit
-    : readFn(`${activeUser}_master_audit_events`, readFn("katya_master_audit_events", readFn("katya_audit", []))) || [];
-  record.audit = audit;
+  // Двусторонний слияющий мердж журнала аудита
+  const localAudit = readFn(`${activeUser}_master_audit_events`, readFn("katya_master_audit_events", readFn("katya_audit", []))) || [];
+  const cloudAudit = Array.isArray(record.audit) ? record.audit : [];
+  const seenAuditKeys = new Set();
+  const mergedAudit = [];
+  [...cloudAudit, ...localAudit].forEach(it => {
+    if (!it || !it.text) return;
+    const key = (it.timestamp || 0) + "_" + (it.date || "") + "_" + (it.time || "") + "_" + it.text;
+    if (!seenAuditKeys.has(key)) {
+      seenAuditKeys.add(key);
+      mergedAudit.push(it);
+    }
+  });
+  mergedAudit.sort((a, b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0));
+  record.audit = mergedAudit;
+  const audit = mergedAudit;
+  try {
+    localStorage.setItem(`${activeUser}_master_audit_events`, JSON.stringify(mergedAudit));
+    localStorage.setItem("katya_master_audit_events", JSON.stringify(mergedAudit));
+  } catch (e) {}
 
   const feedback = (Array.isArray(record.feedback) && record.feedback.length > 0)
     ? record.feedback
@@ -340,10 +356,23 @@ window.renderAuditLedger = function (audit) {
   const startOfWeek = now.getTime() - (7 * 86400000);
   const startOfMonth = now.getTime() - (30 * 86400000);
 
+  function parseEntryTime(entry) {
+    if (entry.timestamp && !isNaN(entry.timestamp)) return Number(entry.timestamp);
+    if (entry.date && typeof entry.date === "string") {
+      const parts = entry.date.trim().split(".");
+      if (parts.length === 3) {
+        const iso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}T${entry.time || "12:00:00"}`;
+        const p = Date.parse(iso);
+        if (!isNaN(p)) return p;
+      }
+    }
+    return null;
+  }
+
   // Фильтрация проводок по временным границам
   const filtered = auditData.filter(entry => {
-    if (!entry.timestamp && !entry.time) return true;
-    const entryTime = entry.timestamp || Date.parse((entry.date || "") + " " + (entry.time || "")) || now.getTime();
+    const entryTime = parseEntryTime(entry);
+    if (!entryTime) return true;
     if (currentAuditFilterPeriod === "today") return entryTime >= startOfToday;
     if (currentAuditFilterPeriod === "yesterday") return entryTime >= startOfYesterday && entryTime < startOfToday;
     if (currentAuditFilterPeriod === "week") return entryTime >= startOfWeek;
@@ -386,11 +415,30 @@ window.renderAuditLedger = function (audit) {
     </div>
   `;
 
+  const sorted = [...filtered].sort((a, b) => {
+    const tA = parseEntryTime(a) || 0;
+    const tB = parseEntryTime(b) || 0;
+    return tB - tA;
+  });
+
+  const todayStr = now.toLocaleDateString("ru-RU");
+  const yesterdayStr = new Date(startOfYesterday).toLocaleDateString("ru-RU");
+
   let rowsHtml = "";
-  filtered.slice().reverse().slice(0, 150).forEach(a => {
+  sorted.slice(0, 150).forEach(a => {
     const isDebit = a.text?.includes("+");
     const isCredit = a.text?.includes("-");
     const amountColor = isDebit ? "text-emerald-400" : isCredit ? "text-rose-400" : "text-gray-300";
+
+    const itemDate = a.date || (a.timestamp ? new Date(a.timestamp).toLocaleDateString("ru-RU") : "");
+    const itemTime = a.time || (a.timestamp ? new Date(a.timestamp).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "");
+
+    let prettyDate = itemDate;
+    if (itemDate === todayStr) {
+      prettyDate = "Сегодня";
+    } else if (itemDate === yesterdayStr) {
+      prettyDate = "Вчера";
+    }
 
     rowsHtml += `
       <div class="bg-[#0a0b14]/80 px-3 py-2 rounded-xl border border-[#191b30] flex items-center justify-between text-xs hover:border-pink-500/30 transition">
@@ -399,8 +447,8 @@ window.renderAuditLedger = function (audit) {
           <span class="${amountColor} truncate font-medium">${escapeFn(a.text || "")}</span>
         </div>
         <div class="flex items-center gap-2 font-mono text-[10px] text-gray-500 whitespace-nowrap">
-          <span>${escapeFn(a.date || "")}</span>
-          <span>${escapeFn(a.time || "")}</span>
+          <span class="text-slate-400">${escapeFn(prettyDate || itemDate)}</span>
+          <span class="text-slate-500">${escapeFn(itemTime || "")}</span>
         </div>
       </div>
     `;
@@ -412,6 +460,8 @@ window.renderAuditLedger = function (audit) {
 // =========================================================================
 // 2. ВХОДЯЩИЕ СООБЩЕНИЯ (INBOX) И СЧЁТЧИКИ НЕПРОЧИТАННОГО
 // =========================================================================
+window.currentInboxTargetId = null;
+
 window.renderFeedbackInbox = function () {
   const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
   const userRecord = window.currentCloudData?.[targetUser] || {};
@@ -431,42 +481,52 @@ window.renderFeedbackInbox = function () {
 
     const isUnread = item.isRead === false || item.isRead === undefined;
     const isLove = item.category?.includes("Любовь");
+    const inKanban = item.inKanban === true;
+    const praiseAccepted = item.praiseAccepted === true;
+    const taskType = item.taskType || (isLove ? "idea" : "improvement");
+
+    let taskTypeLabel = "⚡ Доработка";
+    if (taskType === "feature") taskTypeLabel = "✨ Новое";
+    else if (taskType === "bug") taskTypeLabel = "🐛 Исправление";
+    else if (taskType === "idea") taskTypeLabel = "💡 Идея";
 
     const card = document.createElement("div");
-    card.className = `bg-[#18192a] border ${isUnread ? "border-pink-500 shadow-[0_0_15px_rgba(244,114,182,0.3)]" : "border-[#2e304f]"} rounded-2xl p-3.5 flex flex-col gap-2 relative transition cursor-pointer`;
+    card.className = `bg-[#18192a] border ${isUnread ? "border-pink-500 shadow-[0_0_15px_rgba(244,114,182,0.3)]" : "border-[#2e304f]"} rounded-2xl p-4 flex flex-col gap-2.5 relative transition`;
 
-    card.onclick = () => {
-      if (item.isRead !== true) {
-        item.isRead = true;
-        if (typeof window.saveFeedbackListToCloud === "function") {
-          window.saveFeedbackListToCloud(list);
-        } else {
-          localStorage.setItem(`${targetUser}_master_feedback`, JSON.stringify(list));
-          localStorage.setItem("katya_master_feedback", JSON.stringify(list));
-          if (typeof window.saveCloud === "function") window.saveCloud();
-        }
-        window.renderFeedbackInbox();
-      }
-    };
+    let imgHtml = item.image ? `<img src="${item.image}" alt="Скриншот" onclick="if (typeof window.openFullImage === 'function') window.openFullImage('${item.image}')" class="max-h-36 rounded-xl mt-1 w-auto object-contain cursor-pointer border border-white/10 hover:border-pink-500/50 transition">` : "";
 
-    let imgHtml = item.image ? `<img src="${item.image}" alt="Скриншот" onclick="if (typeof window.openFullImage === 'function') window.openFullImage('${item.image}')" class="max-h-32 rounded-xl mt-1 w-auto object-contain cursor-pointer border border-white/10">` : "";
+    const msgCount = Array.isArray(item.messages) ? item.messages.length : 0;
 
     card.innerHTML = `
       <div class="flex justify-between items-center text-[10px]">
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
           <span class="px-2 py-0.5 rounded-lg ${isLove ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'} font-bold">
             ${escapeFn(item.category || "Предложение")}
           </span>
           ${isUnread ? '<span class="text-[9px] bg-pink-500 text-white font-bold px-1.5 py-0.2 rounded-full animate-pulse">NEW</span>' : ''}
+          ${inKanban ? `<span class="px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/30 font-mono text-[9px] font-bold">📋 Канбан: ${taskTypeLabel}</span>` : ''}
+          ${praiseAccepted ? '<span class="px-2 py-0.5 rounded-lg bg-pink-500/20 text-pink-300 border border-pink-500/30 font-mono text-[9px] font-bold">💖 Похвала принята!</span>' : ''}
         </div>
-        <span class="text-gray-500 font-mono text-[9px]">${escapeFn(item.date || "")}</span>
+        <span class="text-gray-400 font-mono text-[10px]">${escapeFn(item.date || "")}</span>
       </div>
 
-      <p class="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed select-text font-sans">${escapeFn(item.text || "")}</p>${imgHtml}
+      <p class="text-xs text-gray-200 whitespace-pre-wrap leading-relaxed select-text font-sans bg-[#121320] p-3 rounded-xl border border-white/5">${escapeFn(item.text || "")}</p>${imgHtml}
 
-      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-2 border-t border-white/5">
+      <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t border-white/5">
         <span>🐱 ${escapeFn(item.petName || "Зефирка")} (Ур. ${escapeFn(String(item.petLevel || 1))})</span>
-        <span class="text-amber-400">${"★".repeat(Math.max(1, Math.min(5, Number(item.rating) || 5)))}</span>
+        <span class="text-amber-400 font-mono">${"★".repeat(Math.max(1, Math.min(5, Number(item.rating) || 5)))}</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+        <button type="button" onclick="window.openSendToKanbanModal('${item.id}')" class="flex-1 py-1.5 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 font-semibold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>📋</span> ${inKanban ? 'Изменить на Канбане' : 'В Канбан'}
+        </button>
+        <button type="button" onclick="window.openAcceptPraiseModal('${item.id}')" class="flex-1 py-1.5 px-3 rounded-xl bg-pink-500/15 hover:bg-pink-500/25 border border-pink-500/30 text-pink-300 font-semibold text-xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>💖</span> ${praiseAccepted ? 'Ответить ещё раз' : 'Принять похвалу'}
+        </button>
+        <button type="button" onclick="window.openBugDetailModal('${item.id}')" class="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs transition flex items-center gap-1 cursor-pointer" title="Диалог с игроком">
+          <span>💬</span> <span class="font-mono text-[10px]">${msgCount}</span>
+        </button>
       </div>
     `;
 
@@ -478,6 +538,144 @@ window.renderFeedbackInbox = function () {
   }
 
   window.updateUnreadBadges();
+};
+
+window.openSendToKanbanModal = function (itemId) {
+  window.currentInboxTargetId = itemId;
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || [];
+  const item = list.find(it => it.id === itemId);
+  if (!item) return;
+
+  const modal = document.getElementById("modalSendToKanban");
+  const preview = document.getElementById("sendToKanbanTextPreview");
+  const select = document.getElementById("sendToKanbanTypeSelect");
+  if (preview) preview.innerText = item.text || "Без текста";
+  if (select) select.value = item.taskType || (item.category?.includes("Баг") ? "bug" : "improvement");
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.confirmSendToKanban = async function () {
+  const itemId = window.currentInboxTargetId;
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || [];
+  const item = list.find(it => it.id === itemId);
+  if (!item) return;
+
+  const select = document.getElementById("sendToKanbanTypeSelect");
+  const chosenType = select ? select.value : "improvement";
+
+  item.inKanban = true;
+  item.taskType = chosenType;
+  item.status = item.status || "inbox";
+  item.isRead = true;
+
+  if (typeof window.saveFeedbackListToCloud === "function") {
+    await window.saveFeedbackListToCloud(list);
+  } else if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  document.getElementById("modalSendToKanban")?.classList.add("hidden");
+  window.renderFeedbackInbox();
+  if (typeof window.renderKanbanBoard === "function") {
+    window.renderKanbanBoard();
+  }
+  alert("Обращение успешно перенесено на доску Канбан! 🚀");
+};
+
+window.openAcceptPraiseModal = function (itemId) {
+  window.currentInboxTargetId = itemId;
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || {};
+  const list = userRecord.feedback || [];
+  const item = list.find(it => it.id === itemId);
+  if (!item) return;
+
+  const modal = document.getElementById("modalAcceptPraise");
+  const preview = document.getElementById("praiseFeedbackPreview");
+  const input = document.getElementById("praiseReplyTextInput");
+  if (preview) preview.innerText = `«${item.text || 'Теплые слова'}»`;
+  if (input) input.value = "Спасибо огромное за тёплые слова! Котик передаёт мур-мур, а разработчик уже вдохновлён на новые фичи 🥰✨";
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.setPraiseReplyPreset = function (idx) {
+  const presets = [
+    "Спасибо огромное за тёплые слова! Котик передаёт мур-мур, а разработчик уже вдохновлён на новые фичи 🥰✨",
+    "Твои послания — лучшая мотивация делать игру ещё прекраснее! Люблю тебя бесконечно 💖🐾",
+    "🌸 Спасибо, моя радость! Всё прочитал, котика погладил и уже работаю над обновлениями! 🐱"
+  ];
+  const input = document.getElementById("praiseReplyTextInput");
+  if (input && presets[idx]) {
+    input.value = presets[idx];
+  }
+};
+
+window.confirmAcceptPraise = async function () {
+  const itemId = window.currentInboxTargetId;
+  const targetUser = document.getElementById("targetPlayerSelect")?.value || "katya";
+  const userRecord = window.currentCloudData?.[targetUser] || {};
+  let list = userRecord.feedback || [];
+  const item = list.find(it => it.id === itemId);
+  if (!item) return;
+
+  const replyText = document.getElementById("praiseReplyTextInput")?.value.trim() || "Спасибо огромное за тёплые слова! 💖";
+  const giveBonus = document.getElementById("praiseRewardCoinsCheckbox")?.checked;
+
+  if (!Array.isArray(item.messages)) item.messages = [];
+  const now = new Date();
+  item.messages.push({
+    sender: "developer",
+    text: replyText,
+    date: now.toLocaleDateString("ru-RU"),
+    time: now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+    timestamp: now.getTime()
+  });
+
+  item.praiseAccepted = true;
+  item.isRead = true;
+
+  if (giveBonus) {
+    if (!userRecord.pet) userRecord.pet = {};
+    userRecord.pet.coins = (Number(userRecord.pet.coins) || 0) + 25;
+
+    if (!Array.isArray(userRecord.rewardNotifications)) userRecord.rewardNotifications = [];
+    userRecord.rewardNotifications.push({
+      id: "praise_" + Date.now(),
+      bugId: item.id,
+      humanTitle: "Благодарность от разработчика 💖",
+      humanMessage: replyText,
+      devReport: replyText,
+      coins: 25,
+      date: now.toLocaleString("ru-RU"),
+      claimed: false
+    });
+
+    if (!Array.isArray(userRecord.audit)) userRecord.audit = [];
+    userRecord.audit.push({
+      text: `[PRAISE BONUS] Принял похвалу от Кати (+25 🪙 бонус): «${replyText.substring(0, 35)}...»`,
+      icon: "💖",
+      date: now.toLocaleDateString("ru-RU"),
+      time: now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      timestamp: now.getTime()
+    });
+  }
+
+  if (typeof window.saveFeedbackListToCloud === "function") {
+    await window.saveFeedbackListToCloud(list);
+  } else if (typeof window.saveCloud === "function") {
+    await window.saveCloud();
+  }
+
+  document.getElementById("modalAcceptPraise")?.classList.add("hidden");
+  window.renderFeedbackInbox();
+  if (giveBonus && typeof window.renderAuditLedger === "function") {
+    window.renderAuditLedger();
+  }
+  alert("Ответ с любовью и благодарность успешно отправлены Кате! 💖");
 };
 
 window.updateUnreadBadges = function () {

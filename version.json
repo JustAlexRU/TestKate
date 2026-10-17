@@ -1,22 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "name": "kotya-pet-mission-control",
   "displayName": "Котик & Вкусняшки 💖 • Mission Control",
-  "build": 270,
-  "releaseDate": "2026-10-16",
-  "codename": "Lex Labs Achievements & Hall of Fame Engine",
+  "build": 280,
+  "releaseDate": "2026-10-17",
+  "codename": "Live Event Ledger, AI Harmonization & Multi-Type Kanban",
   "semver": {
     "major": 2,
-    "minor": 7,
+    "minor": 8,
     "patch": 0
   },
   "modules": {
-    "client": "2.6.0",
-    "dashboard": "2.6.0",
+    "client": "2.8.0",
+    "dashboard": "2.8.0",
     "core": "1.0.0",
     "decisionTree": "1.1.0",
-    "aiEconomyAdvisor": "2.3.0",
+    "aiEconomyAdvisor": "2.4.0",
     "irlBudgetGuard": "1.0.0"
   }
 }

@@ -148,8 +148,50 @@ function normalizeCloudData(root) {
   if (!Array.isArray(k.wishes) || k.wishes.length === 0) k.wishes = fallback.katya.wishes;
   if (!Array.isArray(k.caseHistory) || k.caseHistory.length === 0) k.caseHistory = fallback.katya.caseHistory;
   if (!Array.isArray(k.rouletteHistory) || k.rouletteHistory.length === 0) k.rouletteHistory = fallback.katya.rouletteHistory;
-  if (!Array.isArray(k.audit) || k.audit.length === 0) k.audit = fallback.katya.audit;
-  if (!Array.isArray(k.feedback) || k.feedback.length === 0) k.feedback = fallback.katya.feedback;
+  // Умный мердж журнала аудита (не теряем ни локальные, ни облачные события)
+  const fallbackAudit = fallback.katya.audit || [];
+  if (!Array.isArray(k.audit) || k.audit.length === 0) {
+    k.audit = fallbackAudit;
+  } else if (Array.isArray(fallbackAudit) && fallbackAudit.length > 0) {
+    const seenAudit = new Set();
+    const mergedAudit = [];
+    [...k.audit, ...fallbackAudit].forEach(it => {
+      if (!it || !it.text) return;
+      const key = (it.timestamp || 0) + "_" + (it.date || "") + "_" + (it.time || "") + "_" + it.text;
+      if (!seenAudit.has(key)) {
+        seenAudit.add(key);
+        mergedAudit.push(it);
+      }
+    });
+    mergedAudit.sort((a, b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0));
+    k.audit = mergedAudit;
+  }
+
+  // Умный мердж тикетов обратной связи и сообщений
+  const fallbackFeedback = fallback.katya.feedback || [];
+  if (!Array.isArray(k.feedback) || k.feedback.length === 0) {
+    k.feedback = fallbackFeedback;
+  } else if (Array.isArray(fallbackFeedback) && fallbackFeedback.length > 0) {
+    const fMap = new Map();
+    k.feedback.forEach(it => { if (it && it.id) fMap.set(it.id, Object.assign({}, it)); });
+    fallbackFeedback.forEach(localIt => {
+      if (!localIt || !localIt.id) return;
+      if (fMap.has(localIt.id)) {
+        const cloudIt = fMap.get(localIt.id);
+        if (Array.isArray(cloudIt.messages) && cloudIt.messages.length >= (localIt.messages?.length || 0)) {
+          // Cloud has newer messages
+        } else if (Array.isArray(localIt.messages) && localIt.messages.length > (cloudIt.messages?.length || 0)) {
+          cloudIt.messages = localIt.messages;
+        }
+        if (localIt.praiseAccepted) cloudIt.praiseAccepted = true;
+        if (localIt.inKanban) cloudIt.inKanban = true;
+        if (localIt.taskType && !cloudIt.taskType) cloudIt.taskType = localIt.taskType;
+      } else {
+        fMap.set(localIt.id, localIt);
+      }
+    });
+    k.feedback = Array.from(fMap.values());
+  }
 
   return normalized;
 }
