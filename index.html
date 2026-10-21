@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Котик & Вкусняшки 💖</title>
+  <link rel="stylesheet" href="css/tailwind.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
@@ -15,11 +16,50 @@
       --font-body: 'Nunito', sans-serif;
     }
 
+    html {
+      background-color: #0c0d18;
+      color: #e2e8f0;
+      min-height: 100%;
+    }
+
     body {
       font-family: var(--font-body);
+      background-color: #0c0d18;
+      color: #e2e8f0;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    /* Гарантированное скрытие скрытых элементов без зависимости от сторонних CDN */
+    .hidden, [hidden] {
+      display: none !important;
+    }
+
+    /* Фиксированное позиционирование декораций локаций (анти-сдвиг на мобильных устройствах) */
+    #roomSceneryLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    #petRoomCard {
+      position: relative;
+      background-color: #141527;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    #catTapZone {
+      position: relative;
+      z-index: 20;
     }
 
     .cute-font { font-family: var(--font-cute); }
@@ -86,7 +126,7 @@
 <body class="bg-[#0c0d18] text-[#e2e8f0] min-h-screen flex flex-col items-center justify-between pb-24 selection:bg-pink-500/30 selection:text-white antialiased overflow-x-hidden">
 
   <!-- Индикатор локального режима -->
-  <div id="localSandboxWarning" class="hidden w-full max-w-md bg-rose-500/90 text-white text-[10px] font-bold text-center py-1 rounded-xl mx-auto my-1 shadow z-50">
+  <div id="localSandboxWarning" hidden class="hidden w-full max-w-md bg-rose-500/90 text-white text-[10px] font-bold text-center py-1 rounded-xl mx-auto my-1 shadow z-50">
     🚀 ЛОКАЛЬНЫЙ РЕЖИМ (ПЕСОЧНИЦА): Синхронизация с боевым облаком отключена
   </div>
 

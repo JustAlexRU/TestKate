@@ -160,7 +160,11 @@ window.triggerHaptic = triggerHaptic;
  * ------------------------------------------------------------------------- */
 const isLocalExecution = window.location.protocol === "file:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 if (isLocalExecution) {
-  document.getElementById("localSandboxWarning")?.classList.remove("hidden");
+  const sb = document.getElementById("localSandboxWarning");
+  if (sb) {
+    if (typeof sb.removeAttribute === "function") sb.removeAttribute("hidden");
+    sb.classList?.remove("hidden");
+  }
 }
 
 let currentUser = localStorage.getItem("active_player_profile");
@@ -628,7 +632,7 @@ function applyRoomTheme(themeId) {
     hw_room_web: "border-stone-500/50 shadow-[0_0_25px_rgba(120,113,108,0.3)]"
   };
 
-  card.className = `relative border-2 rounded-3xl p-4 flex flex-col items-center transition-all duration-700 overflow-hidden min-h-[300px] ${themeBorderColors[validTheme] || themeBorderColors.neon}`;
+  card.className = `relative w-full bg-[#141527]/90 border-2 rounded-3xl p-4 flex flex-col items-center transition-all duration-700 overflow-hidden min-h-[300px] shadow-xl ${themeBorderColors[validTheme] || themeBorderColors.neon}`;
 }
 window.applyRoomTheme = applyRoomTheme;
 
