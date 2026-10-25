@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.2] - 2026-10-25
+
+### Fixed
+- **Halloween Complete Thematic Sets & Drop Pool Harmonization** (`game_modules/items_db.js`, `game_modules/minigames/cases.js`, `admin_modules/admin_economy.js`):
+  - Audited all 30 seasonal Halloween items in `GAME_ITEMS_DB` and eliminated the issue where 12 items (40% of seasonal content) were impossible to unbox from the Halloween case.
+  - Assembled and validated all 6 complete thematic bundles (Jackpot superprizes at 3.0% chance each = 18.0% total):
+    - `bundle_witch_full` (★ ПОЛНЫЙ СЕТ ВЕДЬМЫ ★): Колпак + Мантия + Юбка + Полосатые чулки + Хижина Ведьмы (`hw_witch_hat`, `hw_witch_robe`, `hw_witch_skirt`, `hw_striped_tights`, `hw_room_cauldron`).
+    - `bundle_pumpkin_full` (★ ПОЛНЫЙ СЕТ ТЫКВЫ ДЖЕКА ★): Тыква Джека + Глаза-огоньки + Туфельки + Поляна Джека + Тыквенный окрас (`hw_pumpkin_helm`, `hw_pumpkin_glow`, `hw_pumpkin_shoes`, `hw_room_patch`, `hw_pumpkin_orange`).
+    - `bundle_vampire_full` (★ СЕТ ВЛАДЫКИ НОЧИ ★): Ушки Нетопыря + Алые глаза + Плащ Дракулы + Замок Дракулы + Окрас Вампира (`hw_bat_ears`, `hw_vamp_eyes`, `hw_vampire_cape`, `hw_room_castle`, `hw_vamp_black`).
+    - `bundle_ghost_full` (★ СЕТ ПРИЗРАКА ★): Саван Призрака + Вуаль Паутины + Кентервильские цепи + Древний Склеп + Призрачный окрас (`hw_ghost_sheet`, `hw_spider_web`, `hw_ghost_chains`, `hw_room_crypt`, `hw_ghost_white`).
+    - `bundle_skeleton_full` (★ СЕТ ВЕСЁЛОГО СКЕЛЕТИКА ★): Маска Черепа + Костюм Скелетика + Костяные штаны + Кладбищенский туман (`hw_skull_mask`, `hw_skeleton_suit`, `hw_bone_trousers`, `hw_room_mist`).
+    - `bundle_demon_full` (★ СЕТ ЛОРДА ДЕМОНОВ ★): Рожки Демона + Огненные лапки + Токсичный окрас + Паучий чердак (`hw_demon_horns`, `hw_demon_hooves`, `hw_toxic_slime`, `hw_room_web`).
+  - Corrected item ID typo in `bundle_ghost_full` from `color_hw_ghost_white` to `hw_ghost_white`.
+  - Expanded individual case drops to cover all 30 seasonal items (6 rooms at 3.0%, 4 colors at 2.5%, 4 hats at 3.0%, 5 eye accessories at 2.8%, 5 body outfits at 2.8%, 6 leg cosmetics at 2.3–2.4%), achieving exact 100.0% probability sum.
+  - Normalized cosmetic ownership and unlocking logic in `game_modules/minigames/cases.js` (`isCosmeticOwned`, `unlockCosmeticItem`), ensuring seasonal colors and rooms immediately register in `ownedItems`/`ownedRooms` and auto-equip into wardrobe.
+  - Synchronized `FALLBACK_ODDS_DATABASE.case_hw` in `admin_modules/admin_economy.js` with the 36-item pool and calibrated duplicate spark bonuses so Halloween case RTP stays balanced at 84% without economic risk alerts.
+
+---
+
 ## [2.8.1] - 2026-10-25
 
 ### Fixed

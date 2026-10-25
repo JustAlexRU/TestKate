@@ -184,8 +184,23 @@ window.currentUser = currentUser;
 
 var TELEGRAM_BOT_TOKEN = "8860557268:AAEXppOhH3jzprkzThf0phM828_Y3ALP_YU";
 var TELEGRAM_CHAT_ID = "409697238";
-var JSONBIN_BIN_ID = window.JSONBIN_BIN_ID || "6acb3d30ac6210605a272eb6";
-var JSONBIN_API_KEY = window.JSONBIN_API_KEY || "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
+
+function getCloudBinId() {
+  return window.JSONBIN_BIN_ID || localStorage.getItem("lex_custom_jsonbin_bin_id") || "6acb3d30ac6210605a272eb6";
+}
+function getCloudApiKey() {
+  return window.JSONBIN_API_KEY || localStorage.getItem("lex_custom_jsonbin_api_key") || "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
+}
+function isCloudQuotaExhausted() {
+  return Boolean(window.CLOUD_QUOTA_EXHAUSTED || localStorage.getItem("lex_cloud_quota_exhausted") === "true");
+}
+function markCloudQuotaExhausted() {
+  window.CLOUD_QUOTA_EXHAUSTED = true;
+  try { localStorage.setItem("lex_cloud_quota_exhausted", "true"); } catch (_) {}
+}
+
+var JSONBIN_BIN_ID = getCloudBinId();
+var JSONBIN_API_KEY = getCloudApiKey();
 
 function safeHydrate(key, defaults) {
   try {
@@ -335,13 +350,32 @@ function syncToCloud() {
   cloudSyncTimer = setTimeout(async () => {
     cloudSyncTimer = null;
     if (isSyncInProgress) return;
+
+    // Сохраняем локальное состояние (Optimistic Local Persist)
+    if (window.pet) localStorage.setItem("katya_master_pet_state", JSON.stringify(window.pet));
+    if (window.activeEquipment) localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
+    if (window.wishesVault) localStorage.setItem("katya_master_wishes_vault", JSON.stringify(window.wishesVault));
+    if (window.analytics) localStorage.setItem("katya_master_analytics", JSON.stringify(window.analytics));
+
+    // Circuit Breaker: при исчерпании квоты запросов работаем автономно в LocalStorage
+    if (isCloudQuotaExhausted()) {
+      return;
+    }
+
     isSyncInProgress = true;
+    const binId = getCloudBinId();
+    const apiKey = getCloudApiKey();
 
     try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-        headers: { "X-Master-Key": JSONBIN_API_KEY }
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        headers: { "X-Master-Key": apiKey }
       });
-      if (!res.ok) throw new Error("Fetch failed");
+      if (!res.ok) {
+        if (res.status === 403 || res.status === 429) {
+          markCloudQuotaExhausted();
+        }
+        throw new Error(`Fetch failed HTTP ${res.status}`);
+      }
       const root = (await res.json()).record || {};
 
       const cloudFeedback = Array.isArray(root[currentUser]?.feedback) ? root[currentUser].feedback : [];

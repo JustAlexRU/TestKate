@@ -467,16 +467,28 @@ window.CASES_DATA = {
   /* -------------------------------------------------------------------------
    * 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ВЫДАЧИ И АТЕЛЬЕ
    * ------------------------------------------------------------------------- */
+  function isColorItem(itemId, slotHint = null) {
+    if (slotHint === "color" || itemId?.startsWith("color_")) return true;
+    if (window.GAME_ITEMS_DB?.color?.some(c => c.id === itemId)) return true;
+    return false;
+  }
+
+  function isRoomItem(itemId, slotHint = null) {
+    if (slotHint === "room" || itemId?.includes("room_")) return true;
+    if (window.GAME_ITEMS_DB?.room?.some(r => r.id === itemId)) return true;
+    return false;
+  }
+
   function isCosmeticOwned(itemId, slotHint = null) {
     if (!itemId) return false;
-    if (itemId.includes("room_") || slotHint === "room") {
+    if (isRoomItem(itemId, slotHint)) {
       const rooms = window.ownedRooms || ["neon"];
       return rooms.includes(itemId);
     }
-    if (itemId.startsWith("color_")) {
-      const cId = itemId.replace("color_", "");
+    if (isColorItem(itemId, slotHint)) {
+      const cId = itemId.replace(/^color_/, "");
       const items = window.ownedItems || [];
-      return items.includes(itemId) || window.pet?.color === cId;
+      return items.includes("color_" + cId) || items.includes(cId) || window.pet?.color === cId;
     }
     const items = window.ownedItems || [];
     return items.includes(itemId);
@@ -511,7 +523,7 @@ window.CASES_DATA = {
   function unlockCosmeticItem(itemId, slotHint = null) {
     if (!itemId) return;
 
-    if (itemId.includes("room_") || slotHint === "room") {
+    if (isRoomItem(itemId, slotHint)) {
       if (!window.ownedRooms) window.ownedRooms = ["neon"];
       if (!window.ownedRooms.includes(itemId)) {
         window.ownedRooms.push(itemId);
@@ -521,14 +533,13 @@ window.CASES_DATA = {
       return;
     }
 
-    if (itemId.startsWith("color_")) {
-      const cId = itemId.replace("color_", "");
+    if (isColorItem(itemId, slotHint)) {
+      const cId = itemId.replace(/^color_/, "");
       window.pet.color = cId;
       if (!window.ownedItems) window.ownedItems = [];
-      if (!window.ownedItems.includes(itemId)) {
-        window.ownedItems.push(itemId);
-        localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
-      }
+      if (!window.ownedItems.includes("color_" + cId)) window.ownedItems.push("color_" + cId);
+      if (!window.ownedItems.includes(cId)) window.ownedItems.push(cId);
+      localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
       return;
     }
 
@@ -538,17 +549,32 @@ window.CASES_DATA = {
       localStorage.setItem("katya_owned_items", JSON.stringify(window.ownedItems));
     }
 
-    if (slotHint === "head" || itemId.includes("hat") || itemId.includes("helm") || itemId.includes("ears") || itemId.includes("horns")) {
-      window.activeEquipment.head = itemId;
-    } else if (slotHint === "eyes" || itemId.includes("eyes") || itemId.includes("web") || itemId.includes("glasses")) {
-      window.activeEquipment.eyes = itemId;
-    } else if (slotHint === "body" || itemId.includes("robe") || itemId.includes("cape") || itemId.includes("sheet") || itemId.includes("hoodie") || itemId.includes("scarf")) {
-      window.activeEquipment.body = itemId;
-    } else if (slotHint === "legs" || itemId.includes("skirt") || itemId.includes("shoes") || itemId.includes("tights") || itemId.includes("boots")) {
-      window.activeEquipment.legs = itemId;
+    let detectedSlot = slotHint;
+    if (!detectedSlot && window.GAME_ITEMS_DB) {
+      for (const slot of ["head", "eyes", "body", "legs"]) {
+        if (window.GAME_ITEMS_DB[slot]?.some(x => x.id === itemId)) {
+          detectedSlot = slot;
+          break;
+        }
+      }
+    }
+    if (!detectedSlot) {
+      if (itemId.includes("hat") || itemId.includes("helm") || itemId.includes("ears") || itemId.includes("horns")) {
+        detectedSlot = "head";
+      } else if (itemId.includes("eyes") || itemId.includes("web") || itemId.includes("glasses") || itemId.includes("stitches") || itemId.includes("mask") || itemId.includes("glow")) {
+        detectedSlot = "eyes";
+      } else if (itemId.includes("robe") || itemId.includes("cape") || itemId.includes("sheet") || itemId.includes("hoodie") || itemId.includes("scarf") || itemId.includes("suit") || itemId.includes("wraps")) {
+        detectedSlot = "body";
+      } else if (itemId.includes("skirt") || itemId.includes("shoes") || itemId.includes("tights") || itemId.includes("boots") || itemId.includes("trousers") || itemId.includes("hooves") || itemId.includes("chains")) {
+        detectedSlot = "legs";
+      }
     }
 
-    localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
+    if (detectedSlot) {
+      if (!window.activeEquipment) window.activeEquipment = {};
+      window.activeEquipment[detectedSlot] = itemId;
+      localStorage.setItem("katya_active_equipment", JSON.stringify(window.activeEquipment));
+    }
   }
 
 

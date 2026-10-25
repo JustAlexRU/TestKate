@@ -363,6 +363,25 @@ document.getElementById("crmChatTextInput")?.addEventListener("keydown", (e) => 
   }
 });
 
+// Реактивное обновление чата при получении сообщений из другой вкладки (Storage Event)
+window.addEventListener("storage", (e) => {
+  if (!e.key) return;
+  if (e.key === "katya_master_feedback" && window.currentOpenBugId && !window.isChatSendingMessage) {
+    try {
+      const list = JSON.parse(e.newValue || "[]");
+      const targetBug = list.find(b => b.id === window.currentOpenBugId);
+      if (targetBug) {
+        const msgs = Array.isArray(targetBug.messages) ? targetBug.messages : [];
+        const currentHash = `${targetBug.status}_${msgs.length}_${msgs.length > 0 ? msgs[msgs.length - 1].id : ""}`;
+        if (currentHash !== lastRenderedChatHash) {
+          lastRenderedChatHash = currentHash;
+          renderCrmChatTimeline(targetBug);
+        }
+      }
+    } catch (_) {}
+  }
+});
+
 // Фоновый опрос для синхронизации чата каждые 10 секунд с защитой от наложения и гонок
 let isPolling = false;
 let lastRenderedChatHash = "";

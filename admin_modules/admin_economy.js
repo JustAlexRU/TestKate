@@ -118,19 +118,55 @@ const FALLBACK_ODDS_DATABASE = {
     { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", chance: 30, value: 150 }
   ],
   case_hw: [
-    { id: "bundle_witch_full", name: "★ ПОЛНЫЙ СЕТ ВЕДЬМЫ ★", icon: "🧙‍♀️", chance: 4, value: 450, isBundle: true, isEpic: true, desc: "Колпак + Мантия + Юбка с паучками + Поляна Джека!", itemsIncluded: ["hw_witch_hat", "hw_witch_robe", "hw_witch_skirt", "hw_room_patch"] },
-    { id: "bundle_vampire_full", name: "★ СЕТ ВЛАДЫКИ НОЧИ ★", icon: "🧛‍♂️", chance: 3, value: 500, isBundle: true, isEpic: true, desc: "Алые глаза + Плащ Дракулы + Замок Дракулы!", itemsIncluded: ["hw_vamp_eyes", "hw_vampire_cape", "hw_room_castle"] },
-    { id: "bundle_ghost_full", name: "★ СЕТ ПРИЗРАКА ★", icon: "👻", chance: 5, value: 420, isBundle: true, isEpic: true, desc: "Саван Призрака + Вуаль Паутины + Древний Склеп + Призрачный окрас!", itemsIncluded: ["hw_ghost_sheet", "hw_spider_web", "hw_room_crypt", "color_hw_ghost_white"] },
-    { id: "bundle_demon_full", name: "★ СЕТ ЛОРДА ДЕМОНОВ ★", icon: "😈", chance: 3, value: 500, isBundle: true, isEpic: true, desc: "Рожки демона + Огненные лапки + Хижина ведьмы!", itemsIncluded: ["hw_demon_horns", "hw_demon_hooves", "hw_room_cauldron"] },
-    { id: "hw_room_patch", slot: "room", name: "Локация: Поляна Джека", icon: "🎃", color: "#fb923c", chance: 7, value: 180, desc: "Сотни светящихся тыкв" },
-    { id: "hw_room_crypt", slot: "room", name: "Локация: Древний Склеп", icon: "⚰️", color: "#a855f7", chance: 7, value: 180, desc: "Мистический склеп со свечами" },
-    { id: "hw_room_mist", slot: "room", name: "Локация: Туманное кладбище", icon: "🪦", color: "#38bdf8", chance: 8, value: 180, desc: "Холодная дымка и луна" },
-    { id: "hw_pumpkin_helm", slot: "head", name: "Тыква Джека", icon: "🎃", color: "#fb923c", chance: 11, value: 100, desc: "Светится изнутри" },
-    { id: "hw_vampire_cape", slot: "body", name: "Плащ Дракулы", icon: "🧛", color: "#f43f5e", chance: 10, value: 120, desc: "Атласный черный плащ" },
-    { id: "hw_witch_hat", slot: "head", name: "Колпак Ведьмы", icon: "🧙‍♀️", color: "#c084fc", chance: 10, value: 120, desc: "Остроконечная шляпа" },
-    { id: "hw_skeleton_suit", slot: "body", name: "Костюм Скелетика", icon: "💀", color: "#94a3b8", chance: 11, value: 110, desc: "Флуоресцентные кости" },
-    { id: "hw_bat_ears", slot: "head", name: "Ушки Нетопыря", icon: "🦇", color: "#60a5fa", chance: 11, value: 90, desc: "Шелестят в темноте" },
-    { id: "hw_pumpkin_shoes", slot: "legs", name: "Тыквенные туфельки", icon: "🥿", color: "#ea580c", chance: 10, value: 90, desc: "Мягкий оранжевый бархат" }
+    // ПОЛНЫЕ СЕТЫ ЦЕЛИКОМ (СУПЕРПРИЗЫ / ДЖЕКПОТ) - 6 сетов (18.0%)
+    { id: "bundle_witch_full", name: "★ ПОЛНЫЙ СЕТ ВЕДЬМЫ ★", icon: "🧙‍♀️", color: "#c084fc", chance: 3.0, value: 450, isBundle: true, isEpic: true, desc: "Колпак + Мантия + Юбка + Полосатые чулки + Хижина Ведьмы!", itemsIncluded: ["hw_witch_hat", "hw_witch_robe", "hw_witch_skirt", "hw_striped_tights", "hw_room_cauldron"] },
+    { id: "bundle_pumpkin_full", name: "★ ПОЛНЫЙ СЕТ ТЫКВЫ ДЖЕКА ★", icon: "🎃", color: "#f97316", chance: 3.0, value: 450, isBundle: true, isEpic: true, desc: "Тыква Джека + Глаза-огоньки + Туфельки + Поляна Джека + Тыквенный окрас!", itemsIncluded: ["hw_pumpkin_helm", "hw_pumpkin_glow", "hw_pumpkin_shoes", "hw_room_patch", "hw_pumpkin_orange"] },
+    { id: "bundle_vampire_full", name: "★ СЕТ ВЛАДЫКИ НОЧИ ★", icon: "🧛‍♂️", color: "#ef4444", chance: 3.0, value: 480, isBundle: true, isEpic: true, desc: "Ушки Нетопыря + Алые глаза + Плащ Дракулы + Замок Дракулы + Окрас Вампира!", itemsIncluded: ["hw_bat_ears", "hw_vamp_eyes", "hw_vampire_cape", "hw_room_castle", "hw_vamp_black"] },
+    { id: "bundle_ghost_full", name: "★ СЕТ ПРИЗРАКА ★", icon: "👻", color: "#38bdf8", chance: 3.0, value: 450, isBundle: true, isEpic: true, desc: "Саван Призрака + Вуаль Паутины + Кентервильские цепи + Древний Склеп + Призрачный окрас!", itemsIncluded: ["hw_ghost_sheet", "hw_spider_web", "hw_ghost_chains", "hw_room_crypt", "hw_ghost_white"] },
+    { id: "bundle_skeleton_full", name: "★ СЕТ ВЕСЁЛОГО СКЕЛЕТИКА ★", icon: "💀", color: "#94a3b8", chance: 3.0, value: 400, isBundle: true, isEpic: true, desc: "Маска Черепа + Костюм Скелетика + Костяные штаны + Кладбищенский туман!", itemsIncluded: ["hw_skull_mask", "hw_skeleton_suit", "hw_bone_trousers", "hw_room_mist"] },
+    { id: "bundle_demon_full", name: "★ СЕТ ЛОРДА ДЕМОНОВ ★", icon: "😈", color: "#dc2626", chance: 3.0, value: 420, isBundle: true, isEpic: true, desc: "Рожки Демона + Огненные лапки + Токсичный окрас + Паучий чердак!", itemsIncluded: ["hw_demon_horns", "hw_demon_hooves", "hw_toxic_slime", "hw_room_web"] },
+
+    // ЛОКАЦИИ ИНТЕРЬЕРА - 6 локаций (18.0%)
+    { id: "hw_room_crypt", slot: "room", name: "Локация: Древний Склеп", icon: "⚰️", color: "#a855f7", chance: 3.0, value: 180, desc: "Свечи, летучие мыши и полумрак" },
+    { id: "hw_room_patch", slot: "room", name: "Локация: Поляна Джека", icon: "🎃", color: "#fb923c", chance: 3.0, value: 180, desc: "Сотни светящихся тыкв" },
+    { id: "hw_room_castle", slot: "room", name: "Локация: Замок Дракулы", icon: "🏰", color: "#f43f5e", chance: 3.0, value: 180, desc: "Трон владыки ночи" },
+    { id: "hw_room_mist", slot: "room", name: "Локация: Туманное кладбище", icon: "🪦", color: "#38bdf8", chance: 3.0, value: 180, desc: "Холодная дымка и луна" },
+    { id: "hw_room_cauldron", slot: "room", name: "Локация: Хижина Ведьмы", icon: "🧪", color: "#22c55e", chance: 3.0, value: 180, desc: "Бурлящий котел с зельем" },
+    { id: "hw_room_web", slot: "room", name: "Локация: Чердак с пауками", icon: "🕸️", color: "#a1a1aa", chance: 3.0, value: 180, desc: "Забытые сундуки и паутина" },
+
+    // МИСТИЧЕСКИЕ ОКРАСЫ ШЕРСТКИ - 4 окраса (10.0%)
+    { id: "hw_pumpkin_orange", slot: "color", name: "Окрас: Тыквенный огонь", icon: "🎃", color: "#ea580c", chance: 2.5, value: 150, desc: "Ярко-оранжевая бархатная шерстка" },
+    { id: "hw_ghost_white", slot: "color", name: "Окрас: Призрачный саван", icon: "👻", color: "#5eead4", chance: 2.5, value: 150, desc: "Эфирное бирюзово-белое сияние" },
+    { id: "hw_toxic_slime", slot: "color", name: "Окрас: Токсичная слизь", icon: "🧪", color: "#84cc16", chance: 2.5, value: 150, desc: "Неоновый ядовито-зеленый оттенок" },
+    { id: "hw_vamp_black", slot: "color", name: "Окрас: Вампирский агат", icon: "🧛", color: "#991b1b", chance: 2.5, value: 150, desc: "Угольно-черная шерсть с алым отливом" },
+
+    // ГОЛОВНЫЕ УБОРЫ - 4 предмета (12.0%)
+    { id: "hw_witch_hat", slot: "head", name: "Колпак Ведьмы", icon: "🧙‍♀️", color: "#c084fc", chance: 3.0, value: 120, desc: "Остроконечная шляпа с пряжкой" },
+    { id: "hw_pumpkin_helm", slot: "head", name: "Тыква Джека", icon: "🎃", color: "#fb923c", chance: 3.0, value: 110, desc: "Светится изнутри мистическим светом" },
+    { id: "hw_bat_ears", slot: "head", name: "Ушки Нетопыря", icon: "🦇", color: "#60a5fa", chance: 3.0, value: 100, desc: "Шелестят в темноте" },
+    { id: "hw_demon_horns", slot: "head", name: "Рожки Демона", icon: "😈", color: "#dc2626", chance: 3.0, value: 110, desc: "Искрятся багровым пламенем" },
+
+    // АКСЕССУАРЫ ДЛЯ ГЛАЗ И ЛИЦА - 5 предметов (14.0%)
+    { id: "hw_vamp_eyes", slot: "eyes", name: "Алые глаза Вампира", icon: "🧛", color: "#ef4444", chance: 2.8, value: 110, desc: "Взгляд владыки ночи" },
+    { id: "hw_spider_web", slot: "eyes", name: "Вуаль Паутины", icon: "🕸️", color: "#cbd5e1", chance: 2.8, value: 95, desc: "Тончайший паучий шелк" },
+    { id: "hw_zombie_stitches", slot: "eyes", name: "Шрам Франкенштейна", icon: "🧟", color: "#84cc16", chance: 2.8, value: 95, desc: "Хирургические стежки монстра" },
+    { id: "hw_pumpkin_glow", slot: "eyes", name: "Тыквенный огонь", icon: "🕯️", color: "#f97316", chance: 2.8, value: 100, desc: "Зловещее пламя свечи в глазах" },
+    { id: "hw_skull_mask", slot: "eyes", name: "Маска Черепа", icon: "💀", color: "#94a3b8", chance: 2.8, value: 100, desc: "Обрядовая маска Дня всех святых" },
+
+    // НАРЯДЫ ДЛЯ ТЕЛА - 5 предметов (14.0%)
+    { id: "hw_witch_robe", slot: "body", name: "Мантия Ведьмы", icon: "🔮", color: "#a855f7", chance: 2.8, value: 130, desc: "Ткань звездного ночного неба" },
+    { id: "hw_ghost_sheet", slot: "body", name: "Саван Призрака", icon: "👻", color: "#38bdf8", chance: 2.8, value: 125, desc: "Легкий саван, парящий над землей" },
+    { id: "hw_vampire_cape", slot: "body", name: "Плащ Дракулы", icon: "🧛‍♂️", color: "#f43f5e", chance: 2.8, value: 130, desc: "Черный атлас с кроваво-красным подбоем" },
+    { id: "hw_skeleton_suit", slot: "body", name: "Костюм Скелетика", icon: "💀", color: "#94a3b8", chance: 2.8, value: 120, desc: "Флуоресцентный скелет котика" },
+    { id: "hw_mummy_wraps", slot: "body", name: "Бинты Мумии", icon: "🩹", color: "#e2e8f0", chance: 2.8, value: 115, desc: "Древние египетские папирусные бинты" },
+
+    // НАБОРЫ ДЛЯ ЛАПОК И НИЗА - 6 предметов (14.0%)
+    { id: "hw_witch_skirt", slot: "legs", name: "Юбка с паучками", icon: "🕷️", color: "#c084fc", chance: 2.3, value: 95, desc: "Рваный край с золотой паутинкой" },
+    { id: "hw_pumpkin_shoes", slot: "legs", name: "Тыквенные туфельки", icon: "🥿", color: "#ea580c", chance: 2.4, value: 90, desc: "Мягкий бархат цвета спелой тыквы" },
+    { id: "hw_bone_trousers", slot: "legs", name: "Костяные штаны", icon: "🦴", color: "#94a3b8", chance: 2.3, value: 95, desc: "Анатомический принт костей" },
+    { id: "hw_striped_tights", slot: "legs", name: "Полосатые чулки Ведьмы", icon: "🍭", color: "#fb923c", chance: 2.4, value: 90, desc: "Озорная черно-оранжевая полоска" },
+    { id: "hw_demon_hooves", slot: "legs", name: "Лапки Демона", icon: "🔥", color: "#ef4444", chance: 2.3, value: 100, desc: "Оставляют горящие искры при шаге" },
+    { id: "hw_ghost_chains", slot: "legs", name: "Кентервильские цепи", icon: "⛓️", color: "#cbd5e1", chance: 2.3, value: 95, desc: "Призрачные звенящие оковы" }
   ],
   slots: [
     { id: "slot_sushi", name: "Суши (x2.5)", icon: "🍣", chance: 12, multiplier: 2.5 },
@@ -242,7 +278,7 @@ window.switchOddsMode = function (modeKey) {
   }
 
   // Реконсиляция пула Хеллоуина: если в облаке/локально лежат устаревшие 4 заглушки вместо 13 реальных предметов
-  if (currentOddsTab === "case_hw" && refList.length >= 13) {
+  if (currentOddsTab === "case_hw" && refList.length >= 10) {
     const hasOutdatedStubs = items.some(it => it.id === "hw_candy" || it.id === "hw_pumpkin" || it.id === "hw_bat");
     if (items.length < refList.length || hasOutdatedStubs) {
       items = refList.map(ref => {

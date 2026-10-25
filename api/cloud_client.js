@@ -4,7 +4,8 @@
  * 
  * @description
  * Централизованный сетевой транспорт JSONBin API, управление гонками запросов (Race Condition lock),
- * E-Tag / версионирование снимков и двусторонняя синхронизация с LocalStorage.
+ * Circuit Breaker / Quota Guard при исчерпании лимитов, E-Tag / версионирование снимков
+ * и мгновенная двусторонняя реактивная синхронизация с LocalStorage (storage event).
  */
 
 window.currentCloudData = window.currentCloudData || {};
@@ -25,17 +26,27 @@ function updateJsonbinStatusBadge(isOnline, text) {
 
   const escapeFn = window.escapeHtml || (s => s);
 
+  if (window.CLOUD_QUOTA_EXHAUSTED) {
+    badge.innerHTML = `
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+      <span title="Квота запросов JSONBin исчерпана. Данные сохраняются автономно в LocalStorage. Нажмите для настройки">Storage: <b class="text-amber-400 font-medium">${escapeFn(text || "Автономно (Квота)")}</b></span>
+    `;
+    badge.classList.add("cursor-pointer", "hover:opacity-80");
+    return;
+  }
+
   if (isOnline) {
     badge.innerHTML = `
       <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span>JSONBin: <b class="text-emerald-400 font-medium">${escapeFn(text || "Online")}</b></span>
+      <span title="Синхронизировано с JSONBin Cloud. Нажмите для настройки">JSONBin: <b class="text-emerald-400 font-medium">${escapeFn(text || "Online")}</b></span>
     `;
   } else {
     badge.innerHTML = `
       <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-      <span>Storage: <b class="text-amber-400 font-medium">${escapeFn(text || "Local Cache")}</b></span>
+      <span title="Работа в локальном режиме. Нажмите для настройки">Storage: <b class="text-amber-400 font-medium">${escapeFn(text || "Local Cache")}</b></span>
     `;
   }
+  badge.classList.add("cursor-pointer", "hover:opacity-80");
 }
 
 /**
@@ -81,7 +92,6 @@ function buildFallbackDataFromLocalStorage() {
       clean: 80,
       starSparks: 0
     };
-
   }
 
   // 2. Игровая аналитика
@@ -148,6 +158,7 @@ function normalizeCloudData(root) {
   if (!Array.isArray(k.wishes) || k.wishes.length === 0) k.wishes = fallback.katya.wishes;
   if (!Array.isArray(k.caseHistory) || k.caseHistory.length === 0) k.caseHistory = fallback.katya.caseHistory;
   if (!Array.isArray(k.rouletteHistory) || k.rouletteHistory.length === 0) k.rouletteHistory = fallback.katya.rouletteHistory;
+  
   // Умный мердж журнала аудита (не теряем ни локальные, ни облачные события)
   const fallbackAudit = fallback.katya.audit || [];
   if (!Array.isArray(k.audit) || k.audit.length === 0) {
@@ -197,10 +208,19 @@ function normalizeCloudData(root) {
 }
 
 /**
- * Загрузка актуального состояния из JSONBin с автоматическим кэшированием и fallback
+ * Загрузка актуального состояния из JSONBin с автоматическим кэшированием, fallback и Circuit Breaker
+ * @param {boolean} [force=false] - Принудительно попытаться выполнить сетевой запрос, даже если взведён Circuit Breaker
  * @returns {Promise<object>}
  */
-async function fetchCloudData() {
+async function fetchCloudData(force = false) {
+  // Circuit Breaker: если квота исчерпана и не запрошен принудительный опрос, сразу возвращаем LocalStorage
+  if (window.CLOUD_QUOTA_EXHAUSTED && !force) {
+    const fallback = buildFallbackDataFromLocalStorage();
+    window.currentCloudData = fallback;
+    updateJsonbinStatusBadge(false, "Автономно (Квота)");
+    return window.currentCloudData;
+  }
+
   const binId = window.JSONBIN_BIN_ID || "6acb3d30ac6210605a272eb6";
   const apiKey = window.JSONBIN_API_KEY || "$2a$10$JBnAcYGGmJL6Q5lDn45nHeW4jsBStn1Z/4XRrRormnfaKG7YbqUN2";
 
@@ -210,7 +230,22 @@ async function fetchCloudData() {
     });
 
     if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        window.CLOUD_QUOTA_EXHAUSTED = true;
+        try { localStorage.setItem("lex_cloud_quota_exhausted", "true"); } catch (_) {}
+        console.warn(`[CloudClient] JSONBin HTTP ${res.status} quota limit reached. Circuit Breaker activated: falling back to LocalStorage.`);
+        const fallback = buildFallbackDataFromLocalStorage();
+        window.currentCloudData = fallback;
+        updateJsonbinStatusBadge(false, "Автономно (Квота)");
+        return window.currentCloudData;
+      }
       throw new Error(`JSONBin error HTTP ${res.status}`);
+    }
+
+    // При успешном ответе снимаем флаг исчерпания квоты
+    if (window.CLOUD_QUOTA_EXHAUSTED) {
+      window.CLOUD_QUOTA_EXHAUSTED = false;
+      try { localStorage.removeItem("lex_cloud_quota_exhausted"); } catch (_) {}
     }
 
     // Фиксация E-Tag / версии для предотвращения перезаписи при параллельных сессиях
@@ -235,13 +270,13 @@ async function fetchCloudData() {
     console.warn("[CloudClient] Fetch error, using LocalStorage fallback:", e);
     const fallback = buildFallbackDataFromLocalStorage();
     window.currentCloudData = fallback;
-    updateJsonbinStatusBadge(false, "Локальный кэш");
+    updateJsonbinStatusBadge(false, window.CLOUD_QUOTA_EXHAUSTED ? "Автономно (Квота)" : "Локальный кэш");
     return window.currentCloudData;
   }
 }
 
 /**
- * Сохранение состояния в Cloud с блокировкой параллельных гонок (Race Condition Lock)
+ * Сохранение состояния в Cloud с блокировкой параллельных гонок (Race Condition Lock) и Circuit Breaker
  * @param {object} [data] - Данные для сохранения (по умолчанию window.currentCloudData)
  * @returns {Promise<boolean>}
  */
@@ -264,6 +299,12 @@ async function saveCloud(data) {
     }
   } catch (err) {
     console.warn("[CloudClient] Local cache write warning:", err);
+  }
+
+  // Circuit Breaker: если лимит запросов исчерпан, локальной записи достаточно
+  if (window.CLOUD_QUOTA_EXHAUSTED) {
+    updateJsonbinStatusBadge(false, "Автономно (Квота)");
+    return true;
   }
 
   // Блокировка гонок (Race Condition Lock)
@@ -291,7 +332,16 @@ async function saveCloud(data) {
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error(`JSONBin save error HTTP ${res.status}`);
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        window.CLOUD_QUOTA_EXHAUSTED = true;
+        try { localStorage.setItem("lex_cloud_quota_exhausted", "true"); } catch (_) {}
+        console.warn(`[CloudClient] JSONBin save HTTP ${res.status}. Circuit Breaker activated: saved locally.`);
+        updateJsonbinStatusBadge(false, "Автономно (Квота)");
+        return true;
+      }
+      throw new Error(`JSONBin save error HTTP ${res.status}`);
+    }
 
     const newETag = res.headers.get("etag") || res.headers.get("x-version-id");
     if (newETag) lastCloudETag = newETag;
@@ -300,7 +350,7 @@ async function saveCloud(data) {
     return true;
   } catch (e) {
     console.warn("[CloudClient] Network save failed (saved locally):", e);
-    updateJsonbinStatusBadge(false, "Сохранено локально");
+    updateJsonbinStatusBadge(false, window.CLOUD_QUOTA_EXHAUSTED ? "Автономно (Квота)" : "Сохранено локально");
     return false;
   } finally {
     isCloudSaving = false;
@@ -330,7 +380,7 @@ async function forceManualSync() {
   const syncBtn = document.getElementById("btnRefresh");
   if (syncBtn) syncBtn.classList.add("animate-spin");
   try {
-    await fetchCloudData();
+    await fetchCloudData(true);
     if (typeof window.renderDashboard === "function") {
       await window.renderDashboard();
     }
@@ -339,12 +389,154 @@ async function forceManualSync() {
   }
 }
 
+/**
+ * Открытие модального окна настроек Cloud API и режима работы
+ */
+function openCloudConfigModal() {
+  const modal = document.getElementById("modalCloudConfig");
+  if (!modal) return;
+
+  const inputBinId = document.getElementById("inputCloudBinId");
+  const inputApiKey = document.getElementById("inputCloudApiKey");
+  const statusBanner = document.getElementById("cloudConfigStatusBanner");
+
+  if (inputBinId) inputBinId.value = window.JSONBIN_BIN_ID || "";
+  if (inputApiKey) inputApiKey.value = window.JSONBIN_API_KEY || "";
+
+  if (statusBanner) {
+    if (window.CLOUD_QUOTA_EXHAUSTED) {
+      statusBanner.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-3">
+          <span class="text-xl leading-none">⚠️</span>
+          <div>
+            <div class="font-bold text-amber-200">Квота бесплатных запросов JSONBin исчерпана (HTTP 403)</div>
+            <div class="text-[11px] text-amber-300/80 mt-1 leading-relaxed">
+              Circuit Breaker активирован: сетевой спам заблокирован. Система функционирует автономно через LocalStorage. Все балансы, кейсы, купоны и чаты сохраняются локально и синхронизируются между вкладками браузера в реальном времени.
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      statusBanner.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3">
+          <span class="text-xl leading-none">✅</span>
+          <div>
+            <div class="font-bold text-emerald-200">Облачный транспорт активен</div>
+            <div class="text-[11px] text-emerald-300/80 mt-1 leading-relaxed">
+              Подключение к JSONBin API активно. Все изменения сохраняются в облаке и на локальном диске.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  modal.classList.remove("hidden");
+}
+
+/**
+ * Закрытие модального окна настроек Cloud
+ */
+function closeCloudConfigModal() {
+  const modal = document.getElementById("modalCloudConfig");
+  if (modal) modal.classList.add("hidden");
+}
+
+/**
+ * Сохранение пользовательских ключей и проверка подключения
+ */
+async function submitCloudConfigModal() {
+  const inputBinId = document.getElementById("inputCloudBinId");
+  const inputApiKey = document.getElementById("inputCloudApiKey");
+
+  const binId = inputBinId ? inputBinId.value.trim() : "";
+  const apiKey = inputApiKey ? inputApiKey.value.trim() : "";
+
+  if (!binId || !apiKey) {
+    if (typeof window.showToast === "function") {
+      window.showToast("Укажите Bin ID и Master Key", "warning");
+    } else {
+      alert("Укажите Bin ID и Master Key");
+    }
+    return;
+  }
+
+  if (typeof window.setCloudCredentials === "function") {
+    window.setCloudCredentials(binId, apiKey);
+  }
+
+  closeCloudConfigModal();
+  if (typeof window.showToast === "function") {
+    window.showToast("Ключи сохранены. Проверяем связь с JSONBin...", "info");
+  }
+
+  await fetchCloudData(true);
+  if (typeof window.renderDashboard === "function") {
+    await window.renderDashboard();
+  }
+}
+
+/**
+ * Сброс ключей к системным по умолчанию
+ */
+async function resetCloudConfigModal() {
+  if (typeof window.resetCloudCredentials === "function") {
+    window.resetCloudCredentials();
+  }
+  closeCloudConfigModal();
+  if (typeof window.showToast === "function") {
+    window.showToast("Ключи сброшены к значениям по умолчанию", "info");
+  }
+  await fetchCloudData(true);
+}
+
+/**
+ * Принудительное включение автономного режима (LocalStorage Only)
+ */
+function useOfflineLocalStorageMode() {
+  window.CLOUD_QUOTA_EXHAUSTED = true;
+  try { localStorage.setItem("lex_cloud_quota_exhausted", "true"); } catch (_) {}
+  updateJsonbinStatusBadge(false, "Автономно (Квота)");
+  closeCloudConfigModal();
+  if (typeof window.showToast === "function") {
+    window.showToast("Включен автономный режим LocalStorage. Сетевой спам отключен.", "info");
+  }
+}
+
+// Реактивная межвкладочная синхронизация (Cross-Tab Reactivity via Storage Event)
+window.addEventListener("storage", (e) => {
+  if (!e.key) return;
+
+  // Реакция на изменение статуса Circuit Breaker в другой вкладке
+  if (e.key === "lex_cloud_quota_exhausted") {
+    window.CLOUD_QUOTA_EXHAUSTED = (e.newValue === "true");
+    updateJsonbinStatusBadge(!window.CLOUD_QUOTA_EXHAUSTED);
+  }
+
+  // Мгновенное обновление дашборда при действиях игрока в другой вкладке
+  if (e.key.startsWith("katya_master_") || e.key === "lex_dashboard_cloud_cache") {
+    if (typeof window.renderDashboard === "function") {
+      if (window._dashCrossTabSyncTimer) clearTimeout(window._dashCrossTabSyncTimer);
+      window._dashCrossTabSyncTimer = setTimeout(() => {
+        const fresh = buildFallbackDataFromLocalStorage();
+        window.currentCloudData = fresh;
+        window.renderDashboard();
+      }, 250);
+    }
+  }
+});
+
 // Экспорт в глобальный контекст window
 window.fetchCloudData = fetchCloudData;
 window.saveCloud = saveCloud;
-window.saveCloudData = saveCloud; // Алиас saveCloudData для единообразия архитектуры
+window.saveCloudData = saveCloud;
 window.saveLocal = saveLocal;
 window.forceManualSync = forceManualSync;
 window.updateJsonbinStatusBadge = updateJsonbinStatusBadge;
 window.buildFallbackDataFromLocalStorage = buildFallbackDataFromLocalStorage;
 window.normalizeCloudData = normalizeCloudData;
+window.openCloudConfigModal = openCloudConfigModal;
+window.closeCloudConfigModal = closeCloudConfigModal;
+window.submitCloudConfigModal = submitCloudConfigModal;
+window.resetCloudConfigModal = resetCloudConfigModal;
+window.useOfflineLocalStorageMode = useOfflineLocalStorageMode;
