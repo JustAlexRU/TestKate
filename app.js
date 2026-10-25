@@ -466,14 +466,17 @@ function syncToCloud() {
         clientUpdatedAt: Date.now()
       };
 
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json", 
-          "X-Master-Key": JSONBIN_API_KEY 
+          "X-Master-Key": apiKey 
         },
         body: JSON.stringify(root)
       });
+      if (!putRes.ok && (putRes.status === 403 || putRes.status === 429)) {
+        markCloudQuotaExhausted();
+      }
     } catch (e) {
       console.warn("[CloudSync] Push error:", e);
     } finally {
@@ -485,14 +488,21 @@ window.syncToCloud = syncToCloud;
 
 async function pullCloudSettings() {
   if (document.hidden || document.visibilityState !== "visible") return;
-  // Если у игрока есть не отправленные локальные действия (таймер взведён) или идёт сохранение — не перезатираем
-  if (isLocalExecution || isSyncInProgress || cloudSyncTimer !== null) return;
+  // Если у игрока есть не отправленные локальные действия (таймер взведён), идёт сохранение или квота исчерпана — не опрашиваем
+  if (isLocalExecution || isSyncInProgress || cloudSyncTimer !== null || isCloudQuotaExhausted()) return;
 
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    const binId = getCloudBinId();
+    const apiKey = getCloudApiKey();
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { "X-Master-Key": apiKey }
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        markCloudQuotaExhausted();
+      }
+      return;
+    }
     const root = (await res.json()).record || {};
     window.currentCloudData = root;
 
@@ -2297,12 +2307,32 @@ window.sendPlayerChatMessage = async function () {
   clearChatAttachment();
   renderChatTimeline(ticket);
 
+  // Если квота исчерпана — сообщение уже сохранено локально в LocalStorage
+  if (isCloudQuotaExhausted()) {
+    optimisticMsg.sending = false;
+    localStorage.setItem("katya_master_feedback", JSON.stringify(list));
+    renderChatTimeline(ticket);
+    window.isChatSendingMessage = false;
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.classList.remove("opacity-50", "pointer-events-none");
+    }
+    input?.focus();
+    return;
+  }
+
   // Мгновенный пуш в JSONBin под текущим профилем
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    const binId = getCloudBinId();
+    const apiKey = getCloudApiKey();
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { "X-Master-Key": apiKey }
     });
-    if (res.ok) {
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        markCloudQuotaExhausted();
+      }
+    } else {
       const root = (await res.json()).record || {};
       if (!root[currentUser]) root[currentUser] = {};
       
@@ -2322,11 +2352,14 @@ window.sendPlayerChatMessage = async function () {
 
       root[currentUser].feedback = cloudList;
 
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      const putRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_API_KEY },
+        headers: { "Content-Type": "application/json", "X-Master-Key": apiKey },
         body: JSON.stringify(root)
       });
+      if (!putRes.ok && (putRes.status === 403 || putRes.status === 429)) {
+        markCloudQuotaExhausted();
+      }
     }
     optimisticMsg.sending = false;
     localStorage.setItem("katya_master_feedback", JSON.stringify(list));
