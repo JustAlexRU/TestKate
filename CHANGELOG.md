@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.1] - 2026-10-25
+
+### Fixed
+- **Halloween Event Drop Pool & RNG Odds Harmonization** (`admin_modules/admin_economy.js`):
+  - Added all 13 canonical Halloween rewards into the Mission Control probability manager (`FALLBACK_ODDS_DATABASE.case_hw`): 4 complete sets (`bundle_witch_full`, `bundle_vampire_full`, `bundle_ghost_full`, `bundle_demon_full`), 3 room locations (`hw_room_patch`, `hw_room_crypt`, `hw_room_mist`), and 6 individual wardrobe items (`hw_pumpkin_helm`, `hw_vampire_cape`, `hw_witch_hat`, `hw_skeleton_suit`, `hw_bat_ears`, `hw_pumpkin_shoes`).
+  - Added visual badges (`[Сет]`, `[Комната]`) to items in the probability editor grid.
+  - Implemented automatic pool healing/reconciliation in `switchOddsMode("case_hw")` that replaces stale 4-item prototypes in cloud/localStorage with the complete 13-item pool without resetting valid chances.
+  - Added `slot_wish` (💌 Купон на желание, 1%) to Slots 777 odds table.
+- **Mobile Viewport & Styling Resilience** (`index.html`, `dashboard.html`, `app.js`, `css/tailwind.css`):
+  - Pre-compiled 77 KB standalone CSS bundle (`css/tailwind.css`) to eliminate reliance on external JIT Tailwind CDN on mobile data networks.
+  - Inlined anti-FOUC and layout lock rules in `<style>` to ensure elements never collapse into normal block flow or display unstyled text.
+  - Guarded `petRoomCard` layout classes (`w-full bg-[#141527]/90 shadow-xl`) in `applyRoomTheme`.
+
+---
+
 ## [2.8.0] - 2026-10-17
 
 ### Added

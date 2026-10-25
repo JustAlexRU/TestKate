@@ -27,8 +27,8 @@ var SESSION_AUTH_KEY = "lex_dashboard_auth_token";
 var SESSION_OPERATOR_KEY = "lex_dashboard_operator";
 
 // Версионирование (Single Source of Truth)
-var APP_VERSION = "2.4.1";
-var APP_BUILD = 241;
+var APP_VERSION = "2.8.1";
+var APP_BUILD = 281;
 
 // Финансовые и макроэкономические лимиты
 var IRL_BUDGET_LIMIT = 5000; // Месячный лимит реальных рублей на подарки

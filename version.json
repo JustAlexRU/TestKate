@@ -1,23 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "name": "kotya-pet-mission-control",
   "displayName": "Котик & Вкусняшки 💖 • Mission Control",
-  "build": 280,
-  "releaseDate": "2026-10-17",
-  "codename": "Live Event Ledger, AI Harmonization & Multi-Type Kanban",
+  "build": 281,
+  "releaseDate": "2026-10-25",
+  "codename": "Halloween Drop Pool Harmonization & Mobile Layout Stability",
   "semver": {
     "major": 2,
     "minor": 8,
-    "patch": 0
+    "patch": 1
   },
   "modules": {
-    "client": "2.8.0",
-    "dashboard": "2.8.0",
+    "client": "2.8.1",
+    "dashboard": "2.8.1",
     "core": "1.0.0",
     "decisionTree": "1.1.0",
     "aiEconomyAdvisor": "2.4.0",
     "irlBudgetGuard": "1.0.0"
   }
 }
-
