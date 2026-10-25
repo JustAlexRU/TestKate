@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Котик & Вкусняшки 💖</title>
   <link rel="stylesheet" href="css/tailwind.css">
+  <script>
+    (function() {
+      const _origWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        _origWarn.apply(console, args);
+      };
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
@@ -423,7 +432,7 @@
       <div class="flex items-center justify-center gap-1.5 text-[9px] font-mono text-slate-500">
         <span>© 2026 Lex Labs LLC</span>
         <span>•</span>
-        <span class="px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-400 font-bold tracking-wider">v2.4.1</span>
+        <span class="px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-slate-400 font-bold tracking-wider">v2.8.2</span>
       </div>
     </footer>
 

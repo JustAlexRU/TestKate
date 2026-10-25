@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Lex Labs Enterprise Mission Control 🛰️</title>
   <link rel="stylesheet" href="css/tailwind.css">
+  <script>
+    (function() {
+      const _origWarn = console.warn;
+      console.warn = function(...args) {
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+        _origWarn.apply(console, args);
+      };
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -47,7 +56,7 @@
       <div class="text-center">
         <div class="flex items-center justify-center gap-2">
           <h2 class="text-base font-bold text-white tracking-tight">Lex Labs Control Portal</h2>
-          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">v2.4.1</span>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">v2.8.2</span>
         </div>
         <p class="text-xs text-slate-400 mt-1">Авторизация оператора Mission Control</p>
       </div>
@@ -105,7 +114,7 @@
           </div>
           <div class="flex items-center gap-1.5">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25" title="Версия системы">
-              v2.4.1
+              v2.8.2
             </span>
             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>PROD
@@ -206,10 +215,11 @@
         <div class="flex items-center gap-3">
           <!-- Статус синхронизации и сетевой задержки -->
           <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#131522] border border-white/5 text-[11px] font-mono text-slate-400">
-            <span id="jsonbinStatusBadge" class="flex items-center gap-1.5">
+            <span id="jsonbinStatusBadge" onclick="window.openCloudConfigModal()" class="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition" title="Настройки Cloud API / LocalStorage">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               <span>JSONBin: <b class="text-emerald-400 font-medium">Online</b></span>
             </span>
+            <button type="button" onclick="window.openCloudConfigModal()" class="text-slate-400 hover:text-white transition px-0.5" title="Настройки API / LocalStorage">⚙️</button>
             <span class="text-white/20">•</span>
             <span>Синхронизация: <span id="dashLastSyncTime" class="text-slate-300 font-medium">...</span></span>
             <span class="text-white/20">•</span>
@@ -1064,6 +1074,70 @@
       <div class="flex gap-2 pt-2 border-t border-white/5">
         <button type="button" onclick="document.getElementById('modalAcceptPraise').classList.add('hidden')" class="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition">Отмена</button>
         <button type="button" onclick="window.confirmAcceptPraise()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-xs active:scale-95 transition shadow-lg">💌 Отправить с любовью</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ СЕТЕВОГО ТРАНСПОРТА CLOUD API / LOCALSTORAGE -->
+  <div id="modalCloudConfig" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 select-none" onclick="if(event.target===this) window.closeCloudConfigModal()">
+    <div class="bg-[#0e1017] border border-white/10 rounded-2xl w-full max-w-lg p-5 sm:p-6 flex flex-col gap-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b border-white/5 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-base">
+            ☁️
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Настройки транспорта данных</h3>
+            <p class="text-[11px] text-slate-400">Управление JSONBin Cloud API и режимом LocalStorage</p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closeCloudConfigModal()" class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-xs transition">✕</button>
+      </div>
+
+      <div id="cloudConfigStatusBanner">
+        <!-- Заполняется динамически через openCloudConfigModal() -->
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="text-[11px] font-mono text-slate-400 uppercase font-semibold block mb-1">JSONBin Bin ID:</label>
+          <input 
+            type="text" 
+            id="inputCloudBinId" 
+            placeholder="6acb3d30ac6210605a272eb6" 
+            class="w-full bg-[#141622] border border-white/10 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 outline-none transition"
+          />
+        </div>
+
+        <div>
+          <label class="text-[11px] font-mono text-slate-400 uppercase font-semibold block mb-1">JSONBin Master Key / Access Key:</label>
+          <input 
+            type="password" 
+            id="inputCloudApiKey" 
+            placeholder="$2a$10$..." 
+            class="w-full bg-[#141622] border border-white/10 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 outline-none transition"
+          />
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-[11px] text-slate-400 leading-relaxed space-y-1">
+        <p><b class="text-slate-200">💡 Автономный режим:</b> при исчерпании лимитов JSONBin система переходит на мгновенный обмен данными между вкладками через браузерное событие <code class="text-indigo-300">storage</code>. Вся функциональность (монеты, покупки, чат, канбан) работает локально без сетевых сбоев.</p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-white/5">
+        <button type="button" onclick="window.useOfflineLocalStorageMode()" class="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition" title="Отключить сетевые запросы и работать только в браузере">
+          ⚡ Только LocalStorage
+        </button>
+        <button type="button" onclick="window.resetCloudConfigModal()" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-semibold transition" title="Сбросить на системные ключи">
+          Сброс
+        </button>
+        <div class="flex-1"></div>
+        <button type="button" onclick="window.closeCloudConfigModal()" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition">
+          Отмена
+        </button>
+        <button type="button" onclick="window.submitCloudConfigModal()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs active:scale-95 transition shadow-sm">
+          Сохранить и проверить
+        </button>
       </div>
     </div>
   </div>

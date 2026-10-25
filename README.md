@@ -4,8 +4,8 @@
 
 **Enterprise-Grade Cozy Virtual Pet Game & Real-Time LiveOps CRM Dashboard**
 
-[![Version](https://img.shields.io/badge/version-2.4.1-6366f1.svg?style=for-the-badge&logo=semver&logoColor=white)](version.json)
-[![Build](https://img.shields.io/badge/build-241-8b5cf6.svg?style=for-the-badge)](version.json)
+[![Version](https://img.shields.io/badge/version-2.8.2-6366f1.svg?style=for-the-badge&logo=semver&logoColor=white)](version.json)
+[![Build](https://img.shields.io/badge/build-282-8b5cf6.svg?style=for-the-badge)](version.json)
 [![Architecture](https://img.shields.io/badge/architecture-Vanilla_JS_Layered-10b981.svg?style=for-the-badge&logo=javascript&logoColor=white)](#-vanilla-js-layered-architecture)
 [![Bundler](https://img.shields.io/badge/bundler-Zero_Build_Step-06b6d4.svg?style=for-the-badge)](#-zero-bundler-philosophy)
 [![Status](https://img.shields.io/badge/status-production_ready-emerald.svg?style=for-the-badge)](#)

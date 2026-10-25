@@ -2918,11 +2918,37 @@ setInterval(async () => {
   if (isPlayerChatPolling) return;
   isPlayerChatPolling = true;
 
+  // Если квота запросов исчерпана — синхронизируемся напрямую с LocalStorage без сетевого спама
+  if (isCloudQuotaExhausted()) {
+    try {
+      const localFeedback = readStorage("katya_master_feedback", []);
+      const ticket = localFeedback.find(t => t.id === window.activeChatTicketId);
+      if (ticket) {
+        const msgs = ticket.messages || [];
+        const lastMsgId = msgs.length > 0 ? (msgs[msgs.length - 1].id || msgs[msgs.length - 1].timestamp || "") : "";
+        const currentHash = `${ticket.id}_${ticket.status}_${msgs.length}_${lastMsgId}_${ticket.claimed}`;
+        if (currentHash !== lastPlayerChatHash) {
+          lastPlayerChatHash = currentHash;
+          renderChatTimeline(ticket);
+        }
+      }
+    } catch (_) {}
+    isPlayerChatPolling = false;
+    return;
+  }
+
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_API_KEY }
+    const binId = getCloudBinId();
+    const apiKey = getCloudApiKey();
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { "X-Master-Key": apiKey }
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 429) {
+        markCloudQuotaExhausted();
+      }
+      return;
+    }
     const root = (await res.json()).record || {};
     const remoteUser = root[currentUser] || root["katya"];
     
@@ -2954,6 +2980,46 @@ setInterval(async () => {
     isPlayerChatPolling = false;
   }
 }, 5000);
+
+// Мгновенная межвкладочная реактивность (Cross-Tab Reactivity)
+window.addEventListener("storage", (e) => {
+  if (!e.key) return;
+
+  if (e.key === "lex_cloud_quota_exhausted") {
+    window.CLOUD_QUOTA_EXHAUSTED = (e.newValue === "true");
+  }
+
+  if (e.key === "katya_master_pet_state") {
+    try {
+      const p = JSON.parse(e.newValue || "{}");
+      if (p && typeof p === "object") {
+        window.pet = Object.assign(window.pet || {}, p);
+        if (typeof updatePetUI === "function") updatePetUI();
+      }
+    } catch (_) {}
+  }
+
+  if (e.key === "katya_master_feedback") {
+    try {
+      const list = JSON.parse(e.newValue || "[]");
+      if (window.activeChatTicketId) {
+        const ticket = list.find(t => t.id === window.activeChatTicketId);
+        if (ticket && typeof renderChatTimeline === "function") {
+          const msgs = ticket.messages || [];
+          const lastMsgId = msgs.length > 0 ? (msgs[msgs.length - 1].id || msgs[msgs.length - 1].timestamp || "") : "";
+          const currentHash = `${ticket.id}_${ticket.status}_${msgs.length}_${lastMsgId}_${ticket.claimed}`;
+          if (currentHash !== lastPlayerChatHash) {
+            lastPlayerChatHash = currentHash;
+            renderChatTimeline(ticket);
+          }
+        }
+      }
+      if (typeof updatePlayerSupportBadge === "function") {
+        updatePlayerSupportBadge();
+      }
+    } catch (_) {}
+  }
+});
 
 
 /* -------------------------------------------------------------------------

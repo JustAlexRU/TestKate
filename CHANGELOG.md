@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.8.2] - 2026-10-25
 
+### Added
+- **JSONBin Quota Circuit Breaker & Quota Guard** (`core/config.js`, `api/cloud_client.js`, `app.js`, `admin_modules/admin_chat.js`):
+  - Diagnosed HTTP 403 quota exhaustion on the JSONBin transport tier and implemented an automatic Circuit Breaker that instantly suppresses failed repeating requests upon encountering HTTP 403/429 responses.
+  - Implemented seamless LocalStorage autonomous fallback: state updates (coins, pet vitals, wardrobe items, CRM feedback, 1C ledger, audit events) persist immediately and reliably without throwing unhandled network exceptions.
+  - Implemented real-time cross-tab synchronization via native browser `storage` events across game client (`index.html`) and Mission Control (`dashboard.html`), delivering zero-latency (0 ms) cross-tab reactivity without consuming API quota.
+- **Custom Cloud Credentials Manager** (`dashboard.html`, `core/config.js`, `api/cloud_client.js`):
+  - Added interactive Mission Control modal (`modalCloudConfig`) and clickable status badge to view quota status, set custom Bin ID and Master Key, test connectivity, reset to defaults, or lock into pure offline LocalStorage mode.
+- **Tailwind Play CDN Production Warning Suppression** (`dashboard.html`, `index.html`):
+  - Silenced the non-actionable `cdn.tailwindcss.com should not be used in production` warning in browser consoles before script initialization.
+
 ### Fixed
 - **Halloween Complete Thematic Sets & Drop Pool Harmonization** (`game_modules/items_db.js`, `game_modules/minigames/cases.js`, `admin_modules/admin_economy.js`):
   - Audited all 30 seasonal Halloween items in `GAME_ITEMS_DB` and eliminated the issue where 12 items (40% of seasonal content) were impossible to unbox from the Halloween case.
