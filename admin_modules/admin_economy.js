@@ -118,17 +118,27 @@ const FALLBACK_ODDS_DATABASE = {
     { id: "blk_gold_back", name: "Мега-сокровищница 150 🪙", icon: "💰", chance: 30, value: 150 }
   ],
   case_hw: [
-    { id: "hw_pumpkin", name: "Тыквенный фонарик", icon: "🎃", chance: 40, value: 50 },
-    { id: "hw_witch_hat", name: "Шляпа ведьмы", icon: "🧙‍♀️", chance: 30, value: 120 },
-    { id: "hw_bat", name: "Летучая мышка", icon: "🦇", chance: 20, value: 240 },
-    { id: "hw_candy", name: "Зловещая конфета", icon: "🍬", chance: 10, value: 550 }
+    { id: "bundle_witch_full", name: "★ ПОЛНЫЙ СЕТ ВЕДЬМЫ ★", icon: "🧙‍♀️", chance: 4, value: 450, isBundle: true, isEpic: true, desc: "Колпак + Мантия + Юбка с паучками + Поляна Джека!", itemsIncluded: ["hw_witch_hat", "hw_witch_robe", "hw_witch_skirt", "hw_room_patch"] },
+    { id: "bundle_vampire_full", name: "★ СЕТ ВЛАДЫКИ НОЧИ ★", icon: "🧛‍♂️", chance: 3, value: 500, isBundle: true, isEpic: true, desc: "Алые глаза + Плащ Дракулы + Замок Дракулы!", itemsIncluded: ["hw_vamp_eyes", "hw_vampire_cape", "hw_room_castle"] },
+    { id: "bundle_ghost_full", name: "★ СЕТ ПРИЗРАКА ★", icon: "👻", chance: 5, value: 420, isBundle: true, isEpic: true, desc: "Саван Призрака + Вуаль Паутины + Древний Склеп + Призрачный окрас!", itemsIncluded: ["hw_ghost_sheet", "hw_spider_web", "hw_room_crypt", "color_hw_ghost_white"] },
+    { id: "bundle_demon_full", name: "★ СЕТ ЛОРДА ДЕМОНОВ ★", icon: "😈", chance: 3, value: 500, isBundle: true, isEpic: true, desc: "Рожки демона + Огненные лапки + Хижина ведьмы!", itemsIncluded: ["hw_demon_horns", "hw_demon_hooves", "hw_room_cauldron"] },
+    { id: "hw_room_patch", slot: "room", name: "Локация: Поляна Джека", icon: "🎃", color: "#fb923c", chance: 7, value: 180, desc: "Сотни светящихся тыкв" },
+    { id: "hw_room_crypt", slot: "room", name: "Локация: Древний Склеп", icon: "⚰️", color: "#a855f7", chance: 7, value: 180, desc: "Мистический склеп со свечами" },
+    { id: "hw_room_mist", slot: "room", name: "Локация: Туманное кладбище", icon: "🪦", color: "#38bdf8", chance: 8, value: 180, desc: "Холодная дымка и луна" },
+    { id: "hw_pumpkin_helm", slot: "head", name: "Тыква Джека", icon: "🎃", color: "#fb923c", chance: 11, value: 100, desc: "Светится изнутри" },
+    { id: "hw_vampire_cape", slot: "body", name: "Плащ Дракулы", icon: "🧛", color: "#f43f5e", chance: 10, value: 120, desc: "Атласный черный плащ" },
+    { id: "hw_witch_hat", slot: "head", name: "Колпак Ведьмы", icon: "🧙‍♀️", color: "#c084fc", chance: 10, value: 120, desc: "Остроконечная шляпа" },
+    { id: "hw_skeleton_suit", slot: "body", name: "Костюм Скелетика", icon: "💀", color: "#94a3b8", chance: 11, value: 110, desc: "Флуоресцентные кости" },
+    { id: "hw_bat_ears", slot: "head", name: "Ушки Нетопыря", icon: "🦇", color: "#60a5fa", chance: 11, value: 90, desc: "Шелестят в темноте" },
+    { id: "hw_pumpkin_shoes", slot: "legs", name: "Тыквенные туфельки", icon: "🥿", color: "#ea580c", chance: 10, value: 90, desc: "Мягкий оранжевый бархат" }
   ],
   slots: [
     { id: "slot_sushi", name: "Суши (x2.5)", icon: "🍣", chance: 12, multiplier: 2.5 },
     { id: "slot_coins", name: "Монетки (x4)", icon: "🪙", chance: 7, multiplier: 4.0 },
     { id: "slot_crown", name: "Корона (x7.5)", icon: "👑", chance: 3, multiplier: 7.5 },
     { id: "slot_star", name: "Звезда (x15)", icon: "⭐", chance: 1, multiplier: 15.0 },
-    { id: "slot_empty", name: "Пусто", icon: "💨", chance: 77, multiplier: 0 }
+    { id: "slot_wish", name: "Купон на желание (Суперприз)", icon: "💌", chance: 1, multiplier: 30.0 },
+    { id: "slot_empty", name: "Пусто", icon: "💨", chance: 76, multiplier: 0 }
   ],
   scratch: [
     { id: "scr_small", name: "Малый приз (x1.5)", icon: "🪙", chance: 40, multiplier: 1.5 },
@@ -218,14 +228,34 @@ window.switchOddsMode = function (modeKey) {
   if (!box) return;
   box.innerHTML = "";
 
+  const refList = (currentOddsTab === "case_hw" && window.HALLOWEEN_CASE_CONFIG?.drops)
+    ? window.HALLOWEEN_CASE_CONFIG.drops
+    : (FALLBACK_ODDS_DATABASE[currentOddsTab] || []);
+
   let items = [];
   if (window.currentCloudData?.allChances?.[currentOddsTab] && window.currentCloudData.allChances[currentOddsTab].length > 0) {
     items = window.currentCloudData.allChances[currentOddsTab];
   } else if (FALLBACK_ODDS_DATABASE[currentOddsTab]) {
     items = FALLBACK_ODDS_DATABASE[currentOddsTab];
+  } else if (currentOddsTab === "case_hw" && window.HALLOWEEN_CASE_CONFIG?.drops) {
+    items = window.HALLOWEEN_CASE_CONFIG.drops;
   }
 
-  const refList = FALLBACK_ODDS_DATABASE[currentOddsTab] || [];
+  // Реконсиляция пула Хеллоуина: если в облаке/локально лежат устаревшие 4 заглушки вместо 13 реальных предметов
+  if (currentOddsTab === "case_hw" && refList.length >= 13) {
+    const hasOutdatedStubs = items.some(it => it.id === "hw_candy" || it.id === "hw_pumpkin" || it.id === "hw_bat");
+    if (items.length < refList.length || hasOutdatedStubs) {
+      items = refList.map(ref => {
+        const existing = items.find(it => it.id === ref.id);
+        return Object.assign({}, ref, {
+          chance: (existing && typeof existing.chance === "number") ? existing.chance : ref.chance
+        });
+      });
+      if (window.currentCloudData?.allChances) {
+        window.currentCloudData.allChances.case_hw = items;
+      }
+    }
+  }
 
   if (items.length === 0) {
     box.innerHTML = `<div class="col-span-full text-center text-xs text-gray-500 py-8">Нет данных о шансах для выбранной категории</div>`;
@@ -233,17 +263,25 @@ window.switchOddsMode = function (modeKey) {
   }
 
   items.forEach((it) => {
-    const ref = refList.find(r => r.id === it.id);
-    const displayName = it.name || ref?.name || it.id;
-    const displayIcon = it.icon || ref?.icon || "🎁";
+    const ref = refList.find(r => r.id === it.id) || {};
+    const displayName = it.name || ref.name || it.id;
+    const displayIcon = it.icon || ref.icon || "🎁";
     const chanceVal = it.chance !== undefined ? it.chance : 0;
+    const isBundle = it.isBundle || ref.isBundle;
+    const isRoom = (it.slot === "room") || (ref.slot === "room");
+    let badgeHtml = "";
+    if (isBundle) {
+      badgeHtml = `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-orange-500/20 text-orange-400 border border-orange-500/40 uppercase tracking-wider ml-1">Сет</span>`;
+    } else if (isRoom) {
+      badgeHtml = `<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/40 uppercase tracking-wider ml-1">Комната</span>`;
+    }
 
     box.innerHTML += `
       <div class="bg-[#12131f] border border-white/5 p-3 rounded-xl flex items-center justify-between gap-3 hover:border-white/10 transition">
         <div class="flex items-center gap-3 flex-1 min-w-0">
           <span class="text-2xl">${displayIcon}</span>
           <div class="truncate">
-            <div class="font-semibold text-xs text-gray-200 truncate">${displayName}</div>
+            <div class="font-semibold text-xs text-gray-200 truncate flex items-center">${displayName} ${badgeHtml}</div>
             <div class="mono-font text-[10px] text-gray-500">ID: ${it.id}</div>
           </div>
         </div>
@@ -281,7 +319,7 @@ window.saveAllChances = async function () {
   document.querySelectorAll(".odds-chance-input").forEach((inp) => {
     const id = inp.dataset.oddsId;
     const ref = refList.find(r => r.id === id) || {};
-    updated.push({
+    updated.push(Object.assign({}, ref, {
       id: id,
       name: ref.name || id,
       icon: ref.icon || "🎁",
@@ -290,7 +328,7 @@ window.saveAllChances = async function () {
       chance: parseFloat(inp.value) || 0,
       value: ref.value || 0,
       type: ref.type || "item"
-    });
+    }));
   });
 
   window.currentCloudData.allChances[currentOddsTab] = updated;
